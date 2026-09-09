@@ -914,15 +914,19 @@ async function saveDeck() {
   } else {
     const id = crypto.randomUUID();
     const deck = { name, desc, emoji: selectedEmoji, cards: [], created: Date.now() };
+    db.decks[id] = deck;
     await saveDeckData(id, deck);
     toast('Đã tạo bộ thẻ mới!');
   }
   closeDeckModal();
+  renderDecks();
 }
 
 async function deleteDeck(id) {
   if (!confirm('Xóa bộ thẻ "' + db.decks[id].name + '" và tất cả thẻ trong đó?')) return;
+  delete db.decks[id];
   await deleteDeckData(id);
+  renderDecks();
   toast('Đã xóa bộ thẻ');
 }
 
