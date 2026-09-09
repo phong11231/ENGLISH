@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashMind — Học thông minh</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & TOKENS ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface-2:#f7f8fa;
+  --ink:#1a1a2e;--ink-soft:#555;--ink-dim:#888;
+  --primary:#6c5ce7;--primary-dark:#5a4bd1;--primary-light:#a29bfe;--primary-bg:rgba(108,92,231,.08);
+  --green:#00b894;--green-bg:rgba(0,184,148,.1);
+  --red:#e17055;--red-bg:rgba(225,112,85,.1);
+  --orange:#fdcb6e;--orange-bg:rgba(253,203,110,.15);
+  --blue:#0984e3;--blue-bg:rgba(9,132,227,.1);
+  --line:rgba(0,0,0,.08);--line-strong:rgba(0,0,0,.12);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+  --shadow-xl:0 20px 60px rgba(0,0,0,.16);
+  --r-sm:10px;--r-md:14px;--r-lg:20px;--r-xl:28px;
+  --font:'Inter',system-ui,-apple-system,sans-serif;
+  --transition:.2s cubic-bezier(.4,0,.2,1);
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#16161a;--surface:#1e1e24;--surface-2:#25252d;
+    --ink:#e8e8ed;--ink-soft:#a0a0b0;--ink-dim:#6b6b7b;
+    --primary:#a29bfe;--primary-dark:#8b82f0;--primary-light:#6c5ce7;--primary-bg:rgba(162,155,254,.1);
+    --green:#55efc4;--green-bg:rgba(85,239,196,.1);
+    --red:#ff7675;--red-bg:rgba(255,118,117,.1);
+    --orange:#ffeaa7;--orange-bg:rgba(255,234,167,.12);
+    --blue:#74b9ff;--blue-bg:rgba(116,185,255,.1);
+    --line:rgba(255,255,255,.08);--line-strong:rgba(255,255,255,.12);
+    --shadow-sm:0 1px 3px rgba(0,0,0,.2);--shadow-md:0 4px 16px rgba(0,0,0,.25);
+    --shadow-lg:0 12px 40px rgba(0,0,0,.3);--shadow-xl:0 20px 60px rgba(0,0,0,.35);
+  }
+}
+[data-theme="dark"]{
+  --bg:#16161a;--surface:#1e1e24;--surface-2:#25252d;
+  --ink:#e8e8ed;--ink-soft:#a0a0b0;--ink-dim:#6b6b7b;
+  --primary:#a29bfe;--primary-dark:#8b82f0;--primary-light:#6c5ce7;--primary-bg:rgba(162,155,254,.1);
+  --green:#55efc4;--green-bg:rgba(85,239,196,.1);
+  --red:#ff7675;--red-bg:rgba(255,118,117,.1);
+  --orange:#ffeaa7;--orange-bg:rgba(255,234,167,.12);
+  --blue:#74b9ff;--blue-bg:rgba(116,185,255,.1);
+  --line:rgba(255,255,255,.08);--line-strong:rgba(255,255,255,.12);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.2);--shadow-md:0 4px 16px rgba(0,0,0,.25);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.3);--shadow-xl:0 20px 60px rgba(0,0,0,.35);
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font);font-size:15px;line-height:1.6;
+  background:var(--bg);color:var(--ink);
+  -webkit-font-smoothing:antialiased;min-height:100vh;
+}
+button{font-family:inherit;cursor:pointer;border:0;background:none}
+input,textarea{font-family:inherit;font-size:inherit}
+
+/* ===== LOGIN SCREEN ===== */
+.login-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;text-align:center;
+}
+.login-logo{font-size:64px;margin-bottom:16px}
+.login-screen h1{font-size:32px;font-weight:900;color:var(--primary);margin-bottom:8px}
+.login-screen p{color:var(--ink-soft);margin-bottom:32px;max-width:400px}
+.btn-google{
+  display:inline-flex;align-items:center;gap:12px;
+  background:var(--surface);color:var(--ink);
+  border:2px solid var(--line-strong);border-radius:14px;
+  padding:14px 28px;font-size:16px;font-weight:700;
+  box-shadow:var(--shadow-sm);transition:var(--transition);
+}
+.btn-google:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.btn-google img{width:22px;height:22px}
+
+/* ===== APP SHELL ===== */
+.app{display:none;flex-direction:column;min-height:100vh}
+.app.active{display:flex}
+
+/* ── NAV ── */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--line);
+  padding:0 24px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+[data-theme="dark"] .nav{background:rgba(30,30,36,.85)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .nav{background:rgba(30,30,36,.85)}}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;color:var(--primary)}
+.nav-brand span{font-size:24px}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.nav-btn{
+  width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-soft);transition:var(--transition);font-size:18px;
+}
+.nav-btn:hover{background:var(--primary-bg);color:var(--primary)}
+.nav-btn.active{background:var(--primary-bg);color:var(--primary)}
+.user-avatar{
+  width:34px;height:34px;border-radius:10px;object-fit:cover;
+  border:2px solid var(--line);cursor:pointer;transition:var(--transition);
+}
+.user-avatar:hover{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
+.user-menu{
+  position:absolute;top:60px;right:20px;
+  background:var(--surface);border-radius:var(--r-md);
+  border:1px solid var(--line);box-shadow:var(--shadow-lg);
+  padding:8px;min-width:200px;display:none;z-index:110;
+}
+.user-menu.active{display:block}
+.user-menu-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;
+  color:var(--ink);width:100%;transition:var(--transition);
+}
+.user-menu-item:hover{background:var(--primary-bg);color:var(--primary)}
+.user-menu-item.danger:hover{background:var(--red-bg);color:var(--red)}
+.user-menu-name{padding:10px 14px;font-size:13px;color:var(--ink-dim);border-bottom:1px solid var(--line);margin-bottom:4px}
+
+/* ── MAIN ── */
+.main{flex:1;max-width:900px;width:100%;margin:0 auto;padding:24px 20px 100px}
+
+/* ── VIEWS ── */
+.view{display:none;animation:fadeIn .3s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HEADER ── */
+.page-header{margin-bottom:28px}
+.page-header h1{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.page-header p{color:var(--ink-soft);margin-top:4px}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px}
+.stat-card{
+  background:var(--surface);border-radius:var(--r-md);padding:16px 18px;
+  border:1px solid var(--line);transition:var(--transition);
+}
+.stat-card:hover{box-shadow:var(--shadow-sm);border-color:var(--line-strong)}
+.stat-card .stat-icon{font-size:22px;margin-bottom:6px}
+.stat-card .stat-value{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.stat-card .stat-label{font-size:12px;color:var(--ink-dim);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+/* ── DECK LIST ── */
+.deck-list{display:flex;flex-direction:column;gap:10px}
+.deck-item{
+  background:var(--surface);border-radius:var(--r-md);padding:18px 20px;
+  border:1px solid var(--line);cursor:pointer;
+  display:flex;align-items:center;gap:16px;
+  transition:var(--transition);position:relative;overflow:hidden;
+}
+.deck-item:hover{box-shadow:var(--shadow-md);border-color:var(--primary);transform:translateY(-2px)}
+.deck-item .deck-color{
+  width:48px;height:48px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;
+}
+.deck-item .deck-info{flex:1;min-width:0}
+.deck-item .deck-name{font-weight:700;font-size:16px;margin-bottom:2px}
+.deck-item .deck-meta{font-size:13px;color:var(--ink-dim);display:flex;gap:12px;flex-wrap:wrap}
+.deck-item .deck-meta span{display:flex;align-items:center;gap:4px}
+.deck-badges{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.badge{padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px}
+.badge-new{background:var(--blue-bg);color:var(--blue)}
+.badge-learn{background:var(--orange-bg);color:#e67e22}
+.badge-due{background:var(--green-bg);color:var(--green)}
+.deck-actions{display:flex;gap:4px}
+.deck-action-btn{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-dim);font-size:16px;transition:var(--transition);
+}
+.deck-action-btn:hover{background:var(--primary-bg);color:var(--primary)}
+.deck-action-btn.delete:hover{background:var(--red-bg);color:var(--red)}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-weight:700;font-size:14px;border-radius:12px;padding:12px 22px;
+  transition:var(--transition);position:relative;overflow:hidden;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;box-shadow:0 4px 14px rgba(108,92,231,.3);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.4)}
+.btn-primary:active{transform:translateY(0)}
+.btn-ghost{background:var(--surface);color:var(--ink);border:1.5px solid var(--line-strong)}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-bg)}
+.btn-danger{background:var(--red-bg);color:var(--red)}
+.btn-danger:hover{background:var(--red);color:#fff}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:10px}
+.btn-block{width:100%;justify-content:center}
+
+.fab{
+  position:fixed;bottom:24px;right:24px;z-index:90;
+  width:56px;height:56px;border-radius:18px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;font-size:26px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-lg);transition:var(--transition);
+}
+.fab:hover{transform:translateY(-3px) scale(1.05);box-shadow:var(--shadow-xl)}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.active{display:flex}
+.modal{
+  background:var(--surface);border-radius:var(--r-xl);
+  width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+  box-shadow:var(--shadow-xl);animation:modalIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.modal-header h2{font-size:20px;font-weight:800}
+.modal-close{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-dim);font-size:20px;transition:var(--transition);
+}
+.modal-close:hover{background:var(--red-bg);color:var(--red)}
+.modal-body{padding:20px 24px 24px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:var(--ink-soft)}
+.form-group input,.form-group textarea,.form-group select{
+  width:100%;padding:12px 14px;border-radius:12px;
+  border:1.5px solid var(--line-strong);background:var(--surface-2);
+  color:var(--ink);font-size:15px;transition:var(--transition);outline:none;
+}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{
+  border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg);
+}
+.form-group textarea{resize:vertical;min-height:100px}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* ── REVIEW VIEW ── */
+.review-container{display:flex;flex-direction:column;align-items:center;padding:20px 0;min-height:60vh}
+.review-progress{width:100%;margin-bottom:24px}
+.review-progress-bar{width:100%;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.review-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary),var(--green));transition:width .4s ease}
+.review-counts{display:flex;gap:16px;justify-content:center;margin-top:10px;font-size:13px;font-weight:600}
+.review-counts .cnt-new{color:var(--blue)}
+.review-counts .cnt-learn{color:var(--orange)}
+.review-counts .cnt-due{color:var(--green)}
+
+.flashcard{width:100%;max-width:560px;min-height:320px;perspective:1200px;cursor:pointer;margin-bottom:28px}
+.flashcard-inner{
+  width:100%;min-height:320px;transition:transform .6s cubic-bezier(.4,0,.2,1);
+  transform-style:preserve-3d;position:relative;
+}
+.flashcard.flipped .flashcard-inner{transform:rotateY(180deg)}
+.flashcard-face{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:var(--surface);border-radius:var(--r-xl);border:2px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 32px;text-align:center;box-shadow:var(--shadow-md);
+}
+.flashcard-face.back{transform:rotateY(180deg)}
+.flashcard-label{position:absolute;top:16px;left:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-dim)}
+.flashcard-content{font-size:22px;font-weight:600;line-height:1.5;word-break:break-word}
+.flashcard-hint{position:absolute;bottom:16px;font-size:12px;color:var(--ink-dim)}
+
+.review-actions{display:flex;gap:10px;width:100%;max-width:560px}
+.review-btn{
+  flex:1;padding:14px 8px;border-radius:14px;font-weight:700;font-size:14px;
+  text-align:center;transition:var(--transition);border:2px solid transparent;
+}
+.review-btn .interval{display:block;font-size:11px;font-weight:500;opacity:.7;margin-top:2px}
+.review-btn.again{background:var(--red-bg);color:var(--red);border-color:rgba(225,112,85,.2)}
+.review-btn.again:hover{background:var(--red);color:#fff}
+.review-btn.hard{background:var(--orange-bg);color:#e67e22;border-color:rgba(253,203,110,.25)}
+.review-btn.hard:hover{background:#e67e22;color:#fff}
+.review-btn.good{background:var(--green-bg);color:var(--green);border-color:rgba(0,184,148,.2)}
+.review-btn.good:hover{background:var(--green);color:#fff}
+.review-btn.easy{background:var(--blue-bg);color:var(--blue);border-color:rgba(9,132,227,.2)}
+.review-btn.easy:hover{background:var(--blue);color:#fff}
+
+.review-done{text-align:center;padding:60px 20px}
+.review-done .done-icon{font-size:64px;margin-bottom:16px}
+.review-done h2{font-size:24px;font-weight:800;margin-bottom:8px}
+.review-done p{color:var(--ink-soft);margin-bottom:24px}
+
+/* ── CARD BROWSER ── */
+.card-browser-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;position:relative}
+.search-box input{
+  width:100%;padding:10px 14px 10px 38px;border-radius:12px;
+  border:1.5px solid var(--line-strong);background:var(--surface);
+  color:var(--ink);font-size:14px;transition:var(--transition);outline:none;
+}
+.search-box input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
+.search-box::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px}
+.card-table{width:100%;border-collapse:separate;border-spacing:0}
+.card-table th{text-align:left;font-size:12px;font-weight:700;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;border-bottom:2px solid var(--line)}
+.card-table td{padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+.card-table tr:hover td{background:var(--primary-bg)}
+.card-table .card-front-col{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.card-table .card-back-col{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-soft)}
+.card-table .card-status{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase}
+.status-new{background:var(--blue-bg);color:var(--blue)}
+.status-learning{background:var(--orange-bg);color:#e67e22}
+.status-review{background:var(--green-bg);color:var(--green)}
+.card-edit-btn{
+  width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--ink-dim);font-size:14px;transition:var(--transition);
+}
+.card-edit-btn:hover{background:var(--primary-bg);color:var(--primary)}
+
+/* ── EMPTY / LOADING ── */
+.empty-state{text-align:center;padding:60px 20px}
+.empty-state .empty-icon{font-size:56px;margin-bottom:12px}
+.empty-state h3{font-size:18px;font-weight:700;margin-bottom:6px}
+.empty-state p{color:var(--ink-soft);margin-bottom:20px;font-size:14px}
+
+.loading-spinner{
+  display:flex;align-items:center;justify-content:center;padding:60px;
+}
+.loading-spinner::after{
+  content:'';width:32px;height:32px;border-radius:50%;
+  border:3px solid var(--line);border-top-color:var(--primary);
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:var(--bg);
+  padding:12px 22px;border-radius:14px;font-weight:600;font-size:14px;
+  box-shadow:var(--shadow-lg);z-index:300;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;
+  opacity:0;pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── EMOJI PICKER ── */
+.emoji-pick{
+  width:42px;height:42px;border-radius:10px;font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--line);transition:var(--transition);background:var(--surface-2);
+}
+.emoji-pick:hover{border-color:var(--primary);background:var(--primary-bg)}
+.emoji-pick.selected{border-color:var(--primary);background:var(--primary-bg);box-shadow:0 0 0 3px var(--primary-bg)}
+
+/* heatmap */
+.heatmap{display:flex;gap:3px;flex-wrap:wrap}
+.heatmap-day{width:16px;height:16px;border-radius:3px;background:var(--line);transition:var(--transition)}
+.heatmap-day:hover{outline:2px solid var(--primary);outline-offset:1px}
+.heatmap-day[data-count="1"]{background:rgba(108,92,231,.25)}
+.heatmap-day[data-count="2"]{background:rgba(108,92,231,.45)}
+.heatmap-day[data-count="3"]{background:rgba(108,92,231,.65)}
+.heatmap-day[data-count="4"]{background:var(--primary)}
+.status-bar{display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.status-bar div{transition:width .5s ease}
+.status-legend{display:flex;gap:16px;font-size:13px;font-weight:600;flex-wrap:wrap}
+.status-legend span{display:flex;align-items:center;gap:6px}
+.status-legend .dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .nav{padding:0 16px;height:56px}
+  .nav-brand{font-size:17px}
+  .main{padding:16px 14px 100px}
+  .page-header h1{font-size:22px}
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat-card{padding:12px 14px}
+  .stat-card .stat-value{font-size:22px}
+  .deck-item{padding:14px 16px;gap:12px}
+  .deck-item .deck-color{width:42px;height:42px;font-size:20px}
+  .flashcard-content{font-size:18px}
+  .review-actions{flex-wrap:wrap}
+  .review-btn{min-width:calc(50% - 5px)}
+  .modal{border-radius:var(--r-lg)}
+  .fab{bottom:16px;right:16px;width:50px;height:50px;border-radius:15px;font-size:22px}
+  .card-table{font-size:13px}
+  .card-table th,.card-table td{padding:8px 10px}
+  .card-table .card-front-col,.card-table .card-back-col{max-width:120px}
+  .login-screen h1{font-size:26px}
+}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-dim)}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-logo">🧠</div>
+  <h1>FlashMind</h1>
+  <p>Học thông minh với thẻ ghi nhớ. Đăng nhập để đồng bộ dữ liệu trên mọi thiết bị.</p>
+  <button class="btn-google" onclick="signInGoogle()">
+    <svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.09 24.09 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+    Đăng nhập bằng Google
+  </button>
+</div>
+
+<!-- ===== APP ===== -->
+<div class="app" id="appShell">
+<nav class="nav">
+  <div class="nav-brand"><span>🧠</span> FlashMind</div>
+  <div class="nav-actions">
+    <button class="nav-btn active" onclick="showView('decks')" title="Bộ thẻ" id="navDecks">📚</button>
+    <button class="nav-btn" onclick="showView('stats')" title="Thống kê" id="navStats">📊</button>
+    <button class="nav-btn" onclick="toggleTheme()" title="Đổi theme" id="navTheme">🌙</button>
+    <img class="user-avatar" id="userAvatar" onclick="toggleUserMenu()" alt="avatar">
+  </div>
+  <div class="user-menu" id="userMenu">
+    <div class="user-menu-name" id="userName"></div>
+    <button class="user-menu-item danger" onclick="signOutUser()">🚪 Đăng xuất</button>
+  </div>
+</nav>
+
+<main class="main">
+<!-- DECKS VIEW -->
+<div class="view active" id="viewDecks">
+  <div class="page-header">
+    <h1>Bộ thẻ của bạn</h1>
+    <p>Chọn bộ thẻ để bắt đầu ôn tập</p>
+  </div>
+  <div class="stats-row" id="globalStats"></div>
+  <div id="deckListWrap"><div class="loading-spinner"></div></div>
+</div>
+
+<!-- REVIEW VIEW -->
+<div class="view" id="viewReview">
+  <div class="review-container">
+    <div style="width:100%;display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <button class="btn btn-ghost btn-sm" onclick="exitReview()">← Quay lại</button>
+      <h2 style="font-size:18px;font-weight:700;flex:1" id="reviewDeckName"></h2>
+    </div>
+    <div class="review-progress">
+      <div class="review-progress-bar"><div class="review-progress-fill" id="reviewProgressFill"></div></div>
+      <div class="review-counts">
+        <span class="cnt-new" id="cntNew">0 mới</span>
+        <span class="cnt-learn" id="cntLearn">0 đang học</span>
+        <span class="cnt-due" id="cntDue">0 ôn tập</span>
+      </div>
+    </div>
+    <div class="flashcard" id="flashcard" onclick="flipCard()">
+      <div class="flashcard-inner">
+        <div class="flashcard-face front">
+          <div class="flashcard-label">Câu hỏi</div>
+          <div class="flashcard-content" id="cardFront"></div>
+          <div class="flashcard-hint">Nhấn để xem đáp án</div>
+        </div>
+        <div class="flashcard-face back">
+          <div class="flashcard-label">Đáp án</div>
+          <div class="flashcard-content" id="cardBack"></div>
+        </div>
+      </div>
+    </div>
+    <div class="review-actions" id="reviewActions" style="display:none">
+      <button class="review-btn again" onclick="answerCard(0)">Quên<span class="interval" id="intAgain"></span></button>
+      <button class="review-btn hard" onclick="answerCard(1)">Khó<span class="interval" id="intHard"></span></button>
+      <button class="review-btn good" onclick="answerCard(2)">Tốt<span class="interval" id="intGood"></span></button>
+      <button class="review-btn easy" onclick="answerCard(3)">Dễ<span class="interval" id="intEasy"></span></button>
+    </div>
+    <div class="review-done" id="reviewDone" style="display:none">
+      <div class="done-icon">🎉</div>
+      <h2>Hoàn thành!</h2>
+      <p>Bạn đã ôn hết tất cả thẻ hôm nay. Quay lại sau nhé!</p>
+      <button class="btn btn-primary" onclick="exitReview()">Quay về bộ thẻ</button>
+    </div>
+  </div>
+</div>
+
+<!-- CARD BROWSER VIEW -->
+<div class="view" id="viewBrowser">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <button class="btn btn-ghost btn-sm" onclick="exitBrowser()">← Quay lại</button>
+    <h2 style="font-size:18px;font-weight:700;flex:1" id="browserDeckName"></h2>
+    <button class="btn btn-primary btn-sm" onclick="openCardModal()">+ Thêm thẻ</button>
+  </div>
+  <div class="card-browser-header">
+    <div class="search-box"><input type="text" placeholder="Tìm thẻ..." id="cardSearch" oninput="filterCards()"></div>
+  </div>
+  <div id="cardTableWrap"></div>
+</div>
+
+<!-- STATS VIEW -->
+<div class="view" id="viewStats">
+  <div class="page-header">
+    <h1>Thống kê</h1>
+    <p>Tiến độ học tập của bạn</p>
+  </div>
+  <div class="stats-row" id="detailedStats"></div>
+  <div style="background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);padding:24px;margin-top:16px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Lịch sử ôn tập 30 ngày qua</h3>
+    <div id="heatmapContainer" style="overflow-x:auto"></div>
+  </div>
+  <div style="background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);padding:24px;margin-top:12px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Phân bố thẻ theo trạng thái</h3>
+    <div id="statusChart"></div>
+  </div>
+</div>
+</main>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openDeckModal()" title="Tạo bộ thẻ mới" id="fabBtn" style="display:none">+</button>
+
+<!-- DECK MODAL -->
+<div class="modal-overlay" id="deckModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="deckModalTitle">Tạo bộ thẻ mới</h2>
+      <button class="modal-close" onclick="closeDeckModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tên bộ thẻ</label>
+        <input type="text" id="deckNameInput" placeholder="VD: Tiếng Anh N1, Sinh học 12...">
+      </div>
+      <div class="form-group">
+        <label>Mô tả (tùy chọn)</label>
+        <textarea id="deckDescInput" placeholder="Mô tả ngắn về bộ thẻ..." rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Biểu tượng</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="emojiPicker">
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="📖">📖</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="🧮">🧮</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="🔬">🔬</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="🌍">🌍</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="🇬🇧">🇬🇧</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="🇯🇵">🇯🇵</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="💻">💻</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="⚗️">⚗️</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="📐">📐</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="🎵">🎵</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="🧬">🧬</button>
+          <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="⚡">⚡</button>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeDeckModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveDeck()" id="saveDeckBtn">Tạo bộ thẻ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CARD MODAL -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="cardModalTitle">Thêm thẻ mới</h2>
+      <button class="modal-close" onclick="closeCardModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Mặt trước (câu hỏi)</label>
+        <textarea id="cardFrontInput" placeholder="Nhập câu hỏi, từ vựng..." rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Mặt sau (đáp án)</label>
+        <textarea id="cardBackInput" placeholder="Nhập đáp án, nghĩa..." rows="3"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeCardModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Lưu thẻ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+// ===== FIREBASE INIT =====
+const firebaseConfig = {
+  apiKey: "AIzaSyD7UXDjRS0NaT1OYRBvpxqpirZz3SQYVyc",
+  authDomain: "flashmind-8b1bc.firebaseapp.com",
+  projectId: "flashmind-8b1bc",
+  storageBucket: "flashmind-8b1bc.firebasestorage.app",
+  messagingSenderId: "482268690491",
+  appId: "1:482268690491:web:2c53f56d0bdf8d30c7c41e",
+  measurementId: "G-L93759D1ZJ"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const firestore = firebase.firestore();
+
+let currentUser = null;
+let db = { decks: {}, reviewLog: [] };
+let unsubDecks = null;
+
+// ===== AUTH =====
+function signInGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(e => {
+    toast('Lỗi đăng nhập: ' + e.message);
+  });
+}
+
+function signOutUser() {
+  auth.signOut();
+  toggleUserMenu();
+}
+
+function toggleUserMenu() {
+  document.getElementById('userMenu').classList.toggle('active');
+}
+
+document.addEventListener('click', e => {
+  const menu = document.getElementById('userMenu');
+  const avatar = document.getElementById('userAvatar');
+  if (menu && !menu.contains(e.target) && e.target !== avatar) {
+    menu.classList.remove('active');
+  }
+});
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  if (user) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').classList.add('active');
+    document.getElementById('fabBtn').style.display = 'flex';
+    document.getElementById('userAvatar').src = user.photoURL || '';
+    document.getElementById('userName').textContent = user.displayName || user.email;
+    loadUserData();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appShell').classList.remove('active');
+    document.getElementById('fabBtn').style.display = 'none';
+    if (unsubDecks) { unsubDecks(); unsubDecks = null; }
+    db = { decks: {}, reviewLog: [] };
+  }
+});
+
+// ===== FIRESTORE DATA =====
+function userDoc() {
+  return firestore.collection('users').doc(currentUser.uid);
+}
+
+function decksCol() {
+  return userDoc().collection('decks');
+}
+
+function reviewLogCol() {
+  return userDoc().collection('reviewLog');
+}
+
+async function loadUserData() {
+  db = { decks: {}, reviewLog: [] };
+
+  // Listen to decks in real-time
+  if (unsubDecks) unsubDecks();
+  unsubDecks = decksCol().onSnapshot(snap => {
+    db.decks = {};
+    snap.forEach(doc => {
+      db.decks[doc.id] = doc.data();
+    });
+    renderDecks();
+  }, err => {
+    console.error('Firestore error:', err);
+    toast('Lỗi tải dữ liệu');
+  });
+
+  // Load review log (last 5000)
+  const logSnap = await reviewLogCol().orderBy('date', 'desc').limit(5000).get();
+  db.reviewLog = [];
+  logSnap.forEach(doc => db.reviewLog.push(doc.data()));
+  db.reviewLog.reverse();
+}
+
+async function saveDeckToFirestore(deckId, data) {
+  await decksCol().doc(deckId).set(data);
+}
+
+async function deleteDeckFromFirestore(deckId) {
+  await decksCol().doc(deckId).delete();
+}
+
+async function addReviewLog(entry) {
+  db.reviewLog.push(entry);
+  await reviewLogCol().add(entry);
+}
+
+// ===== SM-2 ALGORITHM =====
+function newCardData() {
+  return {
+    id: crypto.randomUUID(), front: '', back: '',
+    status: 'new', interval: 0, ease: 2.5,
+    due: Date.now(), reps: 0, lapses: 0,
+    created: Date.now(), lastReview: null,
+  };
+}
+
+function sm2(card, quality) {
+  const now = Date.now();
+  const DAY = 86400000;
+  card.lastReview = now;
+
+  if (quality === 0) {
+    card.status = 'learning'; card.interval = 0; card.reps = 0;
+    card.lapses++; card.due = now + 60000;
+    card.ease = Math.max(1.3, card.ease - 0.2);
+  } else if (card.status === 'new' || card.status === 'learning') {
+    if (quality === 1) {
+      card.status = 'learning'; card.interval = 0; card.due = now + 600000;
+    } else if (quality === 2) {
+      card.status = 'review'; card.interval = 1; card.due = now + DAY; card.reps = 1;
+    } else {
+      card.status = 'review'; card.interval = 4; card.due = now + 4 * DAY;
+      card.reps = 1; card.ease = Math.min(3.0, card.ease + 0.15);
+    }
+  } else {
+    let ni;
+    if (quality === 1) { ni = Math.max(1, Math.round(card.interval * 1.2)); card.ease = Math.max(1.3, card.ease - 0.15); }
+    else if (quality === 2) { ni = Math.round(card.interval * card.ease); }
+    else { ni = Math.round(card.interval * card.ease * 1.3); card.ease = Math.min(3.0, card.ease + 0.15); }
+    card.interval = Math.min(ni, 365);
+    card.due = now + card.interval * DAY;
+    card.reps++; card.status = 'review';
+  }
+  return card;
+}
+
+function getIntervalText(card, quality) {
+  if (quality === 0) return '1 phút';
+  if (card.status === 'new' || card.status === 'learning') {
+    if (quality === 1) return '10 phút';
+    if (quality === 2) return '1 ngày';
+    return '4 ngày';
+  }
+  let iv;
+  if (quality === 1) iv = Math.max(1, Math.round(card.interval * 1.2));
+  else if (quality === 2) iv = Math.round(card.interval * card.ease);
+  else iv = Math.round(card.interval * card.ease * 1.3);
+  iv = Math.min(iv, 365);
+  if (iv < 30) return iv + ' ngày';
+  if (iv < 365) return Math.round(iv / 30 * 10) / 10 + ' tháng';
+  return Math.round(iv / 365 * 10) / 10 + ' năm';
+}
+
+// ===== VIEWS =====
+let currentView = 'decks';
+let currentDeckId = null;
+let editingDeckId = null;
+let editingCardId = null;
+let selectedEmoji = '📖';
+let reviewQueue = [];
+let reviewIndex = 0;
+
+function showView(name) {
+  currentView = name;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (name === 'decks') { document.getElementById('navDecks').classList.add('active'); renderDecks(); }
+  if (name === 'stats') { document.getElementById('navStats').classList.add('active'); renderStats(); }
+  document.getElementById('fabBtn').style.display = (name === 'decks' && currentUser) ? 'flex' : 'none';
+}
+
+// ===== DECK RENDERING =====
+function getDeckCards(deckId) { return db.decks[deckId]?.cards || []; }
+
+function getDeckCounts(deckId) {
+  const cards = getDeckCards(deckId);
+  const now = Date.now();
+  let newCount = 0, learnCount = 0, dueCount = 0;
+  cards.forEach(c => {
+    if (c.status === 'new') newCount++;
+    else if (c.status === 'learning') learnCount++;
+    else if (c.due <= now) dueCount++;
+  });
+  return { newCount, learnCount, dueCount, total: cards.length };
+}
+
+function renderDecks() {
+  const wrap = document.getElementById('deckListWrap');
+  const deckIds = Object.keys(db.decks);
+
+  let totalCards = 0, totalDue = 0, totalNew = 0, streak = calcStreak();
+  deckIds.forEach(id => {
+    const c = getDeckCounts(id);
+    totalCards += c.total; totalDue += c.dueCount + c.learnCount; totalNew += c.newCount;
+  });
+  document.getElementById('globalStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">Tổng thẻ</div></div>
+    <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value">${streak}</div><div class="stat-label">Streak ngày</div></div>
+    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value">${totalDue}</div><div class="stat-label">Cần ôn</div></div>
+    <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-value">${totalNew}</div><div class="stat-label">Thẻ mới</div></div>
+  `;
+
+  if (deckIds.length === 0) {
+    wrap.innerHTML = `<div class="deck-list"><div class="empty-state">
+      <div class="empty-icon">📚</div><h3>Chưa có bộ thẻ nào</h3>
+      <p>Tạo bộ thẻ đầu tiên để bắt đầu học nhé!</p>
+      <button class="btn btn-primary" onclick="openDeckModal()">+ Tạo bộ thẻ</button>
+    </div></div>`;
+    return;
+  }
+
+  wrap.innerHTML = '<div class="deck-list">' + deckIds.map(id => {
+    const d = db.decks[id]; const c = getDeckCounts(id);
+    const hasDue = c.newCount + c.learnCount + c.dueCount > 0;
+    return `<div class="deck-item" onclick="startReview('${id}')">
+      <div class="deck-color" style="background:var(--primary-bg)">${d.emoji || '📖'}</div>
+      <div class="deck-info">
+        <div class="deck-name">${esc(d.name)}</div>
+        <div class="deck-meta"><span>📇 ${c.total} thẻ</span>${d.desc ? '<span>' + esc(d.desc) + '</span>' : ''}</div>
+      </div>
+      <div class="deck-badges">
+        ${c.newCount ? '<span class="badge badge-new">' + c.newCount + ' mới</span>' : ''}
+        ${c.learnCount ? '<span class="badge badge-learn">' + c.learnCount + ' học</span>' : ''}
+        ${c.dueCount ? '<span class="badge badge-due">' + c.dueCount + ' ôn</span>' : ''}
+        ${!hasDue ? '<span class="badge" style="background:var(--surface-2);color:var(--ink-dim)">✓ Xong</span>' : ''}
+      </div>
+      <div class="deck-actions" onclick="event.stopPropagation()">
+        <button class="deck-action-btn" onclick="openBrowser('${id}')" title="Xem thẻ">📋</button>
+        <button class="deck-action-btn" onclick="openEditDeck('${id}')" title="Sửa">✏️</button>
+        <button class="deck-action-btn delete" onclick="deleteDeck('${id}')" title="Xóa">🗑️</button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ===== DECK MODAL =====
+function openDeckModal() {
+  editingDeckId = null;
+  document.getElementById('deckModalTitle').textContent = 'Tạo bộ thẻ mới';
+  document.getElementById('saveDeckBtn').textContent = 'Tạo bộ thẻ';
+  document.getElementById('deckNameInput').value = '';
+  document.getElementById('deckDescInput').value = '';
+  selectedEmoji = '📖'; updateEmojiSelection();
+  document.getElementById('deckModal').classList.add('active');
+  setTimeout(() => document.getElementById('deckNameInput').focus(), 100);
+}
+
+function openEditDeck(id) {
+  editingDeckId = id;
+  const d = db.decks[id];
+  document.getElementById('deckModalTitle').textContent = 'Sửa bộ thẻ';
+  document.getElementById('saveDeckBtn').textContent = 'Cập nhật';
+  document.getElementById('deckNameInput').value = d.name;
+  document.getElementById('deckDescInput').value = d.desc || '';
+  selectedEmoji = d.emoji || '📖'; updateEmojiSelection();
+  document.getElementById('deckModal').classList.add('active');
+}
+
+function closeDeckModal() { document.getElementById('deckModal').classList.remove('active'); }
+function pickEmoji(el) { selectedEmoji = el.dataset.emoji; updateEmojiSelection(); }
+function updateEmojiSelection() {
+  document.querySelectorAll('.emoji-pick').forEach(e => e.classList.toggle('selected', e.dataset.emoji === selectedEmoji));
+}
+
+async function saveDeck() {
+  const name = document.getElementById('deckNameInput').value.trim();
+  if (!name) { toast('Vui lòng nhập tên bộ thẻ'); return; }
+  const desc = document.getElementById('deckDescInput').value.trim();
+
+  if (editingDeckId) {
+    const deck = db.decks[editingDeckId];
+    deck.name = name; deck.desc = desc; deck.emoji = selectedEmoji;
+    await saveDeckToFirestore(editingDeckId, deck);
+    toast('Đã cập nhật bộ thẻ!');
+  } else {
+    const id = crypto.randomUUID();
+    const deck = { name, desc, emoji: selectedEmoji, cards: [], created: Date.now() };
+    await saveDeckToFirestore(id, deck);
+    toast('Đã tạo bộ thẻ mới!');
+  }
+  closeDeckModal();
+}
+
+async function deleteDeck(id) {
+  if (!confirm('Xóa bộ thẻ "' + db.decks[id].name + '" và tất cả thẻ trong đó?')) return;
+  await deleteDeckFromFirestore(id);
+  toast('Đã xóa bộ thẻ');
+}
+
+// ===== CARD MODAL =====
+function openCardModal(cardId) {
+  editingCardId = cardId || null;
+  if (cardId) {
+    const card = getDeckCards(currentDeckId).find(c => c.id === cardId);
+    document.getElementById('cardModalTitle').textContent = 'Sửa thẻ';
+    document.getElementById('saveCardBtn').textContent = 'Cập nhật';
+    document.getElementById('cardFrontInput').value = card.front;
+    document.getElementById('cardBackInput').value = card.back;
+  } else {
+    document.getElementById('cardModalTitle').textContent = 'Thêm thẻ mới';
+    document.getElementById('saveCardBtn').textContent = 'Lưu thẻ';
+    document.getElementById('cardFrontInput').value = '';
+    document.getElementById('cardBackInput').value = '';
+  }
+  document.getElementById('cardModal').classList.add('active');
+  setTimeout(() => document.getElementById('cardFrontInput').focus(), 100);
+}
+
+function closeCardModal() { document.getElementById('cardModal').classList.remove('active'); }
+
+async function saveCard() {
+  const front = document.getElementById('cardFrontInput').value.trim();
+  const back = document.getElementById('cardBackInput').value.trim();
+  if (!front || !back) { toast('Vui lòng nhập cả mặt trước và mặt sau'); return; }
+
+  const deck = db.decks[currentDeckId];
+  if (!deck.cards) deck.cards = [];
+
+  if (editingCardId) {
+    const card = deck.cards.find(c => c.id === editingCardId);
+    card.front = front; card.back = back;
+    toast('Đã cập nhật thẻ!');
+  } else {
+    const card = newCardData();
+    card.front = front; card.back = back;
+    deck.cards.push(card);
+    toast('Đã thêm thẻ mới!');
+  }
+  await saveDeckToFirestore(currentDeckId, deck);
+  closeCardModal();
+  renderCardBrowser();
+  if (!editingCardId) {
+    document.getElementById('cardFrontInput').value = '';
+    document.getElementById('cardBackInput').value = '';
+  }
+}
+
+// ===== CARD BROWSER =====
+function openBrowser(deckId) {
+  currentDeckId = deckId;
+  document.getElementById('browserDeckName').textContent = db.decks[deckId].name;
+  renderCardBrowser();
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('viewBrowser').classList.add('active');
+  document.getElementById('fabBtn').style.display = 'none';
+}
+
+function exitBrowser() { currentDeckId = null; showView('decks'); }
+
+function renderCardBrowser() {
+  const cards = getDeckCards(currentDeckId);
+  const search = (document.getElementById('cardSearch')?.value || '').toLowerCase();
+  const filtered = cards.filter(c => c.front.toLowerCase().includes(search) || c.back.toLowerCase().includes(search));
+  const wrap = document.getElementById('cardTableWrap');
+  if (filtered.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div>
+      <h3>${cards.length === 0 ? 'Chưa có thẻ nào' : 'Không tìm thấy'}</h3>
+      <p>${cards.length === 0 ? 'Thêm thẻ đầu tiên vào bộ thẻ này' : 'Thử từ khóa khác'}</p>
+      ${cards.length === 0 ? '<button class="btn btn-primary" onclick="openCardModal()">+ Thêm thẻ</button>' : ''}
+    </div>`;
+    return;
+  }
+  wrap.innerHTML = `<div style="overflow-x:auto"><table class="card-table">
+    <thead><tr><th>Mặt trước</th><th>Mặt sau</th><th>Trạng thái</th><th>Lần tới</th><th></th></tr></thead>
+    <tbody>${filtered.map(c => {
+      const sc = c.status === 'new' ? 'status-new' : c.status === 'learning' ? 'status-learning' : 'status-review';
+      const st = c.status === 'new' ? 'Mới' : c.status === 'learning' ? 'Đang học' : 'Ôn tập';
+      const dt = c.status === 'new' ? '—' : formatDue(c.due);
+      return `<tr><td class="card-front-col">${esc(c.front)}</td><td class="card-back-col">${esc(c.back)}</td>
+        <td><span class="card-status ${sc}">${st}</span></td>
+        <td style="font-size:13px;color:var(--ink-dim)">${dt}</td>
+        <td><button class="card-edit-btn" onclick="openCardModal('${c.id}')" title="Sửa">✏️</button>
+        <button class="card-edit-btn" onclick="deleteCard('${c.id}')" title="Xóa" style="color:var(--red)">🗑️</button></td></tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function filterCards() { renderCardBrowser(); }
+
+async function deleteCard(cardId) {
+  if (!confirm('Xóa thẻ này?')) return;
+  const deck = db.decks[currentDeckId];
+  deck.cards = deck.cards.filter(c => c.id !== cardId);
+  await saveDeckToFirestore(currentDeckId, deck);
+  renderCardBrowser();
+  toast('Đã xóa thẻ');
+}
+
+// ===== REVIEW =====
+function startReview(deckId) {
+  currentDeckId = deckId;
+  const cards = getDeckCards(deckId);
+  const now = Date.now();
+  const newCards = cards.filter(c => c.status === 'new').slice(0, 20);
+  const learnCards = cards.filter(c => c.status === 'learning' && c.due <= now);
+  const dueCards = cards.filter(c => c.status === 'review' && c.due <= now);
+
+  reviewQueue = [...learnCards, ...newCards, ...dueCards];
+  if (reviewQueue.length === 0) { toast('Không có thẻ nào cần ôn hôm nay! 🎉'); return; }
+
+  for (let i = reviewQueue.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [reviewQueue[i], reviewQueue[j]] = [reviewQueue[j], reviewQueue[i]];
+  }
+  reviewIndex = 0;
+
+  document.getElementById('reviewDeckName').textContent = db.decks[deckId].name;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('viewReview').classList.add('active');
+  document.getElementById('fabBtn').style.display = 'none';
+  document.getElementById('reviewDone').style.display = 'none';
+  showCurrentCard();
+}
+
+function exitReview() { reviewQueue = []; showView('decks'); }
+
+function showCurrentCard() {
+  if (reviewIndex >= reviewQueue.length) {
+    document.getElementById('flashcard').style.display = 'none';
+    document.getElementById('reviewActions').style.display = 'none';
+    document.getElementById('reviewDone').style.display = 'block';
+    updateReviewProgress();
+    return;
+  }
+  const card = reviewQueue[reviewIndex];
+  document.getElementById('flashcard').style.display = 'block';
+  document.getElementById('reviewDone').style.display = 'none';
+  document.getElementById('flashcard').classList.remove('flipped');
+  document.getElementById('reviewActions').style.display = 'none';
+  document.getElementById('cardFront').textContent = card.front;
+  document.getElementById('cardBack').textContent = card.back;
+  document.getElementById('intAgain').textContent = getIntervalText(card, 0);
+  document.getElementById('intHard').textContent = getIntervalText(card, 1);
+  document.getElementById('intGood').textContent = getIntervalText(card, 2);
+  document.getElementById('intEasy').textContent = getIntervalText(card, 3);
+  updateReviewProgress();
+}
+
+function flipCard() {
+  const fc = document.getElementById('flashcard');
+  if (!fc.classList.contains('flipped')) {
+    fc.classList.add('flipped');
+    document.getElementById('reviewActions').style.display = 'flex';
+  }
+}
+
+async function answerCard(quality) {
+  const card = reviewQueue[reviewIndex];
+  const deck = db.decks[currentDeckId];
+  const realCard = deck.cards.find(c => c.id === card.id);
+  if (realCard) {
+    sm2(realCard, quality);
+    Object.assign(card, realCard);
+  }
+
+  const entry = { date: Date.now(), deckId: currentDeckId, cardId: card.id, quality };
+  addReviewLog(entry);
+  saveDeckToFirestore(currentDeckId, deck);
+
+  if (quality === 0) {
+    const reinsert = Math.min(reviewQueue.length, reviewIndex + 3 + Math.floor(Math.random() * 3));
+    reviewQueue.splice(reinsert, 0, card);
+  }
+  reviewIndex++;
+  showCurrentCard();
+}
+
+function updateReviewProgress() {
+  const done = Math.min(reviewIndex, reviewQueue.length);
+  const pct = reviewQueue.length > 0 ? (done / reviewQueue.length * 100) : 100;
+  document.getElementById('reviewProgressFill').style.width = pct + '%';
+  const remaining = reviewQueue.slice(reviewIndex);
+  document.getElementById('cntNew').textContent = remaining.filter(c => c.status === 'new').length + ' mới';
+  document.getElementById('cntLearn').textContent = remaining.filter(c => c.status === 'learning').length + ' đang học';
+  document.getElementById('cntDue').textContent = remaining.filter(c => c.status === 'review').length + ' ôn tập';
+}
+
+// ===== STATS =====
+function calcStreak() {
+  const days = new Set();
+  db.reviewLog.forEach(r => days.add(new Date(r.date).toDateString()));
+  let streak = 0; const d = new Date();
+  while (days.has(d.toDateString())) { streak++; d.setDate(d.getDate() - 1); }
+  return streak;
+}
+
+function renderStats() {
+  const deckIds = Object.keys(db.decks);
+  let totalCards = 0, newCards = 0, learningCards = 0, reviewCards = 0, matureCards = 0;
+  deckIds.forEach(id => {
+    getDeckCards(id).forEach(c => {
+      totalCards++;
+      if (c.status === 'new') newCards++;
+      else if (c.status === 'learning') learningCards++;
+      else { reviewCards++; if (c.interval >= 21) matureCards++; }
+    });
+  });
+  const todayReviews = db.reviewLog.filter(r => new Date(r.date).toDateString() === new Date().toDateString()).length;
+
+  document.getElementById('detailedStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">Tổng thẻ</div></div>
+    <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value">${calcStreak()}</div><div class="stat-label">Streak</div></div>
+    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${todayReviews}</div><div class="stat-label">Ôn hôm nay</div></div>
+    <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value">${matureCards}</div><div class="stat-label">Thẻ thuần thục</div></div>
+  `;
+
+  let hmHTML = '<div class="heatmap">';
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toDateString();
+    const count = db.reviewLog.filter(r => new Date(r.date).toDateString() === ds).length;
+    const level = count === 0 ? 0 : count <= 5 ? 1 : count <= 15 ? 2 : count <= 30 ? 3 : 4;
+    hmHTML += `<div class="heatmap-day" data-count="${level}" title="${d.toLocaleDateString('vi')}: ${count} lượt"></div>`;
+  }
+  document.getElementById('heatmapContainer').innerHTML = hmHTML + '</div>';
+
+  const total = totalCards || 1;
+  document.getElementById('statusChart').innerHTML = `
+    <div class="status-bar">
+      <div style="width:${newCards/total*100}%;background:var(--blue)"></div>
+      <div style="width:${learningCards/total*100}%;background:var(--orange)"></div>
+      <div style="width:${(reviewCards-matureCards)/total*100}%;background:var(--green)"></div>
+      <div style="width:${matureCards/total*100}%;background:var(--primary)"></div>
+    </div>
+    <div class="status-legend">
+      <span><span class="dot" style="background:var(--blue)"></span>Mới: ${newCards}</span>
+      <span><span class="dot" style="background:var(--orange)"></span>Đang học: ${learningCards}</span>
+      <span><span class="dot" style="background:var(--green)"></span>Ôn tập: ${reviewCards - matureCards}</span>
+      <span><span class="dot" style="background:var(--primary)"></span>Thuần thục: ${matureCards}</span>
+    </div>`;
+}
+
+// ===== THEME =====
+function toggleTheme() {
+  const html = document.documentElement;
+  if (html.getAttribute('data-theme') === 'dark') {
+    html.removeAttribute('data-theme');
+    localStorage.setItem('flashmind_theme', 'auto');
+    document.getElementById('navTheme').textContent = '🌙';
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('flashmind_theme', 'dark');
+    document.getElementById('navTheme').textContent = '☀️';
+  }
+}
+
+try {
+  if (localStorage.getItem('flashmind_theme') === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('navTheme').textContent = '☀️';
+  }
+} catch(e) {}
+
+// ===== KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (document.getElementById('viewReview').classList.contains('active')) {
+    if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+    if (document.getElementById('reviewActions').style.display === 'flex') {
+      if (e.key === '1') answerCard(0);
+      if (e.key === '2') answerCard(1);
+      if (e.key === '3') answerCard(2);
+      if (e.key === '4') answerCard(3);
+    }
+  }
+});
+
+// ===== HELPERS =====
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function formatDue(ts) {
+  const diff = ts - Date.now();
+  if (diff <= 0) return 'Bây giờ';
+  const mins = Math.round(diff / 60000);
+  if (mins < 60) return mins + ' phút';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + ' giờ';
+  const days = Math.round(hrs / 24);
+  if (days < 30) return days + ' ngày';
+  return Math.round(days / 30) + ' tháng';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
