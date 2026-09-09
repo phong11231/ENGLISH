@@ -397,29 +397,20 @@ input,textarea{font-family:inherit;font-size:inherit}
 </head>
 <body>
 
-<!-- ===== LOGIN SCREEN ===== -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-logo">🧠</div>
-  <h1>FlashMind</h1>
-  <p>Học thông minh với thẻ ghi nhớ. Đăng nhập để đồng bộ dữ liệu trên mọi thiết bị.</p>
-  <button class="btn-google" onclick="signInGoogle()">
-    <svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.09 24.09 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-    Đăng nhập bằng Google
-  </button>
-</div>
-
 <!-- ===== APP ===== -->
-<div class="app" id="appShell">
+<div class="app active" id="appShell">
 <nav class="nav">
   <div class="nav-brand"><span>🧠</span> FlashMind</div>
   <div class="nav-actions">
     <button class="nav-btn active" onclick="showView('decks')" title="Bộ thẻ" id="navDecks">📚</button>
     <button class="nav-btn" onclick="showView('stats')" title="Thống kê" id="navStats">📊</button>
     <button class="nav-btn" onclick="toggleTheme()" title="Đổi theme" id="navTheme">🌙</button>
-    <img class="user-avatar" id="userAvatar" onclick="toggleUserMenu()" alt="avatar">
+    <button class="nav-btn" onclick="signInGoogle()" title="Đăng nhập Google để đồng bộ" id="navLogin">🔗</button>
+    <img class="user-avatar" id="userAvatar" onclick="toggleUserMenu()" alt="avatar" style="display:none">
   </div>
   <div class="user-menu" id="userMenu">
     <div class="user-menu-name" id="userName"></div>
+    <button class="user-menu-item" onclick="syncToCloud()">☁️ Đồng bộ lên cloud</button>
     <button class="user-menu-item danger" onclick="signOutUser()">🚪 Đăng xuất</button>
   </div>
 </nav>
@@ -511,7 +502,7 @@ input,textarea{font-family:inherit;font-size:inherit}
 </div>
 
 <!-- FAB -->
-<button class="fab" onclick="openDeckModal()" title="Tạo bộ thẻ mới" id="fabBtn" style="display:none">+</button>
+<button class="fab" onclick="openDeckModal()" title="Tạo bộ thẻ mới" id="fabBtn">+</button>
 
 <!-- DECK MODAL -->
 <div class="modal-overlay" id="deckModal">
@@ -606,6 +597,20 @@ let currentUser = null;
 let db = { decks: {}, reviewLog: [] };
 let unsubDecks = null;
 
+// ===== LOCAL STORAGE =====
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem('flashmind_data');
+    if (raw) db = JSON.parse(raw);
+    if (!db.decks) db.decks = {};
+    if (!db.reviewLog) db.reviewLog = [];
+  } catch(e) { db = { decks: {}, reviewLog: [] }; }
+}
+
+function saveLocal() {
+  try { localStorage.setItem('flashmind_data', JSON.stringify(db)); } catch(e) {}
+}
+
 // ===== AUTH =====
 function signInGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
@@ -615,8 +620,11 @@ function signInGoogle() {
 }
 
 function signOutUser() {
+  if (unsubDecks) { unsubDecks(); unsubDecks = null; }
   auth.signOut();
   toggleUserMenu();
+  loadLocal();
+  renderDecks();
 }
 
 function toggleUserMenu() {
@@ -634,18 +642,15 @@ document.addEventListener('click', e => {
 auth.onAuthStateChanged(user => {
   currentUser = user;
   if (user) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appShell').classList.add('active');
-    document.getElementById('fabBtn').style.display = 'flex';
+    document.getElementById('navLogin').style.display = 'none';
+    document.getElementById('userAvatar').style.display = 'block';
     document.getElementById('userAvatar').src = user.photoURL || '';
     document.getElementById('userName').textContent = user.displayName || user.email;
-    loadUserData();
+    mergeAndLoadCloud();
   } else {
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('appShell').classList.remove('active');
-    document.getElementById('fabBtn').style.display = 'none';
+    document.getElementById('navLogin').style.display = 'flex';
+    document.getElementById('userAvatar').style.display = 'none';
     if (unsubDecks) { unsubDecks(); unsubDecks = null; }
-    db = { decks: {}, reviewLog: [] };
   }
 });
 
@@ -653,49 +658,78 @@ auth.onAuthStateChanged(user => {
 function userDoc() {
   return firestore.collection('users').doc(currentUser.uid);
 }
+function decksCol() { return userDoc().collection('decks'); }
+function reviewLogCol() { return userDoc().collection('reviewLog'); }
 
-function decksCol() {
-  return userDoc().collection('decks');
-}
+async function mergeAndLoadCloud() {
+  const localData = JSON.parse(JSON.stringify(db));
 
-function reviewLogCol() {
-  return userDoc().collection('reviewLog');
-}
+  // Upload local decks that don't exist in cloud
+  const cloudSnap = await decksCol().get();
+  const cloudIds = new Set();
+  cloudSnap.forEach(doc => cloudIds.add(doc.id));
 
-async function loadUserData() {
-  db = { decks: {}, reviewLog: [] };
+  for (const [id, deck] of Object.entries(localData.decks)) {
+    if (!cloudIds.has(id)) {
+      await decksCol().doc(id).set(deck);
+    }
+  }
 
-  // Listen to decks in real-time
+  // Upload local review logs
+  if (localData.reviewLog.length > 0) {
+    const batch = firestore.batch();
+    localData.reviewLog.forEach(entry => {
+      batch.set(reviewLogCol().doc(), entry);
+    });
+    await batch.commit();
+  }
+
+  // Now listen to cloud data
   if (unsubDecks) unsubDecks();
   unsubDecks = decksCol().onSnapshot(snap => {
     db.decks = {};
-    snap.forEach(doc => {
-      db.decks[doc.id] = doc.data();
-    });
+    snap.forEach(doc => { db.decks[doc.id] = doc.data(); });
+    saveLocal();
     renderDecks();
   }, err => {
     console.error('Firestore error:', err);
-    toast('Lỗi tải dữ liệu');
+    toast('Lỗi tải dữ liệu cloud');
   });
 
-  // Load review log (last 5000)
   const logSnap = await reviewLogCol().orderBy('date', 'desc').limit(5000).get();
   db.reviewLog = [];
   logSnap.forEach(doc => db.reviewLog.push(doc.data()));
   db.reviewLog.reverse();
+  saveLocal();
+  toast('Đã đồng bộ với cloud!');
 }
 
-async function saveDeckToFirestore(deckId, data) {
-  await decksCol().doc(deckId).set(data);
+async function syncToCloud() {
+  if (!currentUser) { toast('Đăng nhập trước để đồng bộ'); return; }
+  await mergeAndLoadCloud();
+  toggleUserMenu();
 }
 
-async function deleteDeckFromFirestore(deckId) {
-  await decksCol().doc(deckId).delete();
+async function saveDeckData(deckId, data) {
+  saveLocal();
+  if (currentUser) {
+    try { await decksCol().doc(deckId).set(data); } catch(e) { console.error(e); }
+  }
 }
 
-async function addReviewLog(entry) {
+async function deleteDeckData(deckId) {
+  saveLocal();
+  if (currentUser) {
+    try { await decksCol().doc(deckId).delete(); } catch(e) { console.error(e); }
+  }
+}
+
+function addReviewLog(entry) {
   db.reviewLog.push(entry);
-  await reviewLogCol().add(entry);
+  saveLocal();
+  if (currentUser) {
+    reviewLogCol().add(entry).catch(e => console.error(e));
+  }
 }
 
 // ===== SM-2 ALGORITHM =====
@@ -771,7 +805,7 @@ function showView(name) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   if (name === 'decks') { document.getElementById('navDecks').classList.add('active'); renderDecks(); }
   if (name === 'stats') { document.getElementById('navStats').classList.add('active'); renderStats(); }
-  document.getElementById('fabBtn').style.display = (name === 'decks' && currentUser) ? 'flex' : 'none';
+  document.getElementById('fabBtn').style.display = (name === 'decks') ? 'flex' : 'none';
 }
 
 // ===== DECK RENDERING =====
@@ -875,12 +909,12 @@ async function saveDeck() {
   if (editingDeckId) {
     const deck = db.decks[editingDeckId];
     deck.name = name; deck.desc = desc; deck.emoji = selectedEmoji;
-    await saveDeckToFirestore(editingDeckId, deck);
+    await saveDeckData(editingDeckId, deck);
     toast('Đã cập nhật bộ thẻ!');
   } else {
     const id = crypto.randomUUID();
     const deck = { name, desc, emoji: selectedEmoji, cards: [], created: Date.now() };
-    await saveDeckToFirestore(id, deck);
+    await saveDeckData(id, deck);
     toast('Đã tạo bộ thẻ mới!');
   }
   closeDeckModal();
@@ -888,7 +922,7 @@ async function saveDeck() {
 
 async function deleteDeck(id) {
   if (!confirm('Xóa bộ thẻ "' + db.decks[id].name + '" và tất cả thẻ trong đó?')) return;
-  await deleteDeckFromFirestore(id);
+  await deleteDeckData(id);
   toast('Đã xóa bộ thẻ');
 }
 
@@ -931,7 +965,7 @@ async function saveCard() {
     deck.cards.push(card);
     toast('Đã thêm thẻ mới!');
   }
-  await saveDeckToFirestore(currentDeckId, deck);
+  await saveDeckData(currentDeckId, deck);
   closeCardModal();
   renderCardBrowser();
   if (!editingCardId) {
@@ -985,7 +1019,7 @@ async function deleteCard(cardId) {
   if (!confirm('Xóa thẻ này?')) return;
   const deck = db.decks[currentDeckId];
   deck.cards = deck.cards.filter(c => c.id !== cardId);
-  await saveDeckToFirestore(currentDeckId, deck);
+  await saveDeckData(currentDeckId, deck);
   renderCardBrowser();
   toast('Đã xóa thẻ');
 }
@@ -1059,7 +1093,7 @@ async function answerCard(quality) {
 
   const entry = { date: Date.now(), deckId: currentDeckId, cardId: card.id, quality };
   addReviewLog(entry);
-  saveDeckToFirestore(currentDeckId, deck);
+  saveDeckData(currentDeckId, deck);
 
   if (quality === 0) {
     const reinsert = Math.min(reviewQueue.length, reviewIndex + 3 + Math.floor(Math.random() * 3));
@@ -1191,6 +1225,10 @@ function toast(msg) {
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.classList.remove('show'), 2500);
 }
+
+// ===== INIT =====
+loadLocal();
+renderDecks();
 </script>
 </body>
 </html>
