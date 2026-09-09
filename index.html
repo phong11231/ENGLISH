@@ -292,6 +292,42 @@ input,textarea{font-family:inherit;font-size:inherit}
 .review-done h2{font-size:24px;font-weight:800;margin-bottom:8px}
 .review-done p{color:var(--ink-soft);margin-bottom:24px}
 
+/* ── MODE TOGGLE ── */
+.mode-toggle{display:flex;gap:4px;background:var(--surface-2);border-radius:12px;padding:3px;margin-bottom:16px}
+.mode-toggle button{flex:1;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:var(--ink-dim);transition:var(--transition)}
+.mode-toggle button.active{background:var(--primary);color:#fff;box-shadow:var(--shadow-sm)}
+.mode-toggle button:not(.active):hover{color:var(--ink)}
+
+/* ── TYPE ANSWER ── */
+.type-answer-wrap{width:100%;max-width:560px;margin-bottom:16px}
+.type-answer-input{
+  width:100%;padding:14px 18px;border-radius:14px;
+  border:2px solid var(--line-strong);background:var(--surface);
+  color:var(--ink);font-size:16px;font-weight:600;
+  transition:var(--transition);outline:none;text-align:center;
+}
+.type-answer-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
+.type-answer-input.correct{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+.type-answer-input.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.type-answer-result{
+  margin-top:10px;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;
+  text-align:center;display:none;
+}
+.type-answer-result.correct{display:block;background:var(--green-bg);color:var(--green)}
+.type-answer-result.wrong{display:block;background:var(--red-bg);color:var(--red)}
+.btn-check-answer{
+  width:100%;max-width:560px;padding:14px;border-radius:14px;font-weight:700;font-size:15px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;
+  box-shadow:0 4px 14px rgba(108,92,231,.3);transition:var(--transition);margin-bottom:10px;
+}
+.btn-check-answer:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.4)}
+.btn-next-card{
+  width:100%;max-width:560px;padding:14px;border-radius:14px;font-weight:700;font-size:15px;
+  background:var(--surface);color:var(--primary);border:2px solid var(--primary);
+  transition:var(--transition);
+}
+.btn-next-card:hover{background:var(--primary-bg)}
+
 /* ── CARD BROWSER ── */
 .card-browser-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .search-box{flex:1;min-width:200px;position:relative}
@@ -433,6 +469,10 @@ input,textarea{font-family:inherit;font-size:inherit}
       <button class="btn btn-ghost btn-sm" onclick="exitReview()">← Quay lại</button>
       <h2 style="font-size:18px;font-weight:700;flex:1" id="reviewDeckName"></h2>
     </div>
+    <div class="mode-toggle">
+      <button class="active" onclick="setReviewMode('flip')" id="modeFlip">🔄 Lật thẻ</button>
+      <button onclick="setReviewMode('type')" id="modeType">⌨️ Nhập đáp án</button>
+    </div>
     <div class="review-progress">
       <div class="review-progress-bar"><div class="review-progress-fill" id="reviewProgressFill"></div></div>
       <div class="review-counts">
@@ -460,6 +500,13 @@ input,textarea{font-family:inherit;font-size:inherit}
       <button class="review-btn good" onclick="answerCard(2)">Tốt<span class="interval" id="intGood"></span></button>
       <button class="review-btn easy" onclick="answerCard(3)">Dễ<span class="interval" id="intEasy"></span></button>
     </div>
+    <!-- Type answer mode -->
+    <div class="type-answer-wrap" id="typeAnswerWrap" style="display:none">
+      <input type="text" class="type-answer-input" id="typeAnswerInput" placeholder="Nhập đáp án..." autocomplete="off">
+      <div class="type-answer-result" id="typeAnswerResult"></div>
+    </div>
+    <button class="btn-check-answer" id="btnCheckAnswer" style="display:none" onclick="checkTypedAnswer()">Kiểm tra</button>
+    <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Thẻ tiếp theo →</button>
     <div class="review-done" id="reviewDone" style="display:none">
       <div class="done-icon">🎉</div>
       <h2>Hoàn thành!</h2>
@@ -797,6 +844,9 @@ let editingCardId = null;
 let selectedEmoji = '📖';
 let reviewQueue = [];
 let reviewIndex = 0;
+let reviewMode = 'flip'; // 'flip' or 'type'
+let viewingParentId = null; // for sub-deck navigation
+let parentStack = []; // breadcrumb stack
 
 function showView(name) {
   currentView = name;
@@ -810,6 +860,18 @@ function showView(name) {
 
 // ===== DECK RENDERING =====
 function getDeckCards(deckId) { return db.decks[deckId]?.cards || []; }
+
+function getSubDecks(parentId) {
+  return Object.entries(db.decks).filter(([id, d]) => (d.parentId || null) === parentId);
+}
+
+function getAllCardsRecursive(deckId) {
+  let cards = [...getDeckCards(deckId)];
+  getSubDecks(deckId).forEach(([subId]) => {
+    cards = cards.concat(getAllCardsRecursive(subId));
+  });
+  return cards;
+}
 
 function getDeckCounts(deckId) {
   const cards = getDeckCards(deckId);
@@ -1032,13 +1094,9 @@ async function deleteCard(cardId) {
 function startReview(deckId) {
   currentDeckId = deckId;
   const cards = getDeckCards(deckId);
-  const now = Date.now();
-  const newCards = cards.filter(c => c.status === 'new').slice(0, 20);
-  const learnCards = cards.filter(c => c.status === 'learning' && c.due <= now);
-  const dueCards = cards.filter(c => c.status === 'review' && c.due <= now);
+  if (cards.length === 0) { toast('Bộ thẻ chưa có thẻ nào!'); return; }
 
-  reviewQueue = [...learnCards, ...newCards, ...dueCards];
-  if (reviewQueue.length === 0) { toast('Không có thẻ nào cần ôn hôm nay! 🎉'); return; }
+  reviewQueue = [...cards];
 
   for (let i = reviewQueue.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -1056,10 +1114,20 @@ function startReview(deckId) {
 
 function exitReview() { reviewQueue = []; showView('decks'); }
 
+function setReviewMode(mode) {
+  reviewMode = mode;
+  document.getElementById('modeFlip').classList.toggle('active', mode === 'flip');
+  document.getElementById('modeType').classList.toggle('active', mode === 'type');
+  showCurrentCard();
+}
+
 function showCurrentCard() {
   if (reviewIndex >= reviewQueue.length) {
     document.getElementById('flashcard').style.display = 'none';
     document.getElementById('reviewActions').style.display = 'none';
+    document.getElementById('typeAnswerWrap').style.display = 'none';
+    document.getElementById('btnCheckAnswer').style.display = 'none';
+    document.getElementById('btnNextCard').style.display = 'none';
     document.getElementById('reviewDone').style.display = 'block';
     updateReviewProgress();
     return;
@@ -1075,15 +1143,70 @@ function showCurrentCard() {
   document.getElementById('intHard').textContent = getIntervalText(card, 1);
   document.getElementById('intGood').textContent = getIntervalText(card, 2);
   document.getElementById('intEasy').textContent = getIntervalText(card, 3);
+
+  // Type mode UI
+  const typeWrap = document.getElementById('typeAnswerWrap');
+  const btnCheck = document.getElementById('btnCheckAnswer');
+  const btnNext = document.getElementById('btnNextCard');
+  const typeInput = document.getElementById('typeAnswerInput');
+  const typeResult = document.getElementById('typeAnswerResult');
+  if (reviewMode === 'type') {
+    typeWrap.style.display = 'block';
+    btnCheck.style.display = 'block';
+    btnNext.style.display = 'none';
+    typeInput.value = '';
+    typeInput.className = 'type-answer-input';
+    typeResult.className = 'type-answer-result';
+    typeResult.style.display = 'none';
+    setTimeout(() => typeInput.focus(), 100);
+  } else {
+    typeWrap.style.display = 'none';
+    btnCheck.style.display = 'none';
+    btnNext.style.display = 'none';
+  }
   updateReviewProgress();
 }
 
 function flipCard() {
+  if (reviewMode === 'type') return;
   const fc = document.getElementById('flashcard');
   if (!fc.classList.contains('flipped')) {
     fc.classList.add('flipped');
     document.getElementById('reviewActions').style.display = 'flex';
   }
+}
+
+function normalize(s) { return s.trim().toLowerCase().replace(/\s+/g, ' '); }
+
+function checkTypedAnswer() {
+  const card = reviewQueue[reviewIndex];
+  const typed = document.getElementById('typeAnswerInput').value;
+  const correct = normalize(card.back) === normalize(typed);
+  const input = document.getElementById('typeAnswerInput');
+  const result = document.getElementById('typeAnswerResult');
+
+  document.getElementById('flashcard').classList.add('flipped');
+
+  if (correct) {
+    input.className = 'type-answer-input correct';
+    result.className = 'type-answer-result correct';
+    result.textContent = '✓ Chính xác!';
+    result.style.display = 'block';
+    answerCard(2);
+    setTimeout(() => showCurrentCard(), 1200);
+  } else {
+    input.className = 'type-answer-input wrong';
+    result.className = 'type-answer-result wrong';
+    result.innerHTML = '✗ Sai — Đáp án: <strong>' + esc(card.back) + '</strong>';
+    result.style.display = 'block';
+    document.getElementById('btnCheckAnswer').style.display = 'none';
+    document.getElementById('btnNextCard').style.display = 'block';
+  }
+}
+
+function nextAfterType() {
+  answerCard(0);
+  showCurrentCard();
 }
 
 async function answerCard(quality) {
@@ -1195,8 +1318,16 @@ try {
 
 // ===== KEYBOARD SHORTCUTS =====
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   if (document.getElementById('viewReview').classList.contains('active')) {
+    if (e.target.id === 'typeAnswerInput' && e.key === 'Enter') {
+      e.preventDefault();
+      const btnCheck = document.getElementById('btnCheckAnswer');
+      const btnNext = document.getElementById('btnNextCard');
+      if (btnCheck.style.display !== 'none') checkTypedAnswer();
+      else if (btnNext.style.display !== 'none') nextAfterType();
+      return;
+    }
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     if (e.code === 'Space') { e.preventDefault(); flipCard(); }
     if (document.getElementById('reviewActions').style.display === 'flex') {
       if (e.key === '1') answerCard(0);
