@@ -7,7 +7,6 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* ===== RESET & TOKENS ===== */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#f0f2f5;--surface:#fff;--surface-2:#f7f8fa;
@@ -52,117 +51,58 @@
   --shadow-sm:0 1px 3px rgba(0,0,0,.2);--shadow-md:0 4px 16px rgba(0,0,0,.25);
   --shadow-lg:0 12px 40px rgba(0,0,0,.3);--shadow-xl:0 20px 60px rgba(0,0,0,.35);
 }
-
 html{scroll-behavior:smooth}
-body{
-  font-family:var(--font);font-size:15px;line-height:1.6;
-  background:var(--bg);color:var(--ink);
-  -webkit-font-smoothing:antialiased;min-height:100vh;
-}
+body{font-family:var(--font);font-size:15px;line-height:1.6;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100vh}
 button{font-family:inherit;cursor:pointer;border:0;background:none}
-input,textarea{font-family:inherit;font-size:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit}
 
-/* ===== LOGIN SCREEN ===== */
-.login-screen{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100vh;padding:24px;text-align:center;
-}
-.login-logo{font-size:64px;margin-bottom:16px}
-.login-screen h1{font-size:32px;font-weight:900;color:var(--primary);margin-bottom:8px}
-.login-screen p{color:var(--ink-soft);margin-bottom:32px;max-width:400px}
-.btn-google{
-  display:inline-flex;align-items:center;gap:12px;
-  background:var(--surface);color:var(--ink);
-  border:2px solid var(--line-strong);border-radius:14px;
-  padding:14px 28px;font-size:16px;font-weight:700;
-  box-shadow:var(--shadow-sm);transition:var(--transition);
-}
-.btn-google:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.btn-google img{width:22px;height:22px}
-
-/* ===== APP SHELL ===== */
-.app{display:none;flex-direction:column;min-height:100vh}
-.app.active{display:flex}
-
-/* ── NAV ── */
-.nav{
-  position:sticky;top:0;z-index:100;
-  background:rgba(255,255,255,.85);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--line);
-  padding:0 24px;height:64px;
-  display:flex;align-items:center;justify-content:space-between;
-}
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
 [data-theme="dark"] .nav{background:rgba(30,30,36,.85)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .nav{background:rgba(30,30,36,.85)}}
 .nav-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;color:var(--primary)}
 .nav-brand span{font-size:24px}
-.nav-actions{display:flex;align-items:center;gap:8px}
-.nav-btn{
-  width:40px;height:40px;border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--ink-soft);transition:var(--transition);font-size:18px;
-}
+.nav-actions{display:flex;align-items:center;gap:6px}
+.nav-btn{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:var(--transition);font-size:18px}
 .nav-btn:hover{background:var(--primary-bg);color:var(--primary)}
 .nav-btn.active{background:var(--primary-bg);color:var(--primary)}
-.user-avatar{
-  width:34px;height:34px;border-radius:10px;object-fit:cover;
-  border:2px solid var(--line);cursor:pointer;transition:var(--transition);
-}
-.user-avatar:hover{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
-.user-menu{
-  position:absolute;top:60px;right:20px;
-  background:var(--surface);border-radius:var(--r-md);
-  border:1px solid var(--line);box-shadow:var(--shadow-lg);
-  padding:8px;min-width:200px;display:none;z-index:110;
-}
+.user-avatar{width:34px;height:34px;border-radius:10px;object-fit:cover;border:2px solid var(--line);cursor:pointer;transition:var(--transition)}
+.user-avatar:hover{border-color:var(--primary)}
+.user-menu{position:absolute;top:60px;right:20px;background:var(--surface);border-radius:var(--r-md);border:1px solid var(--line);box-shadow:var(--shadow-lg);padding:8px;min-width:200px;display:none;z-index:110}
 .user-menu.active{display:block}
-.user-menu-item{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;
-  color:var(--ink);width:100%;transition:var(--transition);
-}
+.user-menu-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink);width:100%;transition:var(--transition)}
 .user-menu-item:hover{background:var(--primary-bg);color:var(--primary)}
 .user-menu-item.danger:hover{background:var(--red-bg);color:var(--red)}
 .user-menu-name{padding:10px 14px;font-size:13px;color:var(--ink-dim);border-bottom:1px solid var(--line);margin-bottom:4px}
 
-/* ── MAIN ── */
+/* MAIN */
 .main{flex:1;max-width:900px;width:100%;margin:0 auto;padding:24px 20px 100px}
-
-/* ── VIEWS ── */
 .view{display:none;animation:fadeIn .3s ease}
 .view.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-/* ── HEADER ── */
 .page-header{margin-bottom:28px}
 .page-header h1{font-size:28px;font-weight:800;letter-spacing:-.02em}
 .page-header p{color:var(--ink-soft);margin-top:4px}
 
-/* ── STATS ROW ── */
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px}
-.stat-card{
-  background:var(--surface);border-radius:var(--r-md);padding:16px 18px;
-  border:1px solid var(--line);transition:var(--transition);
-}
-.stat-card:hover{box-shadow:var(--shadow-sm);border-color:var(--line-strong)}
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:28px}
+.stat-card{background:var(--surface);border-radius:var(--r-md);padding:16px 18px;border:1px solid var(--line);transition:var(--transition)}
+.stat-card:hover{box-shadow:var(--shadow-sm)}
 .stat-card .stat-icon{font-size:22px;margin-bottom:6px}
 .stat-card .stat-value{font-size:26px;font-weight:800;letter-spacing:-.02em}
 .stat-card .stat-label{font-size:12px;color:var(--ink-dim);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
 
-/* ── DECK LIST ── */
+/* BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:6px;margin-bottom:16px;font-size:14px;font-weight:600;flex-wrap:wrap}
+.breadcrumb a{color:var(--primary);text-decoration:none;cursor:pointer}
+.breadcrumb a:hover{text-decoration:underline}
+.breadcrumb .sep{color:var(--ink-dim)}
+
+/* DECK LIST */
 .deck-list{display:flex;flex-direction:column;gap:10px}
-.deck-item{
-  background:var(--surface);border-radius:var(--r-md);padding:18px 20px;
-  border:1px solid var(--line);cursor:pointer;
-  display:flex;align-items:center;gap:16px;
-  transition:var(--transition);position:relative;overflow:hidden;
-}
+.deck-item{background:var(--surface);border-radius:var(--r-md);padding:18px 20px;border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:16px;transition:var(--transition);position:relative}
 .deck-item:hover{box-shadow:var(--shadow-md);border-color:var(--primary);transform:translateY(-2px)}
-.deck-item .deck-color{
-  width:48px;height:48px;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;
-}
+.deck-item .deck-color{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;background:var(--primary-bg)}
 .deck-item .deck-info{flex:1;min-width:0}
 .deck-item .deck-name{font-weight:700;font-size:16px;margin-bottom:2px}
 .deck-item .deck-meta{font-size:13px;color:var(--ink-dim);display:flex;gap:12px;flex-wrap:wrap}
@@ -172,111 +112,69 @@ input,textarea{font-family:inherit;font-size:inherit}
 .badge-new{background:var(--blue-bg);color:var(--blue)}
 .badge-learn{background:var(--orange-bg);color:#e67e22}
 .badge-due{background:var(--green-bg);color:var(--green)}
+.badge-sub{background:var(--primary-bg);color:var(--primary)}
 .deck-actions{display:flex;gap:4px}
-.deck-action-btn{
-  width:36px;height:36px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--ink-dim);font-size:16px;transition:var(--transition);
-}
+.deck-action-btn{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:16px;transition:var(--transition)}
 .deck-action-btn:hover{background:var(--primary-bg);color:var(--primary)}
 .deck-action-btn.delete:hover{background:var(--red-bg);color:var(--red)}
 
-/* ── BUTTONS ── */
-.btn{
-  display:inline-flex;align-items:center;gap:8px;
-  font-weight:700;font-size:14px;border-radius:12px;padding:12px 22px;
-  transition:var(--transition);position:relative;overflow:hidden;
-}
-.btn-primary{
-  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-  color:#fff;box-shadow:0 4px 14px rgba(108,92,231,.3);
-}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px;border-radius:12px;padding:12px 22px;transition:var(--transition)}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 4px 14px rgba(108,92,231,.3)}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.4)}
-.btn-primary:active{transform:translateY(0)}
 .btn-ghost{background:var(--surface);color:var(--ink);border:1.5px solid var(--line-strong)}
 .btn-ghost:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-bg)}
 .btn-danger{background:var(--red-bg);color:var(--red)}
 .btn-danger:hover{background:var(--red);color:#fff}
 .btn-sm{padding:8px 14px;font-size:13px;border-radius:10px}
 .btn-block{width:100%;justify-content:center}
-
-.fab{
-  position:fixed;bottom:24px;right:24px;z-index:90;
-  width:56px;height:56px;border-radius:18px;
-  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-  color:#fff;font-size:26px;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:var(--shadow-lg);transition:var(--transition);
-}
+.fab{position:fixed;bottom:24px;right:24px;z-index:90;width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-lg);transition:var(--transition)}
 .fab:hover{transform:translateY(-3px) scale(1.05);box-shadow:var(--shadow-xl)}
 
-/* ── MODAL ── */
-.modal-overlay{
-  position:fixed;inset:0;z-index:200;
-  background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
-  display:none;align-items:center;justify-content:center;padding:20px;
-}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
 .modal-overlay.active{display:flex}
-.modal{
-  background:var(--surface);border-radius:var(--r-xl);
-  width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
-  box-shadow:var(--shadow-xl);animation:modalIn .3s cubic-bezier(.34,1.56,.64,1);
-}
+.modal{background:var(--surface);border-radius:var(--r-xl);width:100%;max-width:520px;box-shadow:var(--shadow-xl);animation:modalIn .3s cubic-bezier(.34,1.56,.64,1);margin:40px 0}
 @keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .modal-header{padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between}
 .modal-header h2{font-size:20px;font-weight:800}
-.modal-close{
-  width:36px;height:36px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--ink-dim);font-size:20px;transition:var(--transition);
-}
+.modal-close{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:20px;transition:var(--transition)}
 .modal-close:hover{background:var(--red-bg);color:var(--red)}
 .modal-body{padding:20px 24px 24px}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:var(--ink-soft)}
-.form-group input,.form-group textarea,.form-group select{
-  width:100%;padding:12px 14px;border-radius:12px;
-  border:1.5px solid var(--line-strong);background:var(--surface-2);
-  color:var(--ink);font-size:15px;transition:var(--transition);outline:none;
-}
-.form-group input:focus,.form-group textarea:focus,.form-group select:focus{
-  border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg);
-}
-.form-group textarea{resize:vertical;min-height:100px}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface-2);color:var(--ink);font-size:15px;transition:var(--transition);outline:none}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
+.form-group textarea{resize:vertical;min-height:80px}
 .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 
-/* ── REVIEW VIEW ── */
+/* REVIEW */
 .review-container{display:flex;flex-direction:column;align-items:center;padding:20px 0;min-height:60vh}
-.review-progress{width:100%;margin-bottom:24px}
+.review-progress{width:100%;margin-bottom:20px}
 .review-progress-bar{width:100%;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .review-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary),var(--green));transition:width .4s ease}
 .review-counts{display:flex;gap:16px;justify-content:center;margin-top:10px;font-size:13px;font-weight:600}
-.review-counts .cnt-new{color:var(--blue)}
-.review-counts .cnt-learn{color:var(--orange)}
-.review-counts .cnt-due{color:var(--green)}
+.review-counts .cnt-new{color:var(--blue)}.review-counts .cnt-learn{color:var(--orange)}.review-counts .cnt-due{color:var(--green)}
+.mode-toggle{display:flex;gap:4px;background:var(--surface-2);border-radius:12px;padding:3px;margin-bottom:16px}
+.mode-toggle button{flex:1;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:var(--ink-dim);transition:var(--transition)}
+.mode-toggle button.active{background:var(--primary);color:#fff;box-shadow:var(--shadow-sm)}
+.mode-toggle button:not(.active):hover{color:var(--ink)}
 
 .flashcard{width:100%;max-width:560px;min-height:320px;perspective:1200px;cursor:pointer;margin-bottom:28px}
-.flashcard-inner{
-  width:100%;min-height:320px;transition:transform .6s cubic-bezier(.4,0,.2,1);
-  transform-style:preserve-3d;position:relative;
-}
+.flashcard-inner{width:100%;min-height:320px;transition:transform .6s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;position:relative}
 .flashcard.flipped .flashcard-inner{transform:rotateY(180deg)}
-.flashcard-face{
-  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
-  background:var(--surface);border-radius:var(--r-xl);border:2px solid var(--line);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:40px 32px;text-align:center;box-shadow:var(--shadow-md);
-}
+.flashcard-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border-radius:var(--r-xl);border:2px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;text-align:center;box-shadow:var(--shadow-md)}
 .flashcard-face.back{transform:rotateY(180deg)}
 .flashcard-label{position:absolute;top:16px;left:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-dim)}
-.flashcard-content{font-size:22px;font-weight:600;line-height:1.5;word-break:break-word}
+.flashcard-content{font-size:22px;font-weight:600;line-height:1.5;word-break:break-word;max-width:100%}
+.flashcard-content img{max-width:100%;border-radius:10px;margin:8px 0}
 .flashcard-hint{position:absolute;bottom:16px;font-size:12px;color:var(--ink-dim)}
+.flashcard-tags{position:absolute;top:16px;right:20px;display:flex;gap:4px;flex-wrap:wrap}
+.flashcard-tags .tag{font-size:10px;padding:2px 8px;border-radius:6px;background:var(--primary-bg);color:var(--primary);font-weight:600}
+.cloze-blank{background:var(--primary-bg);color:var(--primary);padding:2px 12px;border-radius:6px;font-weight:700;border-bottom:2px solid var(--primary)}
 
 .review-actions{display:flex;gap:10px;width:100%;max-width:560px}
-.review-btn{
-  flex:1;padding:14px 8px;border-radius:14px;font-weight:700;font-size:14px;
-  text-align:center;transition:var(--transition);border:2px solid transparent;
-}
+.review-btn{flex:1;padding:14px 8px;border-radius:14px;font-weight:700;font-size:14px;text-align:center;transition:var(--transition);border:2px solid transparent}
 .review-btn .interval{display:block;font-size:11px;font-weight:500;opacity:.7;margin-top:2px}
 .review-btn.again{background:var(--red-bg);color:var(--red);border-color:rgba(225,112,85,.2)}
 .review-btn.again:hover{background:var(--red);color:#fff}
@@ -292,105 +190,65 @@ input,textarea{font-family:inherit;font-size:inherit}
 .review-done h2{font-size:24px;font-weight:800;margin-bottom:8px}
 .review-done p{color:var(--ink-soft);margin-bottom:24px}
 
-/* ── MODE TOGGLE ── */
-.mode-toggle{display:flex;gap:4px;background:var(--surface-2);border-radius:12px;padding:3px;margin-bottom:16px}
-.mode-toggle button{flex:1;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:var(--ink-dim);transition:var(--transition)}
-.mode-toggle button.active{background:var(--primary);color:#fff;box-shadow:var(--shadow-sm)}
-.mode-toggle button:not(.active):hover{color:var(--ink)}
-
-/* ── TYPE ANSWER ── */
+/* TYPE ANSWER */
 .type-answer-wrap{width:100%;max-width:560px;margin-bottom:16px}
-.type-answer-input{
-  width:100%;padding:14px 18px;border-radius:14px;
-  border:2px solid var(--line-strong);background:var(--surface);
-  color:var(--ink);font-size:16px;font-weight:600;
-  transition:var(--transition);outline:none;text-align:center;
-}
+.type-answer-input{width:100%;padding:14px 18px;border-radius:14px;border:2px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:16px;font-weight:600;transition:var(--transition);outline:none;text-align:center}
 .type-answer-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
 .type-answer-input.correct{border-color:var(--green);background:var(--green-bg);color:var(--green)}
 .type-answer-input.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red)}
-.type-answer-result{
-  margin-top:10px;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;
-  text-align:center;display:none;
-}
+.type-answer-result{margin-top:10px;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;text-align:center;display:none}
 .type-answer-result.correct{display:block;background:var(--green-bg);color:var(--green)}
 .type-answer-result.wrong{display:block;background:var(--red-bg);color:var(--red)}
-.btn-check-answer{
-  width:100%;max-width:560px;padding:14px;border-radius:14px;font-weight:700;font-size:15px;
-  background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;
-  box-shadow:0 4px 14px rgba(108,92,231,.3);transition:var(--transition);margin-bottom:10px;
-}
-.btn-check-answer:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.4)}
-.btn-next-card{
-  width:100%;max-width:560px;padding:14px;border-radius:14px;font-weight:700;font-size:15px;
-  background:var(--surface);color:var(--primary);border:2px solid var(--primary);
-  transition:var(--transition);
-}
+.btn-check-answer,.btn-next-card{width:100%;max-width:560px;padding:14px;border-radius:14px;font-weight:700;font-size:15px;transition:var(--transition);margin-bottom:10px}
+.btn-check-answer{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 4px 14px rgba(108,92,231,.3)}
+.btn-check-answer:hover{transform:translateY(-2px)}
+.btn-next-card{background:var(--surface);color:var(--primary);border:2px solid var(--primary)}
 .btn-next-card:hover{background:var(--primary-bg)}
+.undo-btn{position:absolute;top:16px;right:16px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;background:var(--surface-2);color:var(--ink-dim);border:1px solid var(--line);transition:var(--transition)}
+.undo-btn:hover{background:var(--primary-bg);color:var(--primary)}
 
-/* ── CARD BROWSER ── */
+/* CARD BROWSER */
 .card-browser-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .search-box{flex:1;min-width:200px;position:relative}
-.search-box input{
-  width:100%;padding:10px 14px 10px 38px;border-radius:12px;
-  border:1.5px solid var(--line-strong);background:var(--surface);
-  color:var(--ink);font-size:14px;transition:var(--transition);outline:none;
-}
+.search-box input{width:100%;padding:10px 14px 10px 38px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:14px;transition:var(--transition);outline:none}
 .search-box input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
 .search-box::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px}
 .card-table{width:100%;border-collapse:separate;border-spacing:0}
 .card-table th{text-align:left;font-size:12px;font-weight:700;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;border-bottom:2px solid var(--line)}
 .card-table td{padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
 .card-table tr:hover td{background:var(--primary-bg)}
-.card-table .card-front-col{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.card-table .card-back-col{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-soft)}
+.card-table .card-front-col{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.card-table .card-back-col{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-soft)}
 .card-table .card-status{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase}
 .status-new{background:var(--blue-bg);color:var(--blue)}
 .status-learning{background:var(--orange-bg);color:#e67e22}
 .status-review{background:var(--green-bg);color:var(--green)}
-.card-edit-btn{
-  width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;
-  color:var(--ink-dim);font-size:14px;transition:var(--transition);
-}
+.status-suspended{background:var(--line);color:var(--ink-dim)}
+.card-edit-btn{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:14px;transition:var(--transition)}
 .card-edit-btn:hover{background:var(--primary-bg);color:var(--primary)}
+.tag-list{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--primary-bg);color:var(--primary);font-weight:600;cursor:pointer}
+.tag:hover{background:var(--primary);color:#fff}
+.tag-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tag-filter .tag.active{background:var(--primary);color:#fff}
+.leech-badge{background:var(--red-bg);color:var(--red);font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700}
 
-/* ── EMPTY / LOADING ── */
+/* EMPTY / LOADING */
 .empty-state{text-align:center;padding:60px 20px}
 .empty-state .empty-icon{font-size:56px;margin-bottom:12px}
 .empty-state h3{font-size:18px;font-weight:700;margin-bottom:6px}
 .empty-state p{color:var(--ink-soft);margin-bottom:20px;font-size:14px}
 
-.loading-spinner{
-  display:flex;align-items:center;justify-content:center;padding:60px;
-}
-.loading-spinner::after{
-  content:'';width:32px;height:32px;border-radius:50%;
-  border:3px solid var(--line);border-top-color:var(--primary);
-  animation:spin .6s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── TOAST ── */
-.toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
-  background:var(--ink);color:var(--bg);
-  padding:12px 22px;border-radius:14px;font-weight:600;font-size:14px;
-  box-shadow:var(--shadow-lg);z-index:300;
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;
-  opacity:0;pointer-events:none;
-}
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--bg);padding:12px 22px;border-radius:14px;font-weight:600;font-size:14px;box-shadow:var(--shadow-lg);z-index:300;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
-/* ── EMOJI PICKER ── */
-.emoji-pick{
-  width:42px;height:42px;border-radius:10px;font-size:22px;
-  display:flex;align-items:center;justify-content:center;
-  border:2px solid var(--line);transition:var(--transition);background:var(--surface-2);
-}
-.emoji-pick:hover{border-color:var(--primary);background:var(--primary-bg)}
-.emoji-pick.selected{border-color:var(--primary);background:var(--primary-bg);box-shadow:0 0 0 3px var(--primary-bg)}
+/* EMOJI PICKER */
+.emoji-pick{width:42px;height:42px;border-radius:10px;font-size:22px;display:flex;align-items:center;justify-content:center;border:2px solid var(--line);transition:var(--transition);background:var(--surface-2)}
+.emoji-pick:hover{border-color:var(--primary)}
+.emoji-pick.selected{border-color:var(--primary);background:var(--primary-bg)}
 
-/* heatmap */
+/* HEATMAP */
 .heatmap{display:flex;gap:3px;flex-wrap:wrap}
 .heatmap-day{width:16px;height:16px;border-radius:3px;background:var(--line);transition:var(--transition)}
 .heatmap-day:hover{outline:2px solid var(--primary);outline-offset:1px}
@@ -404,36 +262,42 @@ input,textarea{font-family:inherit;font-size:inherit}
 .status-legend span{display:flex;align-items:center;gap:6px}
 .status-legend .dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
 
-/* ── RESPONSIVE ── */
+/* TABS */
+.tab-bar{display:flex;gap:2px;background:var(--surface-2);border-radius:12px;padding:3px;margin-bottom:16px}
+.tab-bar button{flex:1;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:700;color:var(--ink-dim);transition:var(--transition);white-space:nowrap}
+.tab-bar button.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+
+/* BULK ADD */
+.bulk-textarea{width:100%;min-height:200px;padding:14px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface-2);color:var(--ink);font-size:14px;font-family:'Consolas','Monaco',monospace;line-height:1.8;resize:vertical}
+.bulk-textarea:focus{border-color:var(--primary);outline:none}
+
+/* DAILY GOAL */
+.daily-goal{background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
+.goal-ring{width:60px;height:60px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+.goal-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.goal-ring circle{fill:none;stroke-width:5}
+.goal-ring .bg{stroke:var(--line)}
+.goal-ring .fill{stroke:var(--primary);stroke-linecap:round;transition:stroke-dashoffset .5s ease}
+.goal-info{flex:1}
+.goal-info .goal-title{font-weight:700;font-size:15px}
+.goal-info .goal-sub{font-size:13px;color:var(--ink-dim)}
+
+/* RESPONSIVE */
 @media(max-width:640px){
-  .nav{padding:0 16px;height:56px}
-  .nav-brand{font-size:17px}
-  .main{padding:16px 14px 100px}
-  .page-header h1{font-size:22px}
-  .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}
-  .stat-card{padding:12px 14px}
-  .stat-card .stat-value{font-size:22px}
-  .deck-item{padding:14px 16px;gap:12px}
-  .deck-item .deck-color{width:42px;height:42px;font-size:20px}
-  .flashcard-content{font-size:18px}
-  .review-actions{flex-wrap:wrap}
-  .review-btn{min-width:calc(50% - 5px)}
-  .modal{border-radius:var(--r-lg)}
-  .fab{bottom:16px;right:16px;width:50px;height:50px;border-radius:15px;font-size:22px}
-  .card-table{font-size:13px}
-  .card-table th,.card-table td{padding:8px 10px}
+  .nav{padding:0 16px;height:56px}.nav-brand{font-size:17px}
+  .main{padding:16px 14px 100px}.page-header h1{font-size:22px}
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}.stat-card{padding:12px 14px}.stat-card .stat-value{font-size:22px}
+  .deck-item{padding:14px 16px;gap:12px}.deck-item .deck-color{width:42px;height:42px;font-size:20px}
+  .flashcard-content{font-size:18px}.review-actions{flex-wrap:wrap}.review-btn{min-width:calc(50% - 5px)}
+  .modal{border-radius:var(--r-lg)}.fab{bottom:16px;right:16px;width:50px;height:50px;border-radius:15px;font-size:22px}
+  .card-table{font-size:13px}.card-table th,.card-table td{padding:8px 10px}
   .card-table .card-front-col,.card-table .card-back-col{max-width:120px}
-  .login-screen h1{font-size:26px}
 }
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:var(--ink-dim)}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
 </style>
 </head>
 <body>
 
-<!-- ===== APP ===== -->
 <div class="app active" id="appShell">
 <nav class="nav">
   <div class="nav-brand"><span>🧠</span> FlashMind</div>
@@ -441,12 +305,13 @@ input,textarea{font-family:inherit;font-size:inherit}
     <button class="nav-btn active" onclick="showView('decks')" title="Bộ thẻ" id="navDecks">📚</button>
     <button class="nav-btn" onclick="showView('stats')" title="Thống kê" id="navStats">📊</button>
     <button class="nav-btn" onclick="toggleTheme()" title="Đổi theme" id="navTheme">🌙</button>
-    <button class="nav-btn" onclick="signInGoogle()" title="Đăng nhập Google để đồng bộ" id="navLogin">🔗</button>
+    <button class="nav-btn" onclick="signInGoogle()" title="Đăng nhập Google" id="navLogin">🔗</button>
     <img class="user-avatar" id="userAvatar" onclick="toggleUserMenu()" alt="avatar" style="display:none">
   </div>
   <div class="user-menu" id="userMenu">
     <div class="user-menu-name" id="userName"></div>
-    <button class="user-menu-item" onclick="syncToCloud()">☁️ Đồng bộ lên cloud</button>
+    <button class="user-menu-item" onclick="syncToCloud()">☁️ Đồng bộ cloud</button>
+    <button class="user-menu-item" onclick="exportAllData()">📤 Xuất dữ liệu</button>
     <button class="user-menu-item danger" onclick="signOutUser()">🚪 Đăng xuất</button>
   </div>
 </nav>
@@ -458,20 +323,23 @@ input,textarea{font-family:inherit;font-size:inherit}
     <h1>Bộ thẻ của bạn</h1>
     <p>Chọn bộ thẻ để bắt đầu ôn tập</p>
   </div>
+  <div id="dailyGoalWrap"></div>
   <div class="stats-row" id="globalStats"></div>
-  <div id="deckListWrap"><div class="loading-spinner"></div></div>
+  <div id="breadcrumbWrap"></div>
+  <div id="deckListWrap"></div>
 </div>
 
 <!-- REVIEW VIEW -->
 <div class="view" id="viewReview">
-  <div class="review-container">
+  <div class="review-container" style="position:relative">
+    <button class="undo-btn" id="undoBtn" style="display:none" onclick="undoAnswer()">↩ Hoàn tác</button>
     <div style="width:100%;display:flex;align-items:center;gap:12px;margin-bottom:8px">
       <button class="btn btn-ghost btn-sm" onclick="exitReview()">← Quay lại</button>
       <h2 style="font-size:18px;font-weight:700;flex:1" id="reviewDeckName"></h2>
     </div>
-    <div class="mode-toggle">
-      <button class="active" onclick="setReviewMode('flip')" id="modeFlip">🔄 Lật thẻ</button>
-      <button onclick="setReviewMode('type')" id="modeType">⌨️ Nhập đáp án</button>
+    <div class="mode-toggle" id="modeIndicator" style="pointer-events:none">
+      <button id="modeFlip">🔄 Lật thẻ</button>
+      <button id="modeType">⌨️ Nhập đáp án</button>
     </div>
     <div class="review-progress">
       <div class="review-progress-bar"><div class="review-progress-fill" id="reviewProgressFill"></div></div>
@@ -486,7 +354,8 @@ input,textarea{font-family:inherit;font-size:inherit}
         <div class="flashcard-face front">
           <div class="flashcard-label">Câu hỏi</div>
           <div class="flashcard-content" id="cardFront"></div>
-          <div class="flashcard-hint">Nhấn để xem đáp án</div>
+          <div class="flashcard-tags" id="cardTags"></div>
+          <div class="flashcard-hint">Nhấn để xem đáp án · Space</div>
         </div>
         <div class="flashcard-face back">
           <div class="flashcard-label">Đáp án</div>
@@ -500,17 +369,16 @@ input,textarea{font-family:inherit;font-size:inherit}
       <button class="review-btn good" onclick="answerCard(2)">Tốt<span class="interval" id="intGood"></span></button>
       <button class="review-btn easy" onclick="answerCard(3)">Dễ<span class="interval" id="intEasy"></span></button>
     </div>
-    <!-- Type answer mode -->
     <div class="type-answer-wrap" id="typeAnswerWrap" style="display:none">
       <input type="text" class="type-answer-input" id="typeAnswerInput" placeholder="Nhập đáp án..." autocomplete="off">
       <div class="type-answer-result" id="typeAnswerResult"></div>
     </div>
-    <button class="btn-check-answer" id="btnCheckAnswer" style="display:none" onclick="checkTypedAnswer()">Kiểm tra</button>
-    <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Thẻ tiếp theo →</button>
+    <button class="btn-check-answer" id="btnCheckAnswer" style="display:none" onclick="checkTypedAnswer()">Kiểm tra (Enter)</button>
+    <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Thẻ tiếp theo → (Enter)</button>
     <div class="review-done" id="reviewDone" style="display:none">
       <div class="done-icon">🎉</div>
       <h2>Hoàn thành!</h2>
-      <p>Bạn đã ôn hết tất cả thẻ hôm nay. Quay lại sau nhé!</p>
+      <p>Bạn đã ôn hết tất cả thẻ. Quay lại sau nhé!</p>
       <button class="btn btn-primary" onclick="exitReview()">Quay về bộ thẻ</button>
     </div>
   </div>
@@ -518,11 +386,15 @@ input,textarea{font-family:inherit;font-size:inherit}
 
 <!-- CARD BROWSER VIEW -->
 <div class="view" id="viewBrowser">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
     <button class="btn btn-ghost btn-sm" onclick="exitBrowser()">← Quay lại</button>
     <h2 style="font-size:18px;font-weight:700;flex:1" id="browserDeckName"></h2>
+    <button class="btn btn-ghost btn-sm" onclick="openBulkAddModal()">📋 Thêm hàng loạt</button>
+    <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📥 Nhập file</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportDeck()">📤 Xuất</button>
     <button class="btn btn-primary btn-sm" onclick="openCardModal()">+ Thêm thẻ</button>
   </div>
+  <div id="tagFilterWrap"></div>
   <div class="card-browser-header">
     <div class="search-box"><input type="text" placeholder="Tìm thẻ..." id="cardSearch" oninput="filterCards()"></div>
   </div>
@@ -531,10 +403,7 @@ input,textarea{font-family:inherit;font-size:inherit}
 
 <!-- STATS VIEW -->
 <div class="view" id="viewStats">
-  <div class="page-header">
-    <h1>Thống kê</h1>
-    <p>Tiến độ học tập của bạn</p>
-  </div>
+  <div class="page-header"><h1>Thống kê</h1><p>Tiến độ học tập của bạn</p></div>
   <div class="stats-row" id="detailedStats"></div>
   <div style="background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);padding:24px;margin-top:16px">
     <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Lịch sử ôn tập 30 ngày qua</h3>
@@ -548,27 +417,17 @@ input,textarea{font-family:inherit;font-size:inherit}
 </main>
 </div>
 
-<!-- FAB -->
 <button class="fab" onclick="openDeckModal()" title="Tạo bộ thẻ mới" id="fabBtn">+</button>
 
 <!-- DECK MODAL -->
 <div class="modal-overlay" id="deckModal">
   <div class="modal">
-    <div class="modal-header">
-      <h2 id="deckModalTitle">Tạo bộ thẻ mới</h2>
-      <button class="modal-close" onclick="closeDeckModal()">✕</button>
-    </div>
+    <div class="modal-header"><h2 id="deckModalTitle">Tạo bộ thẻ mới</h2><button class="modal-close" onclick="closeDeckModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>Tên bộ thẻ</label>
-        <input type="text" id="deckNameInput" placeholder="VD: Tiếng Anh N1, Sinh học 12...">
-      </div>
-      <div class="form-group">
-        <label>Mô tả (tùy chọn)</label>
-        <textarea id="deckDescInput" placeholder="Mô tả ngắn về bộ thẻ..." rows="2"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Biểu tượng</label>
+      <div class="form-group"><label>Tên bộ thẻ</label><input type="text" id="deckNameInput" placeholder="VD: Tiếng Anh, Sinh học 12..."></div>
+      <div class="form-group"><label>Mô tả (tùy chọn)</label><textarea id="deckDescInput" placeholder="Mô tả ngắn..." rows="2"></textarea></div>
+      <div class="form-group"><label>Bộ thẻ cha (tùy chọn)</label><select id="deckParentSelect"><option value="">— Không (bộ thẻ gốc) —</option></select></div>
+      <div class="form-group"><label>Biểu tượng</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap" id="emojiPicker">
           <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="📖">📖</button>
           <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="🧮">🧮</button>
@@ -584,10 +443,7 @@ input,textarea{font-family:inherit;font-size:inherit}
           <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="⚡">⚡</button>
         </div>
       </div>
-      <div class="form-actions">
-        <button class="btn btn-ghost" onclick="closeDeckModal()">Hủy</button>
-        <button class="btn btn-primary" onclick="saveDeck()" id="saveDeckBtn">Tạo bộ thẻ</button>
-      </div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeDeckModal()">Hủy</button><button class="btn btn-primary" onclick="saveDeck()" id="saveDeckBtn">Tạo bộ thẻ</button></div>
     </div>
   </div>
 </div>
@@ -595,28 +451,107 @@ input,textarea{font-family:inherit;font-size:inherit}
 <!-- CARD MODAL -->
 <div class="modal-overlay" id="cardModal">
   <div class="modal">
-    <div class="modal-header">
-      <h2 id="cardModalTitle">Thêm thẻ mới</h2>
-      <button class="modal-close" onclick="closeCardModal()">✕</button>
-    </div>
+    <div class="modal-header"><h2 id="cardModalTitle">Thêm thẻ mới</h2><button class="modal-close" onclick="closeCardModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>Mặt trước (câu hỏi)</label>
-        <textarea id="cardFrontInput" placeholder="Nhập câu hỏi, từ vựng..." rows="3"></textarea>
+      <div class="form-group"><label>Loại thẻ</label>
+        <select id="cardTypeSelect" onchange="onCardTypeChange()">
+          <option value="basic">Basic — Câu hỏi / Đáp án</option>
+          <option value="reversed">Basic + Reversed — Tạo thêm thẻ ngược</option>
+          <option value="cloze">Cloze — Điền khuyết {{c1::từ}}</option>
+        </select>
       </div>
-      <div class="form-group">
-        <label>Mặt sau (đáp án)</label>
-        <textarea id="cardBackInput" placeholder="Nhập đáp án, nghĩa..." rows="3"></textarea>
+      <div id="basicFields">
+        <div class="form-group"><label>Mặt trước (câu hỏi)</label><textarea id="cardFrontInput" placeholder="Nhập câu hỏi, từ vựng... (hỗ trợ hình: ![](url))" rows="3"></textarea></div>
+        <div class="form-group"><label>Mặt sau (đáp án)</label><textarea id="cardBackInput" placeholder="Nhập đáp án, nghĩa..." rows="3"></textarea></div>
       </div>
-      <div class="form-actions">
-        <button class="btn btn-ghost" onclick="closeCardModal()">Hủy</button>
-        <button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Lưu thẻ</button>
+      <div id="clozeFields" style="display:none">
+        <div class="form-group"><label>Nội dung (dùng {{c1::từ cần che}} để tạo chỗ trống)</label><textarea id="clozeInput" placeholder="VD: {{c1::Mitochondria}} is the powerhouse of the cell" rows="3"></textarea></div>
+        <p style="font-size:12px;color:var(--ink-dim);margin-top:-8px">Dùng {{c1::...}}, {{c2::...}} cho nhiều chỗ trống</p>
       </div>
+      <div class="form-group"><label>Chế độ ôn tập</label>
+        <select id="cardReviewMode">
+          <option value="flip">🔄 Lật thẻ — Tự đánh giá</option>
+          <option value="type">⌨️ Nhập đáp án — Hệ thống chấm</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Tags (cách nhau bằng dấu phẩy)</label><input type="text" id="cardTagsInput" placeholder="VD: tuần-1, ngữ-pháp, khó"></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeCardModal()">Hủy</button><button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Lưu thẻ</button></div>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- BULK ADD MODAL -->
+<div class="modal-overlay" id="bulkModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Thêm hàng loạt</h2><button class="modal-close" onclick="closeBulkModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">Mỗi dòng 1 thẻ, ngăn cách mặt trước/sau bằng Tab hoặc dấu <code>|</code></p>
+      <textarea class="bulk-textarea" id="bulkInput" placeholder="hello | xin chào&#10;goodbye | tạm biệt&#10;thank you | cảm ơn"></textarea>
+      <div class="form-group" style="margin-top:12px"><label>Chế độ ôn tập</label>
+        <select id="bulkReviewMode">
+          <option value="flip">🔄 Lật thẻ</option>
+          <option value="type">⌨️ Nhập đáp án</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Tags cho tất cả (tùy chọn)</label><input type="text" id="bulkTagsInput" placeholder="VD: tuần-1"></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeBulkModal()">Hủy</button><button class="btn btn-primary" onclick="saveBulkCards()">Thêm tất cả</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Nhập từ file</h2><button class="modal-close" onclick="closeImportModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">Hỗ trợ JSON (xuất từ FlashMind) hoặc CSV/TXT (mặt trước, mặt sau)</p>
+      <input type="file" id="importFile" accept=".json,.csv,.txt" style="margin-bottom:16px">
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeImportModal()">Hủy</button><button class="btn btn-primary" onclick="importFile()">Nhập</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOM STUDY MODAL -->
+<div class="modal-overlay" id="customStudyModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Ôn tập tùy chỉnh</h2><button class="modal-close" onclick="closeCustomStudy()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Lọc theo</label>
+        <select id="customFilter">
+          <option value="all">Tất cả thẻ</option>
+          <option value="difficult">Thẻ khó (ease &lt; 2.0)</option>
+          <option value="leech">Thẻ leech (sai nhiều)</option>
+          <option value="new">Chỉ thẻ mới</option>
+          <option value="tag">Theo tag</option>
+        </select>
+      </div>
+      <div class="form-group" id="customTagGroup" style="display:none"><label>Chọn tag</label><input type="text" id="customTagInput" placeholder="Nhập tag..."></div>
+      <div class="form-group"><label>Số lượng thẻ tối đa</label><input type="number" id="customLimit" value="50" min="1" max="500"></div>
+      <div class="form-group"><label>Thứ tự</label>
+        <select id="customOrder">
+          <option value="random">Ngẫu nhiên</option>
+          <option value="due">Theo due date</option>
+          <option value="added">Mới thêm trước</option>
+          <option value="difficulty">Khó trước</option>
+        </select>
+      </div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeCustomStudy()">Hủy</button><button class="btn btn-primary" onclick="startCustomStudy()">Bắt đầu ôn</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Cài đặt</h2><button class="modal-close" onclick="closeSettings()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Mục tiêu hàng ngày (số thẻ)</label><input type="number" id="dailyGoalInput" value="20" min="1" max="500"></div>
+      <div class="form-group"><label>Ngưỡng leech (số lần sai)</label><input type="number" id="leechThreshold" value="8" min="3" max="50"></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeSettings()">Hủy</button><button class="btn btn-primary" onclick="saveSettings()">Lưu</button></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Firebase SDK -->
@@ -625,745 +560,755 @@ input,textarea{font-family:inherit;font-size:inherit}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
-// ===== FIREBASE INIT =====
-const firebaseConfig = {
-  apiKey: "AIzaSyD7UXDjRS0NaT1OYRBvpxqpirZz3SQYVyc",
-  authDomain: "flashmind-8b1bc.firebaseapp.com",
-  projectId: "flashmind-8b1bc",
-  storageBucket: "flashmind-8b1bc.firebasestorage.app",
-  messagingSenderId: "482268690491",
-  appId: "1:482268690491:web:2c53f56d0bdf8d30c7c41e",
-  measurementId: "G-L93759D1ZJ"
-};
+// ===== FIREBASE =====
+firebase.initializeApp({apiKey:"AIzaSyD7UXDjRS0NaT1OYRBvpxqpirZz3SQYVyc",authDomain:"flashmind-8b1bc.firebaseapp.com",projectId:"flashmind-8b1bc",storageBucket:"flashmind-8b1bc.firebasestorage.app",messagingSenderId:"482268690491",appId:"1:482268690491:web:2c53f56d0bdf8d30c7c41e"});
+const auth = firebase.auth(), firestore = firebase.firestore();
+let currentUser = null, unsubDecks = null;
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const firestore = firebase.firestore();
+// ===== DATA =====
+let db = { decks:{}, reviewLog:[], settings:{ dailyGoal:20, leechThreshold:8 } };
 
-let currentUser = null;
-let db = { decks: {}, reviewLog: [] };
-let unsubDecks = null;
-
-// ===== LOCAL STORAGE =====
 function loadLocal() {
-  try {
-    const raw = localStorage.getItem('flashmind_data');
-    if (raw) db = JSON.parse(raw);
-    if (!db.decks) db.decks = {};
-    if (!db.reviewLog) db.reviewLog = [];
-  } catch(e) { db = { decks: {}, reviewLog: [] }; }
+  try { const r = localStorage.getItem('flashmind_data'); if(r){ db=JSON.parse(r); if(!db.decks)db.decks={}; if(!db.reviewLog)db.reviewLog=[]; if(!db.settings)db.settings={dailyGoal:20,leechThreshold:8}; } } catch(e){ db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}}; }
 }
-
-function saveLocal() {
-  try { localStorage.setItem('flashmind_data', JSON.stringify(db)); } catch(e) {}
-}
+function saveLocal() { try{localStorage.setItem('flashmind_data',JSON.stringify(db))}catch(e){} }
 
 // ===== AUTH =====
-function signInGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(e => {
-    toast('Lỗi đăng nhập: ' + e.message);
-  });
-}
+function signInGoogle(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>toast('Lỗi: '+e.message)); }
+function signOutUser(){ if(unsubDecks){unsubDecks();unsubDecks=null;} auth.signOut(); toggleUserMenu(); loadLocal(); renderCurrentView(); }
+function toggleUserMenu(){ document.getElementById('userMenu').classList.toggle('active'); }
+document.addEventListener('click',e=>{const m=document.getElementById('userMenu'),a=document.getElementById('userAvatar');if(m&&!m.contains(e.target)&&e.target!==a)m.classList.remove('active');});
 
-function signOutUser() {
-  if (unsubDecks) { unsubDecks(); unsubDecks = null; }
-  auth.signOut();
-  toggleUserMenu();
-  loadLocal();
-  renderDecks();
-}
-
-function toggleUserMenu() {
-  document.getElementById('userMenu').classList.toggle('active');
-}
-
-document.addEventListener('click', e => {
-  const menu = document.getElementById('userMenu');
-  const avatar = document.getElementById('userAvatar');
-  if (menu && !menu.contains(e.target) && e.target !== avatar) {
-    menu.classList.remove('active');
-  }
-});
-
-auth.onAuthStateChanged(user => {
-  currentUser = user;
-  if (user) {
-    document.getElementById('navLogin').style.display = 'none';
-    document.getElementById('userAvatar').style.display = 'block';
-    document.getElementById('userAvatar').src = user.photoURL || '';
-    document.getElementById('userName').textContent = user.displayName || user.email;
+auth.onAuthStateChanged(user=>{
+  currentUser=user;
+  if(user){
+    document.getElementById('navLogin').style.display='none';
+    document.getElementById('userAvatar').style.display='block';
+    document.getElementById('userAvatar').src=user.photoURL||'';
+    document.getElementById('userName').textContent=user.displayName||user.email;
     mergeAndLoadCloud();
   } else {
-    document.getElementById('navLogin').style.display = 'flex';
-    document.getElementById('userAvatar').style.display = 'none';
-    if (unsubDecks) { unsubDecks(); unsubDecks = null; }
+    document.getElementById('navLogin').style.display='flex';
+    document.getElementById('userAvatar').style.display='none';
   }
 });
 
-// ===== FIRESTORE DATA =====
-function userDoc() {
-  return firestore.collection('users').doc(currentUser.uid);
+function userDoc(){return firestore.collection('users').doc(currentUser.uid);}
+function decksCol(){return userDoc().collection('decks');}
+function reviewLogCol(){return userDoc().collection('reviewLog');}
+
+async function mergeAndLoadCloud(){
+  const local=JSON.parse(JSON.stringify(db));
+  const snap=await decksCol().get(); const cloudIds=new Set();
+  snap.forEach(d=>cloudIds.add(d.id));
+  for(const[id,deck]of Object.entries(local.decks)){if(!cloudIds.has(id))await decksCol().doc(id).set(deck);}
+  if(local.reviewLog.length>0){const b=firestore.batch();local.reviewLog.forEach(e=>b.set(reviewLogCol().doc(),e));await b.commit();}
+  if(unsubDecks)unsubDecks();
+  unsubDecks=decksCol().onSnapshot(s=>{db.decks={};s.forEach(d=>{db.decks[d.id]=d.data();});saveLocal();renderCurrentView();});
+  const ls=await reviewLogCol().orderBy('date','desc').limit(5000).get();
+  db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();toast('Đã đồng bộ!');
 }
-function decksCol() { return userDoc().collection('decks'); }
-function reviewLogCol() { return userDoc().collection('reviewLog'); }
+async function syncToCloud(){if(!currentUser){toast('Đăng nhập trước');return;}await mergeAndLoadCloud();toggleUserMenu();}
+function saveDeckData(id,data){saveLocal();if(currentUser)decksCol().doc(id).set(data).catch(console.error);}
+function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete().catch(console.error);}
+function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
-async function mergeAndLoadCloud() {
-  const localData = JSON.parse(JSON.stringify(db));
+// ===== SM-2 =====
+function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
 
-  // Upload local decks that don't exist in cloud
-  const cloudSnap = await decksCol().get();
-  const cloudIds = new Set();
-  cloudSnap.forEach(doc => cloudIds.add(doc.id));
-
-  for (const [id, deck] of Object.entries(localData.decks)) {
-    if (!cloudIds.has(id)) {
-      await decksCol().doc(id).set(deck);
-    }
-  }
-
-  // Upload local review logs
-  if (localData.reviewLog.length > 0) {
-    const batch = firestore.batch();
-    localData.reviewLog.forEach(entry => {
-      batch.set(reviewLogCol().doc(), entry);
-    });
-    await batch.commit();
-  }
-
-  // Now listen to cloud data
-  if (unsubDecks) unsubDecks();
-  unsubDecks = decksCol().onSnapshot(snap => {
-    db.decks = {};
-    snap.forEach(doc => { db.decks[doc.id] = doc.data(); });
-    saveLocal();
-    renderDecks();
-  }, err => {
-    console.error('Firestore error:', err);
-    toast('Lỗi tải dữ liệu cloud');
-  });
-
-  const logSnap = await reviewLogCol().orderBy('date', 'desc').limit(5000).get();
-  db.reviewLog = [];
-  logSnap.forEach(doc => db.reviewLog.push(doc.data()));
-  db.reviewLog.reverse();
-  saveLocal();
-  toast('Đã đồng bộ với cloud!');
-}
-
-async function syncToCloud() {
-  if (!currentUser) { toast('Đăng nhập trước để đồng bộ'); return; }
-  await mergeAndLoadCloud();
-  toggleUserMenu();
-}
-
-async function saveDeckData(deckId, data) {
-  saveLocal();
-  if (currentUser) {
-    try { await decksCol().doc(deckId).set(data); } catch(e) { console.error(e); }
-  }
-}
-
-async function deleteDeckData(deckId) {
-  saveLocal();
-  if (currentUser) {
-    try { await decksCol().doc(deckId).delete(); } catch(e) { console.error(e); }
-  }
-}
-
-function addReviewLog(entry) {
-  db.reviewLog.push(entry);
-  saveLocal();
-  if (currentUser) {
-    reviewLogCol().add(entry).catch(e => console.error(e));
-  }
-}
-
-// ===== SM-2 ALGORITHM =====
-function newCardData() {
-  return {
-    id: crypto.randomUUID(), front: '', back: '',
-    status: 'new', interval: 0, ease: 2.5,
-    due: Date.now(), reps: 0, lapses: 0,
-    created: Date.now(), lastReview: null,
-  };
-}
-
-function sm2(card, quality) {
-  const now = Date.now();
-  const DAY = 86400000;
-  card.lastReview = now;
-
-  if (quality === 0) {
-    card.status = 'learning'; card.interval = 0; card.reps = 0;
-    card.lapses++; card.due = now + 60000;
-    card.ease = Math.max(1.3, card.ease - 0.2);
-  } else if (card.status === 'new' || card.status === 'learning') {
-    if (quality === 1) {
-      card.status = 'learning'; card.interval = 0; card.due = now + 600000;
-    } else if (quality === 2) {
-      card.status = 'review'; card.interval = 1; card.due = now + DAY; card.reps = 1;
-    } else {
-      card.status = 'review'; card.interval = 4; card.due = now + 4 * DAY;
-      card.reps = 1; card.ease = Math.min(3.0, card.ease + 0.15);
-    }
+function sm2(card,quality){
+  const now=Date.now(),DAY=86400000; card.lastReview=now;
+  if(quality===0){card.status='learning';card.interval=0;card.reps=0;card.lapses++;card.due=now+60000;card.ease=Math.max(1.3,card.ease-0.2);}
+  else if(card.status==='new'||card.status==='learning'){
+    if(quality===1){card.status='learning';card.interval=0;card.due=now+600000;}
+    else if(quality===2){card.status='review';card.interval=1;card.due=now+DAY;card.reps=1;}
+    else{card.status='review';card.interval=4;card.due=now+4*DAY;card.reps=1;card.ease=Math.min(3,card.ease+0.15);}
   } else {
     let ni;
-    if (quality === 1) { ni = Math.max(1, Math.round(card.interval * 1.2)); card.ease = Math.max(1.3, card.ease - 0.15); }
-    else if (quality === 2) { ni = Math.round(card.interval * card.ease); }
-    else { ni = Math.round(card.interval * card.ease * 1.3); card.ease = Math.min(3.0, card.ease + 0.15); }
-    card.interval = Math.min(ni, 365);
-    card.due = now + card.interval * DAY;
-    card.reps++; card.status = 'review';
+    if(quality===1){ni=Math.max(1,Math.round(card.interval*1.2));card.ease=Math.max(1.3,card.ease-0.15);}
+    else if(quality===2){ni=Math.round(card.interval*card.ease);}
+    else{ni=Math.round(card.interval*card.ease*1.3);card.ease=Math.min(3,card.ease+0.15);}
+    card.interval=Math.min(ni,365);card.due=now+card.interval*DAY;card.reps++;card.status='review';
   }
+  if(card.lapses>=db.settings.leechThreshold)card.leech=true;
   return card;
 }
 
-function getIntervalText(card, quality) {
-  if (quality === 0) return '1 phút';
-  if (card.status === 'new' || card.status === 'learning') {
-    if (quality === 1) return '10 phút';
-    if (quality === 2) return '1 ngày';
-    return '4 ngày';
-  }
-  let iv;
-  if (quality === 1) iv = Math.max(1, Math.round(card.interval * 1.2));
-  else if (quality === 2) iv = Math.round(card.interval * card.ease);
-  else iv = Math.round(card.interval * card.ease * 1.3);
-  iv = Math.min(iv, 365);
-  if (iv < 30) return iv + ' ngày';
-  if (iv < 365) return Math.round(iv / 30 * 10) / 10 + ' tháng';
-  return Math.round(iv / 365 * 10) / 10 + ' năm';
+function getIntervalText(card,q){
+  if(q===0)return'1 phút';
+  if(card.status==='new'||card.status==='learning'){if(q===1)return'10 phút';if(q===2)return'1 ngày';return'4 ngày';}
+  let iv;if(q===1)iv=Math.max(1,Math.round(card.interval*1.2));else if(q===2)iv=Math.round(card.interval*card.ease);else iv=Math.round(card.interval*card.ease*1.3);
+  iv=Math.min(iv,365);if(iv<30)return iv+' ngày';if(iv<365)return Math.round(iv/30*10)/10+' tháng';return Math.round(iv/365*10)/10+' năm';
 }
 
 // ===== VIEWS =====
-let currentView = 'decks';
-let currentDeckId = null;
-let editingDeckId = null;
-let editingCardId = null;
-let selectedEmoji = '📖';
-let reviewQueue = [];
-let reviewIndex = 0;
-let reviewMode = 'flip'; // 'flip' or 'type'
-let viewingParentId = null; // for sub-deck navigation
-let parentStack = []; // breadcrumb stack
+let currentView='decks',currentDeckId=null,editingDeckId=null,editingCardId=null,selectedEmoji='📖';
+let reviewQueue=[],reviewIndex=0,reviewMode='flip',viewingParentId=null,parentStack=[];
+let undoStack=[], activeTagFilter=null;
 
-function showView(name) {
-  currentView = name;
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  if (name === 'decks') { document.getElementById('navDecks').classList.add('active'); renderDecks(); }
-  if (name === 'stats') { document.getElementById('navStats').classList.add('active'); renderStats(); }
-  document.getElementById('fabBtn').style.display = (name === 'decks') ? 'flex' : 'none';
+function showView(name){
+  currentView=name;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if(name==='decks'){document.getElementById('navDecks').classList.add('active');renderDecks();}
+  if(name==='stats'){document.getElementById('navStats').classList.add('active');renderStats();}
+  document.getElementById('fabBtn').style.display=(name==='decks')?'flex':'none';
+}
+
+function renderCurrentView(){if(currentView==='decks')renderDecks();else if(currentView==='stats')renderStats();}
+
+// ===== SUB-DECKS =====
+function getSubDecks(parentId){return Object.entries(db.decks).filter(([id,d])=>(d.parentId||null)===parentId);}
+function getAllCardsRecursive(deckId){
+  let cards=[...(db.decks[deckId]?.cards||[])];
+  getSubDecks(deckId).forEach(([subId])=>{cards=cards.concat(getAllCardsRecursive(subId));});
+  return cards;
+}
+function getDeckCards(deckId){return db.decks[deckId]?.cards||[];}
+
+function navigateIntoDeck(deckId){
+  parentStack.push(viewingParentId);
+  viewingParentId=deckId;
+  renderDecks();
+}
+function navigateUp(){
+  viewingParentId=parentStack.pop()||null;
+  renderDecks();
+}
+function navigateToRoot(){
+  viewingParentId=null;parentStack=[];renderDecks();
 }
 
 // ===== DECK RENDERING =====
-function getDeckCards(deckId) { return db.decks[deckId]?.cards || []; }
+function renderDecks(){
+  const wrap=document.getElementById('deckListWrap');
+  const subs=getSubDecks(viewingParentId);
+  const deckEntries=subs;
 
-function getSubDecks(parentId) {
-  return Object.entries(db.decks).filter(([id, d]) => (d.parentId || null) === parentId);
-}
+  // Breadcrumb
+  let bcHTML='';
+  if(viewingParentId){
+    bcHTML='<div class="breadcrumb"><a onclick="navigateToRoot()">🏠 Tất cả</a>';
+    let chain=[];let pid=viewingParentId;
+    while(pid){chain.unshift(pid);pid=db.decks[pid]?.parentId||null;}
+    chain.forEach((cid,i)=>{
+      bcHTML+='<span class="sep">›</span>';
+      if(i<chain.length-1)bcHTML+=`<a onclick="viewingParentId='${cid}';parentStack=parentStack.slice(0,${i});renderDecks()">${esc(db.decks[cid]?.name||'')}</a>`;
+      else bcHTML+=`<span style="color:var(--ink);font-weight:700">${esc(db.decks[cid]?.name||'')}</span>`;
+    });
+    bcHTML+='</div>';
+  }
+  document.getElementById('breadcrumbWrap').innerHTML=bcHTML;
 
-function getAllCardsRecursive(deckId) {
-  let cards = [...getDeckCards(deckId)];
-  getSubDecks(deckId).forEach(([subId]) => {
-    cards = cards.concat(getAllCardsRecursive(subId));
-  });
-  return cards;
-}
+  // Global stats
+  const allDecks=Object.keys(db.decks);
+  let totalCards=0,totalDue=0,totalNew=0;
+  allDecks.forEach(id=>{const cards=getDeckCards(id);totalCards+=cards.length;cards.forEach(c=>{if(c.status==='new')totalNew++;});});
+  const streak=calcStreak();
+  const todayReviews=db.reviewLog.filter(r=>new Date(r.date).toDateString()===new Date().toDateString()).length;
 
-function getDeckCounts(deckId) {
-  const cards = getDeckCards(deckId);
-  const now = Date.now();
-  let newCount = 0, learnCount = 0, dueCount = 0;
-  cards.forEach(c => {
-    if (c.status === 'new') newCount++;
-    else if (c.status === 'learning') learnCount++;
-    else if (c.due <= now) dueCount++;
-  });
-  return { newCount, learnCount, dueCount, total: cards.length };
-}
-
-function renderDecks() {
-  const wrap = document.getElementById('deckListWrap');
-  const deckIds = Object.keys(db.decks);
-
-  let totalCards = 0, totalDue = 0, totalNew = 0, streak = calcStreak();
-  deckIds.forEach(id => {
-    const c = getDeckCounts(id);
-    totalCards += c.total; totalDue += c.dueCount + c.learnCount; totalNew += c.newCount;
-  });
-  document.getElementById('globalStats').innerHTML = `
+  document.getElementById('globalStats').innerHTML=`
     <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">Tổng thẻ</div></div>
-    <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value">${streak}</div><div class="stat-label">Streak ngày</div></div>
-    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value">${totalDue}</div><div class="stat-label">Cần ôn</div></div>
-    <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-value">${totalNew}</div><div class="stat-label">Thẻ mới</div></div>
-  `;
+    <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value">${streak}</div><div class="stat-label">Streak</div></div>
+    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${todayReviews}</div><div class="stat-label">Hôm nay</div></div>
+    <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-value">${totalNew}</div><div class="stat-label">Thẻ mới</div></div>`;
 
-  if (deckIds.length === 0) {
-    wrap.innerHTML = `<div class="deck-list"><div class="empty-state">
-      <div class="empty-icon">📚</div><h3>Chưa có bộ thẻ nào</h3>
-      <p>Tạo bộ thẻ đầu tiên để bắt đầu học nhé!</p>
-      <button class="btn btn-primary" onclick="openDeckModal()">+ Tạo bộ thẻ</button>
-    </div></div>`;
+  // Daily goal
+  const goal=db.settings.dailyGoal||20;
+  const pct=Math.min(100,Math.round(todayReviews/goal*100));
+  const circ=2*Math.PI*25;
+  document.getElementById('dailyGoalWrap').innerHTML=`<div class="daily-goal">
+    <div class="goal-ring"><svg viewBox="0 0 60 60"><circle class="bg" cx="30" cy="30" r="25"/><circle class="fill" cx="30" cy="30" r="25" stroke-dasharray="${circ}" stroke-dashoffset="${circ*(1-pct/100)}"/></svg>${pct}%</div>
+    <div class="goal-info"><div class="goal-title">${todayReviews}/${goal} thẻ hôm nay</div><div class="goal-sub">${pct>=100?'Hoàn thành mục tiêu! 🎉':'Cố lên, còn '+(goal-todayReviews)+' thẻ nữa'}</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="openSettings()" title="Cài đặt">⚙️</button>
+  </div>`;
+
+  if(deckEntries.length===0&&!viewingParentId){
+    wrap.innerHTML=`<div class="deck-list"><div class="empty-state"><div class="empty-icon">📚</div><h3>Chưa có bộ thẻ nào</h3><p>Tạo bộ thẻ đầu tiên để bắt đầu học nhé!</p><button class="btn btn-primary" onclick="openDeckModal()">+ Tạo bộ thẻ</button></div></div>`;
+    return;
+  }
+  if(deckEntries.length===0&&viewingParentId){
+    const parentCards=getDeckCards(viewingParentId);
+    const pName=esc(db.decks[viewingParentId]?.name||'');
+    if(parentCards.length>0){
+      wrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Ôn tập (${parentCards.length} thẻ)</button>
+          <button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Xem / Sửa thẻ</button>
+          <button class="btn btn-ghost" onclick="openDeckModal()">📂 + Tạo bộ thẻ con</button>
+        </div>
+      </div>`;
+      return;
+    }
+    wrap.innerHTML=`<div class="deck-list"><div class="empty-state"><div class="empty-icon">📂</div><h3>Chưa có thẻ nào trong "${pName}"</h3><p>Tạo bộ thẻ con hoặc thêm thẻ trực tiếp</p>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="openDeckModal()">📂 + Bộ thẻ con</button><button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Thêm thẻ</button></div></div></div>`;
     return;
   }
 
-  wrap.innerHTML = '<div class="deck-list">' + deckIds.map(id => {
-    const d = db.decks[id]; const c = getDeckCounts(id);
-    const hasDue = c.newCount + c.learnCount + c.dueCount > 0;
-    return `<div class="deck-item" onclick="startReview('${id}')">
-      <div class="deck-color" style="background:var(--primary-bg)">${d.emoji || '📖'}</div>
-      <div class="deck-info">
-        <div class="deck-name">${esc(d.name)}</div>
-        <div class="deck-meta"><span>📇 ${c.total} thẻ</span>${d.desc ? '<span>' + esc(d.desc) + '</span>' : ''}</div>
-      </div>
+  wrap.innerHTML='<div class="deck-list">'+deckEntries.map(([id,d])=>{
+    const cards=getAllCardsRecursive(id);
+    const subCount=getSubDecks(id).length;
+    const cardCount=cards.length;
+    return`<div class="deck-item" onclick="onDeckClick('${id}')">
+      <div class="deck-color">${d.emoji||'📖'}</div>
+      <div class="deck-info"><div class="deck-name">${esc(d.name)}</div>
+        <div class="deck-meta"><span>📇 ${cardCount} thẻ</span>${subCount?'<span>📂 '+subCount+' bộ con</span>':''}${d.desc?'<span>'+esc(d.desc)+'</span>':''}</div></div>
       <div class="deck-badges">
-        ${c.newCount ? '<span class="badge badge-new">' + c.newCount + ' mới</span>' : ''}
-        ${c.learnCount ? '<span class="badge badge-learn">' + c.learnCount + ' học</span>' : ''}
-        ${c.dueCount ? '<span class="badge badge-due">' + c.dueCount + ' ôn</span>' : ''}
-        ${!hasDue ? '<span class="badge" style="background:var(--surface-2);color:var(--ink-dim)">✓ Xong</span>' : ''}
+        ${subCount?'<span class="badge badge-sub">'+subCount+' con</span>':''}
       </div>
       <div class="deck-actions" onclick="event.stopPropagation()">
         <button class="deck-action-btn" onclick="openBrowser('${id}')" title="Xem thẻ">📋</button>
+        <button class="deck-action-btn" onclick="openCustomStudyForDeck('${id}')" title="Ôn tùy chỉnh">🎯</button>
         <button class="deck-action-btn" onclick="openEditDeck('${id}')" title="Sửa">✏️</button>
         <button class="deck-action-btn delete" onclick="deleteDeck('${id}')" title="Xóa">🗑️</button>
       </div>
     </div>`;
-  }).join('') + '</div>';
+  }).join('')+'</div>';
+
+  // If viewing a parent that also has its own cards, show review button
+  if(viewingParentId){
+    const ownCards=getDeckCards(viewingParentId);
+    if(ownCards.length>0){
+      wrap.innerHTML+=`<div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Ôn thẻ của "${esc(db.decks[viewingParentId].name)}"</button><button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Xem thẻ</button></div>`;
+    }
+  }
+}
+
+function onDeckClick(id){
+  navigateIntoDeck(id);
 }
 
 // ===== DECK MODAL =====
-function openDeckModal() {
-  editingDeckId = null;
-  document.getElementById('deckModalTitle').textContent = 'Tạo bộ thẻ mới';
-  document.getElementById('saveDeckBtn').textContent = 'Tạo bộ thẻ';
-  document.getElementById('deckNameInput').value = '';
-  document.getElementById('deckDescInput').value = '';
-  selectedEmoji = '📖'; updateEmojiSelection();
+function openDeckModal(){
+  editingDeckId=null;
+  document.getElementById('deckModalTitle').textContent='Tạo bộ thẻ mới';
+  document.getElementById('saveDeckBtn').textContent='Tạo bộ thẻ';
+  document.getElementById('deckNameInput').value='';
+  document.getElementById('deckDescInput').value='';
+  selectedEmoji='📖';updateEmojiSelection();
+  populateParentSelect();
+  if(viewingParentId)document.getElementById('deckParentSelect').value=viewingParentId;
   document.getElementById('deckModal').classList.add('active');
-  setTimeout(() => document.getElementById('deckNameInput').focus(), 100);
+  setTimeout(()=>document.getElementById('deckNameInput').focus(),100);
 }
-
-function openEditDeck(id) {
-  editingDeckId = id;
-  const d = db.decks[id];
-  document.getElementById('deckModalTitle').textContent = 'Sửa bộ thẻ';
-  document.getElementById('saveDeckBtn').textContent = 'Cập nhật';
-  document.getElementById('deckNameInput').value = d.name;
-  document.getElementById('deckDescInput').value = d.desc || '';
-  selectedEmoji = d.emoji || '📖'; updateEmojiSelection();
+function openEditDeck(id){
+  editingDeckId=id;const d=db.decks[id];
+  document.getElementById('deckModalTitle').textContent='Sửa bộ thẻ';
+  document.getElementById('saveDeckBtn').textContent='Cập nhật';
+  document.getElementById('deckNameInput').value=d.name;
+  document.getElementById('deckDescInput').value=d.desc||'';
+  selectedEmoji=d.emoji||'📖';updateEmojiSelection();
+  populateParentSelect(id);
+  document.getElementById('deckParentSelect').value=d.parentId||'';
   document.getElementById('deckModal').classList.add('active');
 }
+function closeDeckModal(){document.getElementById('deckModal').classList.remove('active');}
+function pickEmoji(el){selectedEmoji=el.dataset.emoji;updateEmojiSelection();}
+function updateEmojiSelection(){document.querySelectorAll('.emoji-pick').forEach(e=>e.classList.toggle('selected',e.dataset.emoji===selectedEmoji));}
 
-function closeDeckModal() { document.getElementById('deckModal').classList.remove('active'); }
-function pickEmoji(el) { selectedEmoji = el.dataset.emoji; updateEmojiSelection(); }
-function updateEmojiSelection() {
-  document.querySelectorAll('.emoji-pick').forEach(e => e.classList.toggle('selected', e.dataset.emoji === selectedEmoji));
+function populateParentSelect(excludeId){
+  const sel=document.getElementById('deckParentSelect');
+  sel.innerHTML='<option value="">— Không (bộ thẻ gốc) —</option>';
+  Object.entries(db.decks).forEach(([id,d])=>{
+    if(id!==excludeId)sel.innerHTML+=`<option value="${id}">${esc(d.emoji||'')} ${esc(d.name)}</option>`;
+  });
 }
 
-async function saveDeck() {
-  const name = document.getElementById('deckNameInput').value.trim();
-  if (!name) { toast('Vui lòng nhập tên bộ thẻ'); return; }
-  const desc = document.getElementById('deckDescInput').value.trim();
-
-  if (editingDeckId) {
-    const deck = db.decks[editingDeckId];
-    deck.name = name; deck.desc = desc; deck.emoji = selectedEmoji;
-    await saveDeckData(editingDeckId, deck);
-    toast('Đã cập nhật bộ thẻ!');
+function saveDeck(){
+  const name=document.getElementById('deckNameInput').value.trim();
+  if(!name){toast('Vui lòng nhập tên');return;}
+  const desc=document.getElementById('deckDescInput').value.trim();
+  const parentId=document.getElementById('deckParentSelect').value||null;
+  if(editingDeckId){
+    const deck=db.decks[editingDeckId];
+    deck.name=name;deck.desc=desc;deck.emoji=selectedEmoji;deck.parentId=parentId;
+    saveDeckData(editingDeckId,deck);toast('Đã cập nhật!');
   } else {
-    const id = crypto.randomUUID();
-    const deck = { name, desc, emoji: selectedEmoji, cards: [], created: Date.now() };
-    db.decks[id] = deck;
-    await saveDeckData(id, deck);
-    toast('Đã tạo bộ thẻ mới!');
+    const id=crypto.randomUUID();
+    const deck={name,desc,emoji:selectedEmoji,cards:[],created:Date.now(),parentId};
+    db.decks[id]=deck;saveDeckData(id,deck);toast('Đã tạo bộ thẻ!');
   }
-  closeDeckModal();
-  renderDecks();
+  closeDeckModal();renderDecks();
 }
-
-async function deleteDeck(id) {
-  if (!confirm('Xóa bộ thẻ "' + db.decks[id].name + '" và tất cả thẻ trong đó?')) return;
-  delete db.decks[id];
-  await deleteDeckData(id);
-  renderDecks();
-  toast('Đã xóa bộ thẻ');
+function deleteDeck(id){
+  if(!confirm('Xóa "'+db.decks[id].name+'" và tất cả bên trong?'))return;
+  // Delete sub-decks recursively
+  getSubDecks(id).forEach(([subId])=>deleteDeck(subId));
+  delete db.decks[id];deleteDeckData(id);renderDecks();toast('Đã xóa');
 }
 
 // ===== CARD MODAL =====
-function openCardModal(cardId) {
-  editingCardId = cardId || null;
-  if (cardId) {
-    const card = getDeckCards(currentDeckId).find(c => c.id === cardId);
-    document.getElementById('cardModalTitle').textContent = 'Sửa thẻ';
-    document.getElementById('saveCardBtn').textContent = 'Cập nhật';
-    document.getElementById('cardFrontInput').value = card.front;
-    document.getElementById('cardBackInput').value = card.back;
+function onCardTypeChange(){
+  const t=document.getElementById('cardTypeSelect').value;
+  document.getElementById('basicFields').style.display=t==='cloze'?'none':'block';
+  document.getElementById('clozeFields').style.display=t==='cloze'?'block':'none';
+}
+
+function openCardModal(cardId){
+  editingCardId=cardId||null;
+  document.getElementById('cardTypeSelect').value='basic';onCardTypeChange();
+  if(cardId){
+    const card=getDeckCards(currentDeckId).find(c=>c.id===cardId);
+    document.getElementById('cardModalTitle').textContent='Sửa thẻ';
+    document.getElementById('saveCardBtn').textContent='Cập nhật';
+    if(card.type==='cloze'){
+      document.getElementById('cardTypeSelect').value='cloze';onCardTypeChange();
+      document.getElementById('clozeInput').value=card.clozeText||card.front;
+    } else {
+      document.getElementById('cardTypeSelect').value=card.type||'basic';
+      document.getElementById('cardFrontInput').value=card.front;
+      document.getElementById('cardBackInput').value=card.back;
+    }
+    document.getElementById('cardTagsInput').value=(card.tags||[]).join(', ');
+    document.getElementById('cardReviewMode').value=card.reviewMode||'flip';
   } else {
-    document.getElementById('cardModalTitle').textContent = 'Thêm thẻ mới';
-    document.getElementById('saveCardBtn').textContent = 'Lưu thẻ';
-    document.getElementById('cardFrontInput').value = '';
-    document.getElementById('cardBackInput').value = '';
+    document.getElementById('cardModalTitle').textContent='Thêm thẻ mới';
+    document.getElementById('saveCardBtn').textContent='Lưu thẻ';
+    document.getElementById('cardFrontInput').value='';document.getElementById('cardBackInput').value='';
+    document.getElementById('cardReviewMode').value='flip';
+    document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
   }
   document.getElementById('cardModal').classList.add('active');
-  setTimeout(() => document.getElementById('cardFrontInput').focus(), 100);
+  setTimeout(()=>(document.getElementById('cardTypeSelect').value==='cloze'?document.getElementById('clozeInput'):document.getElementById('cardFrontInput')).focus(),100);
 }
+function closeCardModal(){document.getElementById('cardModal').classList.remove('active');}
 
-function closeCardModal() { document.getElementById('cardModal').classList.remove('active'); }
+function parseTags(str){return str.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean);}
 
-async function saveCard() {
-  const front = document.getElementById('cardFrontInput').value.trim();
-  const back = document.getElementById('cardBackInput').value.trim();
-  if (!front || !back) { toast('Vui lòng nhập cả mặt trước và mặt sau'); return; }
+function saveCard(){
+  const type=document.getElementById('cardTypeSelect').value;
+  const tags=parseTags(document.getElementById('cardTagsInput').value);
+  const deck=db.decks[currentDeckId];if(!deck.cards)deck.cards=[];
 
-  const deck = db.decks[currentDeckId];
-  if (!deck.cards) deck.cards = [];
-
-  if (editingCardId) {
-    const card = deck.cards.find(c => c.id === editingCardId);
-    card.front = front; card.back = back;
-    toast('Đã cập nhật thẻ!');
+  const cardReviewMode=document.getElementById('cardReviewMode').value;
+  if(type==='cloze'){
+    const text=document.getElementById('clozeInput').value.trim();
+    if(!text||!text.includes('{{c')){toast('Cần có ít nhất 1 {{c1::...}}');return;}
+    const nums=new Set();text.replace(/\{\{c(\d+)::/g,(_,n)=>nums.add(parseInt(n)));
+    if(editingCardId){
+      const card=deck.cards.find(c=>c.id===editingCardId);
+      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;
+      toast('Đã cập nhật!');
+    } else {
+      nums.forEach(n=>{
+        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;
+        deck.cards.push(card);
+      });
+      toast('Đã thêm '+nums.size+' thẻ cloze!');
+    }
   } else {
-    const card = newCardData();
-    card.front = front; card.back = back;
-    deck.cards.push(card);
-    toast('Đã thêm thẻ mới!');
+    const front=document.getElementById('cardFrontInput').value.trim();
+    const back=document.getElementById('cardBackInput').value.trim();
+    if(!front||!back){toast('Nhập cả mặt trước và sau');return;}
+    if(editingCardId){
+      const card=deck.cards.find(c=>c.id===editingCardId);
+      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;toast('Đã cập nhật!');
+    } else {
+      const card=newCardData();card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;deck.cards.push(card);
+      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;deck.cards.push(rc);toast('Đã thêm 2 thẻ (gốc + ngược)!');}
+      else toast('Đã thêm thẻ!');
+    }
   }
-  await saveDeckData(currentDeckId, deck);
-  closeCardModal();
-  renderCardBrowser();
-  if (!editingCardId) {
-    document.getElementById('cardFrontInput').value = '';
-    document.getElementById('cardBackInput').value = '';
-  }
+  saveDeckData(currentDeckId,deck);closeCardModal();renderCardBrowser();
 }
+
+function clozeToFront(text,num){return text.replace(/\{\{c(\d+)::([^}]+)\}\}/g,(_,n,content)=>parseInt(n)===num?'[...]':content);}
+function clozeToBack(text,num){return text.replace(/\{\{c(\d+)::([^}]+)\}\}/g,(_,n,content)=>parseInt(n)===num?content:content);}
 
 // ===== CARD BROWSER =====
-function openBrowser(deckId) {
-  currentDeckId = deckId;
-  document.getElementById('browserDeckName').textContent = db.decks[deckId].name;
-  renderCardBrowser();
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+function openBrowser(deckId){
+  currentDeckId=deckId;
+  document.getElementById('browserDeckName').textContent=db.decks[deckId].name;
+  activeTagFilter=null;renderTagFilter();renderCardBrowser();
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('viewBrowser').classList.add('active');
-  document.getElementById('fabBtn').style.display = 'none';
+  document.getElementById('fabBtn').style.display='none';
+}
+function exitBrowser(){currentDeckId=null;showView('decks');}
+
+function renderTagFilter(){
+  const cards=getDeckCards(currentDeckId);
+  const allTags=new Set();cards.forEach(c=>(c.tags||[]).forEach(t=>allTags.add(t)));
+  if(allTags.size===0){document.getElementById('tagFilterWrap').innerHTML='';return;}
+  let html='<div class="tag-filter"><span style="font-size:12px;font-weight:700;color:var(--ink-dim);padding:4px 0">Tags:</span>';
+  html+=`<span class="tag ${!activeTagFilter?'active':''}" onclick="activeTagFilter=null;renderTagFilter();renderCardBrowser()">Tất cả</span>`;
+  allTags.forEach(t=>{html+=`<span class="tag ${activeTagFilter===t?'active':''}" onclick="activeTagFilter='${t}';renderTagFilter();renderCardBrowser()">${esc(t)}</span>`;});
+  document.getElementById('tagFilterWrap').innerHTML=html+'</div>';
 }
 
-function exitBrowser() { currentDeckId = null; showView('decks'); }
-
-function renderCardBrowser() {
-  const cards = getDeckCards(currentDeckId);
-  const search = (document.getElementById('cardSearch')?.value || '').toLowerCase();
-  const filtered = cards.filter(c => c.front.toLowerCase().includes(search) || c.back.toLowerCase().includes(search));
-  const wrap = document.getElementById('cardTableWrap');
-  if (filtered.length === 0) {
-    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div>
-      <h3>${cards.length === 0 ? 'Chưa có thẻ nào' : 'Không tìm thấy'}</h3>
-      <p>${cards.length === 0 ? 'Thêm thẻ đầu tiên vào bộ thẻ này' : 'Thử từ khóa khác'}</p>
-      ${cards.length === 0 ? '<button class="btn btn-primary" onclick="openCardModal()">+ Thêm thẻ</button>' : ''}
-    </div>`;
+function renderCardBrowser(){
+  const cards=getDeckCards(currentDeckId);
+  const search=(document.getElementById('cardSearch')?.value||'').toLowerCase();
+  let filtered=cards.filter(c=>c.front.toLowerCase().includes(search)||c.back.toLowerCase().includes(search));
+  if(activeTagFilter)filtered=filtered.filter(c=>(c.tags||[]).includes(activeTagFilter));
+  const wrap=document.getElementById('cardTableWrap');
+  if(filtered.length===0){
+    wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">📝</div><h3>${cards.length===0?'Chưa có thẻ nào':'Không tìm thấy'}</h3><p>${cards.length===0?'Thêm thẻ đầu tiên':'Thử từ khóa khác'}</p>${cards.length===0?'<button class="btn btn-primary" onclick="openCardModal()">+ Thêm thẻ</button>':''}</div>`;
     return;
   }
-  wrap.innerHTML = `<div style="overflow-x:auto"><table class="card-table">
-    <thead><tr><th>Mặt trước</th><th>Mặt sau</th><th>Trạng thái</th><th>Lần tới</th><th></th></tr></thead>
-    <tbody>${filtered.map(c => {
-      const sc = c.status === 'new' ? 'status-new' : c.status === 'learning' ? 'status-learning' : 'status-review';
-      const st = c.status === 'new' ? 'Mới' : c.status === 'learning' ? 'Đang học' : 'Ôn tập';
-      const dt = c.status === 'new' ? '—' : formatDue(c.due);
-      return `<tr><td class="card-front-col">${esc(c.front)}</td><td class="card-back-col">${esc(c.back)}</td>
+  wrap.innerHTML=`<div style="overflow-x:auto"><table class="card-table">
+    <thead><tr><th>Mặt trước</th><th>Mặt sau</th><th>Chế độ</th><th>Tags</th><th>Trạng thái</th><th>Lần tới</th><th></th></tr></thead>
+    <tbody>${filtered.map(c=>{
+      const sc=c.suspended?'status-suspended':c.status==='new'?'status-new':c.status==='learning'?'status-learning':'status-review';
+      const st=c.suspended?'Tạm ẩn':c.status==='new'?'Mới':c.status==='learning'?'Đang học':'Ôn tập';
+      const dt=c.status==='new'?'—':formatDue(c.due);
+      const tagHTML=(c.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
+      const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
+      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';
+      return`<tr><td class="card-front-col">${esc(c.front)}</td><td class="card-back-col">${esc(c.back)}</td>
+        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Nhập đáp án':'Lật thẻ'}">${modeLabel}</td>
+        <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
         <td><span class="card-status ${sc}">${st}</span></td>
         <td style="font-size:13px;color:var(--ink-dim)">${dt}</td>
-        <td><button class="card-edit-btn" onclick="openCardModal('${c.id}')" title="Sửa">✏️</button>
-        <button class="card-edit-btn" onclick="deleteCard('${c.id}')" title="Xóa" style="color:var(--red)">🗑️</button></td></tr>`;
+        <td style="white-space:nowrap">
+          <button class="card-edit-btn" onclick="openCardModal('${c.id}')" title="Sửa">✏️</button>
+          <button class="card-edit-btn" onclick="toggleSuspend('${c.id}')" title="${c.suspended?'Bỏ ẩn':'Tạm ẩn'}">${c.suspended?'👁':'⏸'}</button>
+          <button class="card-edit-btn" onclick="deleteCard('${c.id}')" title="Xóa" style="color:var(--red)">🗑️</button>
+        </td></tr>`;
     }).join('')}</tbody></table></div>`;
 }
 
-function filterCards() { renderCardBrowser(); }
+function filterCards(){renderCardBrowser();}
 
-async function deleteCard(cardId) {
-  if (!confirm('Xóa thẻ này?')) return;
-  const deck = db.decks[currentDeckId];
-  deck.cards = deck.cards.filter(c => c.id !== cardId);
-  await saveDeckData(currentDeckId, deck);
-  renderCardBrowser();
-  toast('Đã xóa thẻ');
+function toggleSuspend(cardId){
+  const deck=db.decks[currentDeckId];const card=deck.cards.find(c=>c.id===cardId);
+  card.suspended=!card.suspended;saveDeckData(currentDeckId,deck);renderCardBrowser();
+  toast(card.suspended?'Đã tạm ẩn thẻ':'Đã bỏ ẩn thẻ');
+}
+
+function deleteCard(cardId){
+  if(!confirm('Xóa thẻ này?'))return;
+  const deck=db.decks[currentDeckId];deck.cards=deck.cards.filter(c=>c.id!==cardId);
+  saveDeckData(currentDeckId,deck);renderCardBrowser();toast('Đã xóa');
+}
+
+// ===== BULK ADD =====
+function openBulkAddModal(){document.getElementById('bulkInput').value='';document.getElementById('bulkTagsInput').value='';document.getElementById('bulkModal').classList.add('active');}
+function closeBulkModal(){document.getElementById('bulkModal').classList.remove('active');}
+
+function saveBulkCards(){
+  const text=document.getElementById('bulkInput').value.trim();
+  if(!text){toast('Nhập dữ liệu');return;}
+  const tags=parseTags(document.getElementById('bulkTagsInput').value);
+  const bulkRM=document.getElementById('bulkReviewMode').value;
+  const deck=db.decks[currentDeckId];if(!deck.cards)deck.cards=[];
+  const lines=text.split('\n').filter(l=>l.trim());
+  let count=0;
+  lines.forEach(line=>{
+    const sep=line.includes('\t')?'\t':'|';
+    const parts=line.split(sep).map(s=>s.trim());
+    if(parts.length>=2&&parts[0]&&parts[1]){
+      const card=newCardData();card.front=parts[0];card.back=parts[1];card.tags=tags;card.reviewMode=bulkRM;deck.cards.push(card);count++;
+    }
+  });
+  if(count===0){toast('Không tìm thấy thẻ hợp lệ');return;}
+  saveDeckData(currentDeckId,deck);closeBulkModal();renderCardBrowser();toast('Đã thêm '+count+' thẻ!');
+}
+
+// ===== IMPORT/EXPORT =====
+function openImportModal(){document.getElementById('importFile').value='';document.getElementById('importModal').classList.add('active');}
+function closeImportModal(){document.getElementById('importModal').classList.remove('active');}
+
+function importFile(){
+  const file=document.getElementById('importFile').files[0];
+  if(!file){toast('Chọn file');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const text=e.target.result;
+    const deck=db.decks[currentDeckId];if(!deck.cards)deck.cards=[];
+    if(file.name.endsWith('.json')){
+      try{
+        const data=JSON.parse(text);
+        if(Array.isArray(data)){data.forEach(c=>{const card=newCardData();card.front=c.front||'';card.back=c.back||'';card.tags=c.tags||[];deck.cards.push(card);});}
+        else if(data.cards){data.cards.forEach(c=>{const card=newCardData();Object.assign(card,c);card.id=crypto.randomUUID();deck.cards.push(card);});}
+        toast('Đã nhập '+deck.cards.length+' thẻ');
+      }catch(err){toast('File JSON không hợp lệ');}
+    } else {
+      const lines=text.split('\n').filter(l=>l.trim());let count=0;
+      lines.forEach(line=>{
+        const sep=line.includes('\t')?'\t':',';
+        const parts=line.split(sep).map(s=>s.trim().replace(/^"|"$/g,''));
+        if(parts.length>=2&&parts[0]&&parts[1]){const card=newCardData();card.front=parts[0];card.back=parts[1];deck.cards.push(card);count++;}
+      });
+      toast('Đã nhập '+count+' thẻ');
+    }
+    saveDeckData(currentDeckId,deck);closeImportModal();renderCardBrowser();
+  };
+  reader.readAsText(file);
+}
+
+function exportDeck(){
+  const deck=db.decks[currentDeckId];
+  const data=JSON.stringify({name:deck.name,emoji:deck.emoji,cards:deck.cards},null,2);
+  downloadFile(deck.name+'.json',data,'application/json');
+}
+
+function exportAllData(){
+  const data=JSON.stringify(db,null,2);
+  downloadFile('flashmind_backup.json',data,'application/json');
+  toggleUserMenu();
+}
+
+function downloadFile(name,content,type){
+  const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
 // ===== REVIEW =====
-function startReview(deckId) {
-  currentDeckId = deckId;
-  const cards = getDeckCards(deckId);
-  if (cards.length === 0) { toast('Bộ thẻ chưa có thẻ nào!'); return; }
-
-  reviewQueue = [...cards];
-
-  for (let i = reviewQueue.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [reviewQueue[i], reviewQueue[j]] = [reviewQueue[j], reviewQueue[i]];
-  }
-  reviewIndex = 0;
-
-  document.getElementById('reviewDeckName').textContent = db.decks[deckId].name;
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+function startReview(deckId){
+  currentDeckId=deckId;
+  const cards=getDeckCards(deckId).filter(c=>!c.suspended);
+  if(cards.length===0){toast('Bộ thẻ chưa có thẻ nào!');return;}
+  reviewQueue=[...cards];
+  for(let i=reviewQueue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[reviewQueue[i],reviewQueue[j]]=[reviewQueue[j],reviewQueue[i]];}
+  reviewIndex=0;undoStack=[];
+  document.getElementById('reviewDeckName').textContent=db.decks[deckId].name;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('viewReview').classList.add('active');
-  document.getElementById('fabBtn').style.display = 'none';
-  document.getElementById('reviewDone').style.display = 'none';
+  document.getElementById('fabBtn').style.display='none';
+  document.getElementById('reviewDone').style.display='none';
+  document.getElementById('undoBtn').style.display='none';
   showCurrentCard();
 }
 
-function exitReview() { reviewQueue = []; showView('decks'); }
+function exitReview(){reviewQueue=[];showView('decks');}
 
-function setReviewMode(mode) {
-  reviewMode = mode;
-  document.getElementById('modeFlip').classList.toggle('active', mode === 'flip');
-  document.getElementById('modeType').classList.toggle('active', mode === 'type');
-  showCurrentCard();
-}
 
-function showCurrentCard() {
-  if (reviewIndex >= reviewQueue.length) {
-    document.getElementById('flashcard').style.display = 'none';
-    document.getElementById('reviewActions').style.display = 'none';
-    document.getElementById('typeAnswerWrap').style.display = 'none';
-    document.getElementById('btnCheckAnswer').style.display = 'none';
-    document.getElementById('btnNextCard').style.display = 'none';
-    document.getElementById('reviewDone').style.display = 'block';
-    updateReviewProgress();
-    return;
+function showCurrentCard(){
+  if(reviewIndex>=reviewQueue.length){
+    document.getElementById('flashcard').style.display='none';
+    document.getElementById('reviewActions').style.display='none';
+    document.getElementById('typeAnswerWrap').style.display='none';
+    document.getElementById('btnCheckAnswer').style.display='none';
+    document.getElementById('btnNextCard').style.display='none';
+    document.getElementById('reviewDone').style.display='block';
+    updateReviewProgress();return;
   }
-  const card = reviewQueue[reviewIndex];
-  document.getElementById('flashcard').style.display = 'block';
-  document.getElementById('reviewDone').style.display = 'none';
+  const card=reviewQueue[reviewIndex];
+  document.getElementById('flashcard').style.display='block';
+  document.getElementById('reviewDone').style.display='none';
   document.getElementById('flashcard').classList.remove('flipped');
-  document.getElementById('reviewActions').style.display = 'none';
-  document.getElementById('cardFront').textContent = card.front;
-  document.getElementById('cardBack').textContent = card.back;
-  document.getElementById('intAgain').textContent = getIntervalText(card, 0);
-  document.getElementById('intHard').textContent = getIntervalText(card, 1);
-  document.getElementById('intGood').textContent = getIntervalText(card, 2);
-  document.getElementById('intEasy').textContent = getIntervalText(card, 3);
+  document.getElementById('reviewActions').style.display='none';
+  document.getElementById('undoBtn').style.display=undoStack.length>0?'block':'none';
 
-  // Type mode UI
-  const typeWrap = document.getElementById('typeAnswerWrap');
-  const btnCheck = document.getElementById('btnCheckAnswer');
-  const btnNext = document.getElementById('btnNextCard');
-  const typeInput = document.getElementById('typeAnswerInput');
-  const typeResult = document.getElementById('typeAnswerResult');
-  if (reviewMode === 'type') {
-    typeWrap.style.display = 'block';
-    btnCheck.style.display = 'block';
-    btnNext.style.display = 'none';
-    typeInput.value = '';
-    typeInput.className = 'type-answer-input';
-    typeResult.className = 'type-answer-result';
-    typeResult.style.display = 'none';
-    setTimeout(() => typeInput.focus(), 100);
+  // Render content with markdown images
+  document.getElementById('cardFront').innerHTML=renderContent(card.front);
+  document.getElementById('cardBack').innerHTML=renderContent(card.back);
+  document.getElementById('cardTags').innerHTML=(card.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
+
+  document.getElementById('intAgain').textContent=getIntervalText(card,0);
+  document.getElementById('intHard').textContent=getIntervalText(card,1);
+  document.getElementById('intGood').textContent=getIntervalText(card,2);
+  document.getElementById('intEasy').textContent=getIntervalText(card,3);
+
+  // Per-card review mode
+  reviewMode=card.reviewMode||'flip';
+  document.getElementById('modeFlip').classList.toggle('active',reviewMode==='flip');
+  document.getElementById('modeType').classList.toggle('active',reviewMode==='type');
+
+  const hint=document.querySelector('.flashcard-hint');
+  const typeWrap=document.getElementById('typeAnswerWrap'),btnCheck=document.getElementById('btnCheckAnswer'),btnNext=document.getElementById('btnNextCard'),typeInput=document.getElementById('typeAnswerInput'),typeResult=document.getElementById('typeAnswerResult');
+  if(reviewMode==='type'){
+    document.getElementById('flashcard').onclick=null;
+    if(hint)hint.style.display='none';
+    typeWrap.style.display='block';btnCheck.style.display='block';btnNext.style.display='none';
+    typeInput.value='';typeInput.className='type-answer-input';typeResult.className='type-answer-result';typeResult.style.display='none';
+    setTimeout(()=>typeInput.focus(),100);
   } else {
-    typeWrap.style.display = 'none';
-    btnCheck.style.display = 'none';
-    btnNext.style.display = 'none';
+    document.getElementById('flashcard').onclick=flipCard;
+    if(hint)hint.style.display='';
+    typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
   }
   updateReviewProgress();
 }
 
-function flipCard() {
-  if (reviewMode === 'type') return;
-  const fc = document.getElementById('flashcard');
-  if (!fc.classList.contains('flipped')) {
-    fc.classList.add('flipped');
-    document.getElementById('reviewActions').style.display = 'flex';
-  }
+function renderContent(text){
+  let html=esc(text);
+  html=html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1">');
+  html=html.replace(/\[\.\.\.]/g,'<span class="cloze-blank">[...]</span>');
+  return html;
 }
 
-function normalize(s) { return s.trim().toLowerCase().replace(/\s+/g, ' '); }
+function flipCard(){
+  if(reviewMode==='type')return;
+  const fc=document.getElementById('flashcard');
+  if(!fc.classList.contains('flipped')){fc.classList.add('flipped');document.getElementById('reviewActions').style.display='flex';}
+}
 
-function checkTypedAnswer() {
-  const card = reviewQueue[reviewIndex];
-  const typed = document.getElementById('typeAnswerInput').value;
-  const correct = normalize(card.back) === normalize(typed);
-  const input = document.getElementById('typeAnswerInput');
-  const result = document.getElementById('typeAnswerResult');
+function normalize(s){return s.trim().toLowerCase().replace(/\s+/g,' ');}
 
+function checkTypedAnswer(){
+  const card=reviewQueue[reviewIndex];const typed=document.getElementById('typeAnswerInput').value;
+  const correct=normalize(card.back)===normalize(typed);
+  const input=document.getElementById('typeAnswerInput'),result=document.getElementById('typeAnswerResult');
   document.getElementById('flashcard').classList.add('flipped');
-
-  if (correct) {
-    input.className = 'type-answer-input correct';
-    result.className = 'type-answer-result correct';
-    result.textContent = '✓ Chính xác!';
-    result.style.display = 'block';
-    answerCard(2);
-    setTimeout(() => showCurrentCard(), 1200);
+  if(correct){
+    input.className='type-answer-input correct';result.className='type-answer-result correct';
+    result.textContent='✓ Chính xác!';result.style.display='block';
+    answerCard(2);setTimeout(()=>showCurrentCard(),1200);
   } else {
-    input.className = 'type-answer-input wrong';
-    result.className = 'type-answer-result wrong';
-    result.innerHTML = '✗ Sai — Đáp án: <strong>' + esc(card.back) + '</strong>';
-    result.style.display = 'block';
-    document.getElementById('btnCheckAnswer').style.display = 'none';
-    document.getElementById('btnNextCard').style.display = 'block';
+    input.className='type-answer-input wrong';result.className='type-answer-result wrong';
+    result.innerHTML='✗ Sai — Đáp án: <strong>'+esc(card.back)+'</strong>';result.style.display='block';
+    document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
   }
 }
+function nextAfterType(){answerCard(0);showCurrentCard();}
 
-function nextAfterType() {
-  answerCard(0);
-  showCurrentCard();
-}
-
-async function answerCard(quality) {
-  const card = reviewQueue[reviewIndex];
-  const deck = db.decks[currentDeckId];
-  const realCard = deck.cards.find(c => c.id === card.id);
-  if (realCard) {
-    sm2(realCard, quality);
-    Object.assign(card, realCard);
+function answerCard(quality){
+  const card=reviewQueue[reviewIndex];
+  const deck=db.decks[currentDeckId];
+  const realCard=deck.cards.find(c=>c.id===card.id);
+  if(realCard){
+    undoStack.push({cardId:card.id,prev:JSON.parse(JSON.stringify(realCard)),index:reviewIndex});
+    sm2(realCard,quality);Object.assign(card,realCard);
   }
-
-  const entry = { date: Date.now(), deckId: currentDeckId, cardId: card.id, quality };
-  addReviewLog(entry);
-  saveDeckData(currentDeckId, deck);
-
-  if (quality === 0) {
-    const reinsert = Math.min(reviewQueue.length, reviewIndex + 3 + Math.floor(Math.random() * 3));
-    reviewQueue.splice(reinsert, 0, card);
-  }
+  addReviewLog({date:Date.now(),deckId:currentDeckId,cardId:card.id,quality});
+  saveDeckData(currentDeckId,deck);
+  if(quality===0){const ri=Math.min(reviewQueue.length,reviewIndex+3+Math.floor(Math.random()*3));reviewQueue.splice(ri,0,card);}
   reviewIndex++;
-  showCurrentCard();
+  if(reviewMode==='flip')showCurrentCard();
 }
 
-function updateReviewProgress() {
-  const done = Math.min(reviewIndex, reviewQueue.length);
-  const pct = reviewQueue.length > 0 ? (done / reviewQueue.length * 100) : 100;
-  document.getElementById('reviewProgressFill').style.width = pct + '%';
-  const remaining = reviewQueue.slice(reviewIndex);
-  document.getElementById('cntNew').textContent = remaining.filter(c => c.status === 'new').length + ' mới';
-  document.getElementById('cntLearn').textContent = remaining.filter(c => c.status === 'learning').length + ' đang học';
-  document.getElementById('cntDue').textContent = remaining.filter(c => c.status === 'review').length + ' ôn tập';
+function undoAnswer(){
+  if(undoStack.length===0)return;
+  const last=undoStack.pop();
+  const deck=db.decks[currentDeckId];
+  const realCard=deck.cards.find(c=>c.id===last.cardId);
+  if(realCard)Object.assign(realCard,last.prev);
+  reviewIndex=last.index;
+  saveDeckData(currentDeckId,deck);showCurrentCard();toast('Đã hoàn tác');
+}
+
+function updateReviewProgress(){
+  const done=Math.min(reviewIndex,reviewQueue.length);
+  const pct=reviewQueue.length>0?(done/reviewQueue.length*100):100;
+  document.getElementById('reviewProgressFill').style.width=pct+'%';
+  const rem=reviewQueue.slice(reviewIndex);
+  document.getElementById('cntNew').textContent=rem.filter(c=>c.status==='new').length+' mới';
+  document.getElementById('cntLearn').textContent=rem.filter(c=>c.status==='learning').length+' đang học';
+  document.getElementById('cntDue').textContent=rem.filter(c=>c.status==='review').length+' ôn tập';
+}
+
+// ===== CUSTOM STUDY =====
+let customStudyDeckId=null;
+function openCustomStudyForDeck(id){customStudyDeckId=id;document.getElementById('customStudyModal').classList.add('active');}
+function closeCustomStudy(){document.getElementById('customStudyModal').classList.remove('active');}
+document.getElementById('customFilter').addEventListener('change',()=>{
+  document.getElementById('customTagGroup').style.display=document.getElementById('customFilter').value==='tag'?'block':'none';
+});
+
+function startCustomStudy(){
+  const filter=document.getElementById('customFilter').value;
+  const limit=parseInt(document.getElementById('customLimit').value)||50;
+  const order=document.getElementById('customOrder').value;
+  const deckId=customStudyDeckId;
+  let cards=getAllCardsRecursive(deckId).filter(c=>!c.suspended);
+
+  if(filter==='difficult')cards=cards.filter(c=>c.ease<2);
+  else if(filter==='leech')cards=cards.filter(c=>c.leech);
+  else if(filter==='new')cards=cards.filter(c=>c.status==='new');
+  else if(filter==='tag'){const tag=document.getElementById('customTagInput').value.trim().toLowerCase();cards=cards.filter(c=>(c.tags||[]).includes(tag));}
+
+  if(order==='random'){for(let i=cards.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cards[i],cards[j]]=[cards[j],cards[i]];}}
+  else if(order==='due')cards.sort((a,b)=>a.due-b.due);
+  else if(order==='added')cards.sort((a,b)=>b.created-a.created);
+  else if(order==='difficulty')cards.sort((a,b)=>a.ease-b.ease);
+
+  cards=cards.slice(0,limit);
+  if(cards.length===0){toast('Không tìm thấy thẻ phù hợp');return;}
+
+  currentDeckId=deckId;reviewQueue=cards;reviewIndex=0;undoStack=[];
+  document.getElementById('reviewDeckName').textContent=db.decks[deckId].name+' (Tùy chỉnh)';
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('viewReview').classList.add('active');
+  document.getElementById('fabBtn').style.display='none';
+  document.getElementById('reviewDone').style.display='none';
+  document.getElementById('undoBtn').style.display='none';
+  closeCustomStudy();showCurrentCard();
+}
+
+// ===== SETTINGS =====
+function openSettings(){
+  document.getElementById('dailyGoalInput').value=db.settings.dailyGoal||20;
+  document.getElementById('leechThreshold').value=db.settings.leechThreshold||8;
+  document.getElementById('settingsModal').classList.add('active');
+}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('active');}
+function saveSettings(){
+  db.settings.dailyGoal=parseInt(document.getElementById('dailyGoalInput').value)||20;
+  db.settings.leechThreshold=parseInt(document.getElementById('leechThreshold').value)||8;
+  saveLocal();closeSettings();renderDecks();toast('Đã lưu cài đặt');
 }
 
 // ===== STATS =====
-function calcStreak() {
-  const days = new Set();
-  db.reviewLog.forEach(r => days.add(new Date(r.date).toDateString()));
-  let streak = 0; const d = new Date();
-  while (days.has(d.toDateString())) { streak++; d.setDate(d.getDate() - 1); }
-  return streak;
+function calcStreak(){
+  const days=new Set();db.reviewLog.forEach(r=>days.add(new Date(r.date).toDateString()));
+  let streak=0;const d=new Date();while(days.has(d.toDateString())){streak++;d.setDate(d.getDate()-1);}return streak;
 }
 
-function renderStats() {
-  const deckIds = Object.keys(db.decks);
-  let totalCards = 0, newCards = 0, learningCards = 0, reviewCards = 0, matureCards = 0;
-  deckIds.forEach(id => {
-    getDeckCards(id).forEach(c => {
-      totalCards++;
-      if (c.status === 'new') newCards++;
-      else if (c.status === 'learning') learningCards++;
-      else { reviewCards++; if (c.interval >= 21) matureCards++; }
-    });
-  });
-  const todayReviews = db.reviewLog.filter(r => new Date(r.date).toDateString() === new Date().toDateString()).length;
+function renderStats(){
+  const deckIds=Object.keys(db.decks);
+  let totalCards=0,newCards=0,learningCards=0,reviewCards=0,matureCards=0,suspendedCards=0,leechCards=0;
+  deckIds.forEach(id=>{getDeckCards(id).forEach(c=>{
+    totalCards++;if(c.suspended)suspendedCards++;
+    if(c.status==='new')newCards++;else if(c.status==='learning')learningCards++;
+    else{reviewCards++;if(c.interval>=21)matureCards++;}
+    if(c.leech)leechCards++;
+  });});
+  const todayReviews=db.reviewLog.filter(r=>new Date(r.date).toDateString()===new Date().toDateString()).length;
 
-  document.getElementById('detailedStats').innerHTML = `
+  document.getElementById('detailedStats').innerHTML=`
     <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">Tổng thẻ</div></div>
     <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value">${calcStreak()}</div><div class="stat-label">Streak</div></div>
     <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${todayReviews}</div><div class="stat-label">Ôn hôm nay</div></div>
-    <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value">${matureCards}</div><div class="stat-label">Thẻ thuần thục</div></div>
-  `;
+    <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value">${matureCards}</div><div class="stat-label">Thuần thục</div></div>
+    <div class="stat-card"><div class="stat-icon">⏸</div><div class="stat-value">${suspendedCards}</div><div class="stat-label">Tạm ẩn</div></div>
+    <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value">${leechCards}</div><div class="stat-label">Leech</div></div>`;
 
-  let hmHTML = '<div class="heatmap">';
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const ds = d.toDateString();
-    const count = db.reviewLog.filter(r => new Date(r.date).toDateString() === ds).length;
-    const level = count === 0 ? 0 : count <= 5 ? 1 : count <= 15 ? 2 : count <= 30 ? 3 : 4;
-    hmHTML += `<div class="heatmap-day" data-count="${level}" title="${d.toLocaleDateString('vi')}: ${count} lượt"></div>`;
-  }
-  document.getElementById('heatmapContainer').innerHTML = hmHTML + '</div>';
+  let hmHTML='<div class="heatmap">';
+  for(let i=29;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toDateString();
+    const count=db.reviewLog.filter(r=>new Date(r.date).toDateString()===ds).length;
+    const level=count===0?0:count<=5?1:count<=15?2:count<=30?3:4;
+    hmHTML+=`<div class="heatmap-day" data-count="${level}" title="${d.toLocaleDateString('vi')}: ${count} lượt"></div>`;}
+  document.getElementById('heatmapContainer').innerHTML=hmHTML+'</div>';
 
-  const total = totalCards || 1;
-  document.getElementById('statusChart').innerHTML = `
-    <div class="status-bar">
-      <div style="width:${newCards/total*100}%;background:var(--blue)"></div>
-      <div style="width:${learningCards/total*100}%;background:var(--orange)"></div>
-      <div style="width:${(reviewCards-matureCards)/total*100}%;background:var(--green)"></div>
-      <div style="width:${matureCards/total*100}%;background:var(--primary)"></div>
-    </div>
-    <div class="status-legend">
-      <span><span class="dot" style="background:var(--blue)"></span>Mới: ${newCards}</span>
-      <span><span class="dot" style="background:var(--orange)"></span>Đang học: ${learningCards}</span>
-      <span><span class="dot" style="background:var(--green)"></span>Ôn tập: ${reviewCards - matureCards}</span>
-      <span><span class="dot" style="background:var(--primary)"></span>Thuần thục: ${matureCards}</span>
-    </div>`;
+  const total=totalCards||1;
+  document.getElementById('statusChart').innerHTML=`
+    <div class="status-bar"><div style="width:${newCards/total*100}%;background:var(--blue)"></div><div style="width:${learningCards/total*100}%;background:var(--orange)"></div><div style="width:${(reviewCards-matureCards)/total*100}%;background:var(--green)"></div><div style="width:${matureCards/total*100}%;background:var(--primary)"></div></div>
+    <div class="status-legend"><span><span class="dot" style="background:var(--blue)"></span>Mới: ${newCards}</span><span><span class="dot" style="background:var(--orange)"></span>Đang học: ${learningCards}</span><span><span class="dot" style="background:var(--green)"></span>Ôn tập: ${reviewCards-matureCards}</span><span><span class="dot" style="background:var(--primary)"></span>Thuần thục: ${matureCards}</span></div>`;
 }
 
 // ===== THEME =====
-function toggleTheme() {
-  const html = document.documentElement;
-  if (html.getAttribute('data-theme') === 'dark') {
-    html.removeAttribute('data-theme');
-    localStorage.setItem('flashmind_theme', 'auto');
-    document.getElementById('navTheme').textContent = '🌙';
-  } else {
-    html.setAttribute('data-theme', 'dark');
-    localStorage.setItem('flashmind_theme', 'dark');
-    document.getElementById('navTheme').textContent = '☀️';
-  }
+function toggleTheme(){
+  const html=document.documentElement;
+  if(html.getAttribute('data-theme')==='dark'){html.removeAttribute('data-theme');localStorage.setItem('flashmind_theme','auto');document.getElementById('navTheme').textContent='🌙';}
+  else{html.setAttribute('data-theme','dark');localStorage.setItem('flashmind_theme','dark');document.getElementById('navTheme').textContent='☀️';}
 }
+try{if(localStorage.getItem('flashmind_theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('navTheme').textContent='☀️';}}catch(e){}
 
-try {
-  if (localStorage.getItem('flashmind_theme') === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.getElementById('navTheme').textContent = '☀️';
-  }
-} catch(e) {}
-
-// ===== KEYBOARD SHORTCUTS =====
-document.addEventListener('keydown', e => {
-  if (document.getElementById('viewReview').classList.contains('active')) {
-    if (e.target.id === 'typeAnswerInput' && e.key === 'Enter') {
-      e.preventDefault();
-      const btnCheck = document.getElementById('btnCheckAnswer');
-      const btnNext = document.getElementById('btnNextCard');
-      if (btnCheck.style.display !== 'none') checkTypedAnswer();
-      else if (btnNext.style.display !== 'none') nextAfterType();
-      return;
-    }
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    if (e.code === 'Space') { e.preventDefault(); flipCard(); }
-    if (document.getElementById('reviewActions').style.display === 'flex') {
-      if (e.key === '1') answerCard(0);
-      if (e.key === '2') answerCard(1);
-      if (e.key === '3') answerCard(2);
-      if (e.key === '4') answerCard(3);
+// ===== KEYBOARD =====
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('viewReview').classList.contains('active')){
+    if(e.target.id==='typeAnswerInput'&&e.key==='Enter'){e.preventDefault();
+      const bc=document.getElementById('btnCheckAnswer'),bn=document.getElementById('btnNextCard');
+      if(bc.style.display!=='none')checkTypedAnswer();else if(bn.style.display!=='none')nextAfterType();return;}
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+    if(e.code==='Space'){e.preventDefault();flipCard();}
+    if(e.key==='z'&&(e.ctrlKey||e.metaKey)){e.preventDefault();undoAnswer();}
+    if(document.getElementById('reviewActions').style.display==='flex'){
+      if(e.key==='1')answerCard(0);if(e.key==='2')answerCard(1);if(e.key==='3')answerCard(2);if(e.key==='4')answerCard(3);
     }
   }
 });
 
 // ===== HELPERS =====
-function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-function formatDue(ts) {
-  const diff = ts - Date.now();
-  if (diff <= 0) return 'Bây giờ';
-  const mins = Math.round(diff / 60000);
-  if (mins < 60) return mins + ' phút';
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return hrs + ' giờ';
-  const days = Math.round(hrs / 24);
-  if (days < 30) return days + ' ngày';
-  return Math.round(days / 30) + ' tháng';
-}
-
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
-}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function formatDue(ts){const diff=ts-Date.now();if(diff<=0)return'Bây giờ';const m=Math.round(diff/60000);if(m<60)return m+' phút';const h=Math.round(m/60);if(h<24)return h+' giờ';const d=Math.round(h/24);if(d<30)return d+' ngày';return Math.round(d/30)+' tháng';}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),2500);}
 
 // ===== INIT =====
-loadLocal();
-renderDecks();
+loadLocal();renderDecks();
 </script>
 </body>
 </html>
