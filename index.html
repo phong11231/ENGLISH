@@ -850,6 +850,7 @@ auth.onAuthStateChanged(user=>{
   } else {
     document.getElementById('navLogin').style.display='flex';
     avImg.style.display='none';avInit.style.display='none';
+    db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}};saveLocal();renderCurrentView();
   }
 });
 
