@@ -1543,8 +1543,9 @@ function speakText(text){
   const btn=document.querySelector('.voice-play-btn');
   if(btn)btn.classList.add('speaking');
   const done=()=>{if(btn)btn.classList.remove('speaking');};
-  const provider=db.settings.voiceProvider||'kokoro';
+  let provider=db.settings.voiceProvider||'kokoro';
   const voiceId=db.settings.voiceId||'af_heart';
+  if(!['kokoro','google-translate','browser'].includes(provider))provider='kokoro';
   if(provider==='browser'){speakFallback(text);return;}
   if(provider==='google-translate'){
     try{
@@ -1860,7 +1861,10 @@ function openSettings(){
   document.getElementById('leechThreshold').value=db.settings.leechThreshold||8;
   document.getElementById('speechRateInput').value=db.settings.speechRate||1;
   document.getElementById('speechRateLabel').textContent=(db.settings.speechRate||1)+'x';
-  document.getElementById('voiceProviderSelect').value=db.settings.voiceProvider||'kokoro';
+  const vpSel=document.getElementById('voiceProviderSelect');
+  const savedProvider=db.settings.voiceProvider||'kokoro';
+  const validProviders=[...vpSel.options].map(o=>o.value);
+  vpSel.value=validProviders.includes(savedProvider)?savedProvider:'kokoro';
   updateVoiceList();
   if(db.settings.voiceId)document.getElementById('voiceIdSelect').value=db.settings.voiceId;
   document.getElementById('voiceTestStatus').textContent='';
