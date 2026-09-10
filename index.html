@@ -834,6 +834,7 @@ document.addEventListener('visibilitychange',()=>{
     if(unsubDecks)unsubDecks();
     unsubDecks=decksCol().onSnapshot(s=>{db.decks={};s.forEach(d=>{db.decks[d.id]=d.data();});saveLocal();renderCurrentView();});
     reviewLogCol().orderBy('date','desc').limit(5000).get().then(ls=>{db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();renderCurrentView();});
+    userDoc().get().then(doc=>{if(doc.exists){const cs=doc.data().settings||{};db.settings.totalXp=Math.max(db.settings.totalXp||0,cs.totalXp||0);if(cs.streakDays){if(!db.settings.streakDays)db.settings.streakDays={};for(const[day,count]of Object.entries(cs.streakDays)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}}saveLocal();renderCurrentView();}});
   }
 });
 function userDoc(){return firestore.collection('users').doc(currentUser.uid);}
@@ -849,10 +850,21 @@ async function mergeAndLoadCloud(){
   const existingDates=new Set();existingLogs.forEach(d=>{const e=d.data();existingDates.add(e.date+'_'+e.cardId);});
   const newLogs=local.reviewLog.filter(e=>!existingDates.has(e.date+'_'+e.cardId));
   if(newLogs.length>0){const b=firestore.batch();newLogs.forEach(e=>b.set(reviewLogCol().doc(),e));await b.commit();}
+  // Sync settings (streak, XP)
+  const cloudSettings=await userDoc().get();
+  if(cloudSettings.exists){
+    const cs=cloudSettings.data().settings||{};
+    db.settings.totalXp=Math.max(db.settings.totalXp||0,cs.totalXp||0);
+    if(cs.streakDays){
+      if(!db.settings.streakDays)db.settings.streakDays={};
+      for(const[day,count]of Object.entries(cs.streakDays)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}
+    }
+  }
+  await userDoc().set({settings:{totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20}},{merge:true});
   if(unsubDecks)unsubDecks();
   unsubDecks=decksCol().onSnapshot(s=>{db.decks={};s.forEach(d=>{db.decks[d.id]=d.data();});saveLocal();renderCurrentView();});
   const ls=await reviewLogCol().orderBy('date','desc').limit(5000).get();
-  db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();toast('Đã đồng bộ!');
+  db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();renderCurrentView();toast('Đã đồng bộ!');
 }
 async function syncToCloud(){if(!currentUser){toast('Đăng nhập trước');return;}await mergeAndLoadCloud();toggleUserMenu();}
 function saveDeckData(id,data){saveLocal();if(currentUser)decksCol().doc(id).set(data).catch(console.error);}
@@ -1531,6 +1543,7 @@ function answerCard(quality){
   if(!db.settings.totalXp)db.settings.totalXp=0;
   db.settings.totalXp+=getXpForQuality(quality)*getMultiplier();
   saveLocal();
+  if(currentUser)userDoc().set({settings:{totalXp:db.settings.totalXp,streakDays:db.settings.streakDays,dailyGoal:db.settings.dailyGoal||20}},{merge:true}).catch(console.error);
 
   if(quality===0){const ri=Math.min(reviewQueue.length,reviewIndex+3+Math.floor(Math.random()*3));reviewQueue.splice(ri,0,card);}
   reviewIndex++;
