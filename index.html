@@ -256,6 +256,23 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .review-btn.easy:hover{background:linear-gradient(135deg,var(--blue),#2563eb);color:#fff;box-shadow:0 0 30px rgba(59,130,246,.5),0 8px 20px rgba(59,130,246,.3);transform:translateY(-4px) scale(1.05)}
 
 /* STREAK SYSTEM */
+.streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
+.streak-widget::before{content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(245,158,11,.1),transparent 70%);pointer-events:none}
+.streak-widget-top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.streak-widget-fire{font-size:52px;line-height:1;filter:drop-shadow(0 0 12px rgba(245,158,11,.5));animation:fireGlow 1.5s ease-in-out infinite alternate}
+@keyframes fireGlow{0%{filter:drop-shadow(0 0 8px rgba(245,158,11,.4));transform:scale(1)}100%{filter:drop-shadow(0 0 20px rgba(245,158,11,.7));transform:scale(1.08)}}
+.streak-widget-info{flex:1}
+.streak-widget-days{font-size:36px;font-weight:900;font-family:var(--font-display);background:linear-gradient(135deg,var(--orange),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
+.streak-widget-label{font-size:13px;color:var(--ink-soft);font-weight:600;margin-top:2px}
+.streak-widget-xp{text-align:right}
+.streak-widget-xp-val{font-size:24px;font-weight:900;font-family:var(--font-display);color:var(--accent)}
+.streak-widget-xp-label{font-size:11px;color:var(--ink-soft);font-weight:600}
+.streak-widget-week{display:flex;gap:6px;justify-content:center}
+.streak-day{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:10px;font-weight:700;background:var(--surface);border:1px solid var(--glass-border);color:var(--ink-soft);transition:all .3s}
+.streak-day.active{background:linear-gradient(135deg,var(--primary),var(--accent));border-color:var(--primary);color:#fff;box-shadow:0 2px 12px rgba(139,92,246,.3)}
+.streak-day.today{border-color:var(--orange);box-shadow:0 0 0 2px rgba(245,158,11,.3)}
+.streak-day-name{font-size:9px;opacity:.7}
+.streak-day-dot{width:6px;height:6px;border-radius:50%;background:currentColor;margin-top:2px}
 .streak-bar{display:flex;align-items:center;justify-content:center;gap:16px;width:100%;max-width:560px;margin-bottom:8px;padding:6px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--glass-border);backdrop-filter:blur(12px);transition:all .4s}
 .streak-bar.on-fire{border-color:rgba(245,158,11,.4);box-shadow:0 0 20px rgba(245,158,11,.2)}
 .streak-bar.legendary{border-color:rgba(236,72,153,.4);box-shadow:0 0 30px rgba(236,72,153,.3),0 0 60px rgba(139,92,246,.15);animation:legendaryPulse 2s ease-in-out infinite}
@@ -463,6 +480,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
     <h1>Bộ thẻ của bạn</h1>
     <p>Chọn bộ thẻ để bắt đầu ôn tập</p>
   </div>
+  <div id="streakWidget"></div>
   <div id="dailyGoalWrap"></div>
   <div class="stats-row" id="globalStats"></div>
   <div id="breadcrumbWrap"></div>
@@ -900,6 +918,7 @@ function navigateToRoot(){
 
 // ===== DECK RENDERING =====
 function renderDecks(){
+  renderStreakWidget();
   const wrap=document.getElementById('deckListWrap');
   const subs=getSubDecks(viewingParentId);
   const deckEntries=subs;
@@ -1566,6 +1585,29 @@ function startCustomStudy(){
   document.getElementById('reviewDone').style.display='none';
   document.getElementById('undoBtn').style.display='none';
   closeCustomStudy();showCurrentCard();
+}
+
+function renderStreakWidget(){
+  const s=calcStreak();const xp=db.settings.totalXp||0;
+  const dayNames=['CN','T2','T3','T4','T5','T6','T7'];
+  const today=new Date();const todayDay=today.getDay();
+  const reviewDays=new Set();db.reviewLog.forEach(r=>reviewDays.add(new Date(r.date).toDateString()));
+  let weekHTML='';
+  for(let i=0;i<7;i++){
+    const d=new Date(today);d.setDate(d.getDate()-(todayDay-i));
+    const isActive=reviewDays.has(d.toDateString());
+    const isToday=d.toDateString()===today.toDateString();
+    weekHTML+='<div class="streak-day'+(isActive?' active':'')+(isToday?' today':'')+'"><span class="streak-day-name">'+dayNames[i]+'</span><div class="streak-day-dot"></div></div>';
+  }
+  document.getElementById('streakWidget').innerHTML=
+    '<div class="streak-widget">'+
+    '<div class="streak-widget-top">'+
+    '<div class="streak-widget-fire">🔥</div>'+
+    '<div class="streak-widget-info"><div class="streak-widget-days">'+s+' ngày</div><div class="streak-widget-label">'+(s>0?'Streak liên tiếp — tiếp tục phát huy!':'Ôn tập hôm nay để bắt đầu streak!')+'</div></div>'+
+    '<div class="streak-widget-xp"><div class="streak-widget-xp-val">'+xp+'</div><div class="streak-widget-xp-label">Tổng XP</div></div>'+
+    '</div>'+
+    '<div class="streak-widget-week">'+weekHTML+'</div>'+
+    '</div>';
 }
 
 // ===== SETTINGS =====
