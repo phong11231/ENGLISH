@@ -739,7 +739,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
   <div class="modal" style="max-width:380px">
     <div class="modal-header"><h2 id="authModalTitle">Đăng nhập</h2><button class="modal-close" onclick="closeAuthModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Email</label><input type="email" id="authEmail" placeholder="email@example.com" autocomplete="email"></div>
+      <div class="form-group"><label>Tên tài khoản</label><input type="text" id="authEmail" placeholder="Đặt tên gì cũng được" autocomplete="username"></div>
       <div class="form-group"><label>Mật khẩu</label><input type="password" id="authPass" placeholder="Tối thiểu 6 ký tự" autocomplete="current-password"></div>
       <div id="authNameGroup" class="form-group" style="display:none"><label>Tên hiển thị</label><input type="text" id="authName" placeholder="Tên của bạn"></div>
       <div id="authError" style="color:var(--red);font-size:13px;margin-top:4px;display:none"></div>
@@ -805,15 +805,17 @@ function toggleAuthMode(e){
 function showAuthError(msg){ const el=document.getElementById('authError');el.textContent=msg;el.style.display='block'; }
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('authModal').classList.contains('active'))submitAuth();});
 async function submitAuth(){
-  const email=document.getElementById('authEmail').value.trim();
+  let username=document.getElementById('authEmail').value.trim();
   const pass=document.getElementById('authPass').value;
   const name=document.getElementById('authName').value.trim();
-  if(!email||!pass){showAuthError('Nhập email và mật khẩu');return;}
+  if(!username||!pass){showAuthError('Nhập tên tài khoản và mật khẩu');return;}
+  if(username.length<3){showAuthError('Tên tài khoản tối thiểu 3 ký tự');return;}
   if(pass.length<6){showAuthError('Mật khẩu tối thiểu 6 ký tự');return;}
+  const email=username.includes('@')?username:username.toLowerCase().replace(/\s+/g,'')+'@flashmind.app';
   try{
     if(authIsRegister){
       const cred=await auth.createUserWithEmailAndPassword(email,pass);
-      if(name)await cred.user.updateProfile({displayName:name});
+      await cred.user.updateProfile({displayName:name||username});
       toast('Đăng ký thành công!');
     } else {
       await auth.signInWithEmailAndPassword(email,pass);
@@ -821,11 +823,16 @@ async function submitAuth(){
     }
     closeAuthModal();
   }catch(e){
-    const msgs={'auth/email-already-in-use':'Email đã được sử dụng','auth/invalid-email':'Email không hợp lệ','auth/weak-password':'Mật khẩu quá yếu','auth/user-not-found':'Không tìm thấy tài khoản','auth/wrong-password':'Sai mật khẩu','auth/invalid-credential':'Email hoặc mật khẩu không đúng','auth/too-many-requests':'Quá nhiều lần thử, vui lòng đợi'};
+    const msgs={'auth/email-already-in-use':'Tên tài khoản đã được sử dụng','auth/invalid-email':'Tên tài khoản không hợp lệ','auth/weak-password':'Mật khẩu quá yếu','auth/user-not-found':'Không tìm thấy tài khoản','auth/wrong-password':'Sai mật khẩu','auth/invalid-credential':'Tên tài khoản hoặc mật khẩu không đúng','auth/too-many-requests':'Quá nhiều lần thử, vui lòng đợi'};
     showAuthError(msgs[e.code]||e.message);
   }
 }
-function signInGoogle(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(()=>closeAuthModal()).catch(e=>toast('Lỗi: '+e.message)); }
+function signInGoogle(){
+  const provider=new firebase.auth.GoogleAuthProvider();
+  const isMobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
+  if(isMobile){auth.signInWithRedirect(provider);}
+  else{auth.signInWithPopup(provider).then(()=>closeAuthModal()).catch(e=>{if(e.code==='auth/popup-blocked'){auth.signInWithRedirect(provider);}else{showAuthError('Lỗi Google: '+e.message);}});}
+}
 function signOutUser(){ if(unsubDecks){unsubDecks();unsubDecks=null;} auth.signOut(); toggleUserMenu(); loadLocal(); renderCurrentView(); }
 function toggleUserMenu(){ document.getElementById('userMenu').classList.toggle('active'); }
 document.addEventListener('click',e=>{const m=document.getElementById('userMenu'),a=document.getElementById('userAvatar'),b=document.getElementById('userAvatarInitial');if(m&&!m.contains(e.target)&&e.target!==a&&e.target!==b)m.classList.remove('active');});
@@ -1057,7 +1064,9 @@ function onDeckClick(id){
 }
 
 // ===== DECK MODAL =====
+function requireAuth(){if(!currentUser){openAuthModal();return false;}return true;}
 function openDeckModal(){
+  if(!requireAuth())return;
   editingDeckId=null;
   document.getElementById('deckModalTitle').textContent='Tạo bộ thẻ mới';
   document.getElementById('saveDeckBtn').textContent='Tạo bộ thẻ';
@@ -1123,6 +1132,7 @@ function onCardTypeChange(){
 }
 
 function openCardModal(cardId){
+  if(!requireAuth())return;
   editingCardId=cardId||null;
   document.getElementById('cardTypeSelect').value='basic';onCardTypeChange();
   if(cardId){
@@ -1264,7 +1274,7 @@ function deleteCard(cardId){
 }
 
 // ===== BULK ADD =====
-function openBulkAddModal(){document.getElementById('bulkInput').value='';document.getElementById('bulkTagsInput').value='';document.getElementById('bulkModal').classList.add('active');}
+function openBulkAddModal(){if(!requireAuth())return;document.getElementById('bulkInput').value='';document.getElementById('bulkTagsInput').value='';document.getElementById('bulkModal').classList.add('active');}
 function closeBulkModal(){document.getElementById('bulkModal').classList.remove('active');}
 
 function saveBulkCards(){
