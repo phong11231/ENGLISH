@@ -256,6 +256,15 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .review-btn.easy:hover{background:linear-gradient(135deg,var(--blue),#2563eb);color:#fff;box-shadow:0 0 30px rgba(59,130,246,.5),0 8px 20px rgba(59,130,246,.3);transform:translateY(-4px) scale(1.05)}
 
 /* STREAK SYSTEM */
+.voice-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:120px}
+.voice-play-btn{background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;width:80px;height:80px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .3s;box-shadow:0 4px 20px rgba(139,92,246,.4)}
+.voice-play-btn:hover{transform:scale(1.1);box-shadow:0 6px 30px rgba(139,92,246,.6)}
+.voice-play-btn:active{transform:scale(0.95)}
+.voice-icon{font-size:32px;line-height:1}
+.voice-label{font-size:10px;color:rgba(255,255,255,.8);font-weight:700}
+.voice-hint{font-size:12px;color:var(--ink-soft);font-weight:500}
+.voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
+@keyframes speakPulse{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,.4)}50%{box-shadow:0 4px 30px rgba(139,92,246,.7),0 0 60px rgba(139,92,246,.2)}}
 .streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
 .streak-widget::before{content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(245,158,11,.1),transparent 70%);pointer-events:none}
 .streak-widget-top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
@@ -641,6 +650,12 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <option value="type">⌨️ Nhập đáp án — Hệ thống chấm</option>
         </select>
       </div>
+      <div class="form-group"><label>Hiển thị câu hỏi</label>
+        <select id="cardDisplayMode">
+          <option value="text">📝 Hiện text — Đọc câu hỏi</option>
+          <option value="voice">🔊 AI đọc — Nghe và trả lời</option>
+        </select>
+      </div>
       <div class="form-group"><label>Tags (cách nhau bằng dấu phẩy)</label><input type="text" id="cardTagsInput" placeholder="VD: tuần-1, ngữ-pháp, khó"></div>
       <div class="form-actions"><button class="btn btn-ghost" onclick="closeCardModal()">Hủy</button><button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Lưu thẻ</button></div>
     </div>
@@ -872,7 +887,7 @@ function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
 // ===== SM-2 =====
-function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'text',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
 
 function sm2(card,quality){
   const now=Date.now(),DAY=86400000; card.lastReview=now;
@@ -1123,11 +1138,13 @@ function openCardModal(cardId){
     }
     document.getElementById('cardTagsInput').value=(card.tags||[]).join(', ');
     document.getElementById('cardReviewMode').value=card.reviewMode||'flip';
+    document.getElementById('cardDisplayMode').value=card.displayMode||'text';
   } else {
     document.getElementById('cardModalTitle').textContent='Thêm thẻ mới';
     document.getElementById('saveCardBtn').textContent='Lưu thẻ';
     document.getElementById('cardFrontInput').value='';document.getElementById('cardBackInput').value='';
     document.getElementById('cardReviewMode').value='flip';
+    document.getElementById('cardDisplayMode').value='text';
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
   }
   document.getElementById('cardModal').classList.add('active');
@@ -1143,17 +1160,18 @@ function saveCard(){
   const deck=db.decks[currentDeckId];if(!deck.cards)deck.cards=[];
 
   const cardReviewMode=document.getElementById('cardReviewMode').value;
+  const cardDisplayMode=document.getElementById('cardDisplayMode').value;
   if(type==='cloze'){
     const text=document.getElementById('clozeInput').value.trim();
     if(!text||!text.includes('{{c')){toast('Cần có ít nhất 1 {{c1::...}}');return;}
     const nums=new Set();text.replace(/\{\{c(\d+)::/g,(_,n)=>nums.add(parseInt(n)));
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;
+      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;
       toast('Đã cập nhật!');
     } else {
       nums.forEach(n=>{
-        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;
+        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;
         deck.cards.push(card);
       });
       toast('Đã thêm '+nums.size+' thẻ cloze!');
@@ -1164,10 +1182,10 @@ function saveCard(){
     if(!front||!back){toast('Nhập cả mặt trước và sau');return;}
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;toast('Đã cập nhật!');
+      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;toast('Đã cập nhật!');
     } else {
-      const card=newCardData();card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;deck.cards.push(card);
-      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;deck.cards.push(rc);toast('Đã thêm 2 thẻ (gốc + ngược)!');}
+      const card=newCardData();card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;deck.cards.push(card);
+      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;deck.cards.push(rc);toast('Đã thêm 2 thẻ (gốc + ngược)!');}
       else toast('Đã thêm thẻ!');
     }
   }
@@ -1216,9 +1234,9 @@ function renderCardBrowser(){
       const dt=c.status==='new'?'—':formatDue(c.due);
       const tagHTML=(c.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
       const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
-      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';
+      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':'';
       return`<tr><td class="card-front-col">${esc(c.front)}</td><td class="card-back-col">${esc(c.back)}</td>
-        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Nhập đáp án':'Lật thẻ'}">${modeLabel}</td>
+        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Nhập đáp án':'Lật thẻ'}${c.displayMode==='voice'?' · AI đọc':''}">${modeLabel}${dispLabel}</td>
         <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
         <td><span class="card-status ${sc}">${st}</span></td>
         <td style="font-size:13px;color:var(--ink-dim)">${dt}</td>
@@ -1377,8 +1395,14 @@ function showCurrentCard(){
   document.getElementById('reviewActions').style.display='none';
   document.getElementById('undoBtn').style.display=undoStack.length>0?'block':'none';
 
-  // Render content with markdown images
-  document.getElementById('cardFront').innerHTML=renderContent(card.front);
+  // Render content — voice mode hides text and plays TTS
+  const isVoice=(card.displayMode==='voice');
+  if(isVoice){
+    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+esc(card.front).replace(/'/g,"\\'")+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe câu hỏi</span></button><div class="voice-hint">Nhấn để nghe · Lật thẻ để xem đáp án</div></div>';
+    setTimeout(()=>speakText(card.front),300);
+  } else {
+    document.getElementById('cardFront').innerHTML=renderContent(card.front);
+  }
   document.getElementById('cardBack').innerHTML=renderContent(card.back);
   document.getElementById('cardTags').innerHTML=(card.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
 
@@ -1408,6 +1432,22 @@ function showCurrentCard(){
   updateReviewProgress();
 }
 
+function speakText(text){
+  if(!('speechSynthesis' in window)){toast('Trình duyệt không hỗ trợ đọc');return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';u.rate=0.9;u.pitch=1;
+  const voices=speechSynthesis.getVoices();
+  const preferred=voices.find(v=>v.name.includes('Google US English'))||voices.find(v=>v.name.includes('Google UK English'))||voices.find(v=>v.lang.startsWith('en')&&v.localService===false)||voices.find(v=>v.lang.startsWith('en'));
+  if(preferred)u.voice=preferred;
+  const btn=document.querySelector('.voice-play-btn');
+  if(btn)btn.classList.add('speaking');
+  u.onend=()=>{if(btn)btn.classList.remove('speaking');};
+  u.onerror=()=>{if(btn)btn.classList.remove('speaking');};
+  speechSynthesis.speak(u);
+}
+if('speechSynthesis' in window)speechSynthesis.getVoices();
+
 function renderContent(text){
   let html=esc(text);
   html=html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1">');
@@ -1417,6 +1457,7 @@ function renderContent(text){
 
 function flipCard(){
   if(reviewMode==='type')return;
+  if('speechSynthesis' in window)speechSynthesis.cancel();
   const fc=document.getElementById('flashcard');
   if(!fc.classList.contains('flipped')){fc.classList.add('flipped');document.getElementById('reviewActions').style.display='flex';}
 }
