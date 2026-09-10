@@ -729,6 +729,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
     <div class="modal-body">
       <div class="form-group"><label>Mục tiêu hàng ngày (số thẻ)</label><input type="number" id="dailyGoalInput" value="20" min="1" max="500"></div>
       <div class="form-group"><label>Ngưỡng leech (số lần sai)</label><input type="number" id="leechThreshold" value="8" min="3" max="50"></div>
+      <div class="form-group"><label>Tốc độ đọc AI: <span id="speechRateLabel">1x</span></label><input type="range" id="speechRateInput" min="0.5" max="2" step="0.1" value="1" oninput="document.getElementById('speechRateLabel').textContent=this.value+'x'" style="width:100%"></div>
       <div class="form-actions"><button class="btn btn-ghost" onclick="closeSettings()">Hủy</button><button class="btn btn-primary" onclick="saveSettings()">Lưu</button></div>
     </div>
   </div>
@@ -887,7 +888,7 @@ function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
 // ===== SM-2 =====
-function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'text',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
 
 function sm2(card,quality){
   const now=Date.now(),DAY=86400000; card.lastReview=now;
@@ -1138,13 +1139,13 @@ function openCardModal(cardId){
     }
     document.getElementById('cardTagsInput').value=(card.tags||[]).join(', ');
     document.getElementById('cardReviewMode').value=card.reviewMode||'flip';
-    document.getElementById('cardDisplayMode').value=card.displayMode||'text';
+    document.getElementById('cardDisplayMode').value=card.displayMode||'voice';
   } else {
     document.getElementById('cardModalTitle').textContent='Thêm thẻ mới';
     document.getElementById('saveCardBtn').textContent='Lưu thẻ';
     document.getElementById('cardFrontInput').value='';document.getElementById('cardBackInput').value='';
     document.getElementById('cardReviewMode').value='flip';
-    document.getElementById('cardDisplayMode').value='text';
+    document.getElementById('cardDisplayMode').value='voice';
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
   }
   document.getElementById('cardModal').classList.add('active');
@@ -1436,7 +1437,7 @@ function speakText(text){
   if(!('speechSynthesis' in window)){toast('Trình duyệt không hỗ trợ đọc');return;}
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
-  u.lang='en-US';u.rate=0.9;u.pitch=1;
+  u.lang='en-US';u.rate=db.settings.speechRate||1;u.pitch=1;
   const voices=speechSynthesis.getVoices();
   const preferred=voices.find(v=>v.name.includes('Google US English'))||voices.find(v=>v.name.includes('Google UK English'))||voices.find(v=>v.lang.startsWith('en')&&v.localService===false)||voices.find(v=>v.lang.startsWith('en'));
   if(preferred)u.voice=preferred;
@@ -1678,12 +1679,15 @@ function renderStreakWidget(){
 function openSettings(){
   document.getElementById('dailyGoalInput').value=db.settings.dailyGoal||20;
   document.getElementById('leechThreshold').value=db.settings.leechThreshold||8;
+  document.getElementById('speechRateInput').value=db.settings.speechRate||1;
+  document.getElementById('speechRateLabel').textContent=(db.settings.speechRate||1)+'x';
   document.getElementById('settingsModal').classList.add('active');
 }
 function closeSettings(){document.getElementById('settingsModal').classList.remove('active');}
 function saveSettings(){
   db.settings.dailyGoal=parseInt(document.getElementById('dailyGoalInput').value)||20;
   db.settings.leechThreshold=parseInt(document.getElementById('leechThreshold').value)||8;
+  db.settings.speechRate=parseFloat(document.getElementById('speechRateInput').value)||1;
   saveLocal();closeSettings();renderDecks();toast('Đã lưu cài đặt');
 }
 
