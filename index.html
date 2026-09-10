@@ -267,17 +267,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .voice-flip-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 24px;cursor:pointer;color:var(--ink);font-size:14px;font-weight:700;transition:all .3s;backdrop-filter:blur(8px)}
 .voice-flip-btn:hover{background:rgba(255,255,255,.2);transform:scale(1.05)}
 .voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
-.voice-play-btn.loading{opacity:.7;pointer-events:none;animation:speakPulse .6s ease-in-out infinite}
 @keyframes speakPulse{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,.4)}50%{box-shadow:0 4px 30px rgba(139,92,246,.7),0 0 60px rgba(139,92,246,.2)}}
-.kokoro-loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:10000}
-.kokoro-loading-card{background:linear-gradient(135deg,rgba(30,20,60,.95),rgba(20,15,40,.95));border:1px solid rgba(139,92,246,.3);border-radius:20px;padding:28px;max-width:340px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.kokoro-loading-card .kl-icon{font-size:48px;margin-bottom:12px}
-.kokoro-loading-card .kl-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px}
-.kokoro-loading-card .kl-desc{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:16px;line-height:1.4}
-.kokoro-loading-card .kl-bar-bg{background:rgba(255,255,255,.1);border-radius:8px;height:8px;overflow:hidden;margin-bottom:8px}
-.kokoro-loading-card .kl-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:8px;transition:width .3s;width:0%}
-.kokoro-loading-card .kl-percent{font-size:12px;color:rgba(255,255,255,.5)}
-@keyframes kokoroInit{0%{width:20%}50%{width:70%}100%{width:20%}}
 .streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
 .streak-widget::before{content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(245,158,11,.1),transparent 70%);pointer-events:none}
 .streak-widget-top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
@@ -745,7 +735,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
       <div class="form-group"><label>Tốc độ đọc AI: <span id="speechRateLabel">1x</span></label><input type="range" id="speechRateInput" min="0.5" max="2" step="0.1" value="1" oninput="document.getElementById('speechRateLabel').textContent=this.value+'x'" style="width:100%"></div>
       <div class="form-group"><label>Giọng đọc AI</label>
         <select id="voiceProviderSelect" onchange="updateVoiceList()" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;margin-bottom:8px">
-          <option value="kokoro">🧠 Kokoro AI — Giọng người thật, free</option>
+          <option value="edge">🎙️ Edge TTS — Giọng người thật, nhanh (hay nhất)</option>
           <option value="google-translate">🌍 Google Translate — Free, nhanh</option>
           <option value="browser">🌐 Trình duyệt (Offline, free)</option>
         </select>
@@ -1478,28 +1468,22 @@ function showCurrentCard(){
 }
 
 let currentAudio=null;
-let kokoroTTS=null, kokoroLoading=false;
+const EDGE_TTS_API='https://edge-tts-api-gold.vercel.app/api/tts';
 const VOICE_OPTIONS={
-  kokoro:[
-    {id:'af_heart',name:'Heart — Nữ Mỹ ❤️ (hay nhất)'},
-    {id:'af_sky',name:'Sky — Nữ Mỹ, nhẹ nhàng'},
-    {id:'af_bella',name:'Bella — Nữ Mỹ, ấm'},
-    {id:'af_sarah',name:'Sarah — Nữ Mỹ'},
-    {id:'af_nicole',name:'Nicole — Nữ Mỹ'},
-    {id:'af_nova',name:'Nova — Nữ Mỹ, tươi'},
-    {id:'af_river',name:'River — Nữ Mỹ'},
-    {id:'am_adam',name:'Adam — Nam Mỹ'},
-    {id:'am_michael',name:'Michael — Nam Mỹ'},
-    {id:'am_eric',name:'Eric — Nam Mỹ'},
-    {id:'am_liam',name:'Liam — Nam Mỹ'},
-    {id:'bf_emma',name:'Emma — Nữ Anh 🇬🇧'},
-    {id:'bf_isabella',name:'Isabella — Nữ Anh 🇬🇧'},
-    {id:'bf_lily',name:'Lily — Nữ Anh 🇬🇧'},
-    {id:'bf_alice',name:'Alice — Nữ Anh 🇬🇧'},
-    {id:'bm_george',name:'George — Nam Anh 🇬🇧'},
-    {id:'bm_daniel',name:'Daniel — Nam Anh 🇬🇧'},
-    {id:'bm_lewis',name:'Lewis — Nam Anh 🇬🇧'},
-    {id:'bm_fable',name:'Fable — Nam Anh 🇬🇧'}
+  edge:[
+    {id:'en-US-JennyNeural',name:'Jenny — Nữ Mỹ ❤️ (hay nhất)'},
+    {id:'en-US-AriaNeural',name:'Aria — Nữ Mỹ, tự nhiên'},
+    {id:'en-US-SaraNeural',name:'Sara — Nữ Mỹ, trẻ'},
+    {id:'en-US-MichelleNeural',name:'Michelle — Nữ Mỹ, ấm'},
+    {id:'en-US-GuyNeural',name:'Guy — Nam Mỹ'},
+    {id:'en-US-ChristopherNeural',name:'Christopher — Nam Mỹ'},
+    {id:'en-US-EricNeural',name:'Eric — Nam Mỹ'},
+    {id:'en-US-RogerNeural',name:'Roger — Nam Mỹ, trầm'},
+    {id:'en-GB-SoniaNeural',name:'Sonia — Nữ Anh 🇬🇧'},
+    {id:'en-GB-LibbyNeural',name:'Libby — Nữ Anh 🇬🇧'},
+    {id:'en-GB-RyanNeural',name:'Ryan — Nam Anh 🇬🇧'},
+    {id:'en-AU-NatashaNeural',name:'Natasha — Nữ Úc 🇦🇺'},
+    {id:'en-AU-WilliamNeural',name:'William — Nam Úc 🇦🇺'}
   ],
   'google-translate':[
     {id:'en-US',name:'Tiếng Anh Mỹ 🇺🇸'},
@@ -1522,53 +1506,10 @@ function updateVoiceList(){
   if(saved&&opts.find(v=>v.id===saved))sel.value=saved;
 }
 
-function showKokoroLoading(){
-  if(document.getElementById('kokoroLoadingOverlay'))return;
-  const isFirstTime=!localStorage.getItem('kokoro_cached');
-  const ov=document.createElement('div');ov.id='kokoroLoadingOverlay';ov.className='kokoro-loading-overlay';
-  if(isFirstTime){
-    ov.innerHTML='<div class="kokoro-loading-card"><div class="kl-icon">🧠</div><div class="kl-title">Đang tải giọng nói AI</div><div class="kl-desc">Tải model giọng nói vào trình duyệt.<br>Lần đầu ~90MB • Lần sau <b>không cần tải lại</b></div><div class="kl-bar-bg"><div class="kl-bar" id="kokoroBar"></div></div><div class="kl-percent" id="kokoroPercent">0%</div></div>';
-  } else {
-    ov.innerHTML='<div class="kokoro-loading-card" style="padding:20px"><div class="kl-icon" style="font-size:36px;margin-bottom:8px">🧠</div><div class="kl-title" style="font-size:14px">Đang khởi tạo giọng nói...</div><div class="kl-desc" style="margin-bottom:8px;font-size:12px">Chỉ vài giây</div><div class="kl-bar-bg"><div class="kl-bar" id="kokoroBar" style="width:30%;animation:kokoroInit 2s ease-in-out infinite"></div></div></div>';
-  }
-  document.body.appendChild(ov);
-}
-function updateKokoroProgress(p){
-  const bar=document.getElementById('kokoroBar');
-  const pct=document.getElementById('kokoroPercent');
-  if(bar)bar.style.width=Math.round(p)+'%';
-  if(pct)pct.textContent=Math.round(p)+'%';
-}
-function hideKokoroLoading(){const ov=document.getElementById('kokoroLoadingOverlay');if(ov)ov.remove();}
-
-async function loadKokoro(silent){
-  if(kokoroTTS)return kokoroTTS;
-  if(kokoroLoading)return new Promise((res)=>{const i=setInterval(()=>{if(kokoroTTS){clearInterval(i);res(kokoroTTS);}},200);});
-  kokoroLoading=true;
-  if(!silent)showKokoroLoading();
-  try{
-    const{KokoroTTS}=await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm');
-    if(!silent)updateKokoroProgress(10);
-    kokoroTTS=await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX',{
-      dtype:'q8',device:'wasm',
-      progress_callback:(p)=>{if(!silent&&p.progress!==undefined)updateKokoroProgress(10+p.progress*0.9);}
-    });
-    if(!silent)updateKokoroProgress(100);
-    try{localStorage.setItem('kokoro_cached','1');}catch(e){}
-    if(!silent)hideKokoroLoading();
-  }catch(e){if(!silent)hideKokoroLoading();kokoroLoading=false;throw e;}
-  kokoroLoading=false;
-  return kokoroTTS;
-}
-// Pre-load Kokoro khi da cache (khoi tao nhanh, khong can overlay)
-if(localStorage.getItem('kokoro_cached'))setTimeout(()=>loadKokoro(true).catch(()=>{}),2000);
-
-async function kokoroSpeak(text,voiceId){
-  const tts=await loadKokoro();
-  const raw=await tts.generate(text,{voice:voiceId||'af_heart'});
-  const wavData=raw.toWav();
-  const blob=new Blob([wavData],{type:'audio/wav'});
-  const url=URL.createObjectURL(blob);
+function edgeTTS(text,voiceId){
+  const encoded=encodeURIComponent(text.substring(0,1000));
+  const voice=voiceId||'en-US-JennyNeural';
+  const url=EDGE_TTS_API+'?text='+encoded+'&voice='+voice;
   return new Audio(url);
 }
 
@@ -1584,9 +1525,9 @@ function speakText(text){
   const btn=document.querySelector('.voice-play-btn');
   if(btn)btn.classList.add('speaking');
   const done=()=>{if(btn)btn.classList.remove('speaking');};
-  let provider=db.settings.voiceProvider||'kokoro';
-  const voiceId=db.settings.voiceId||'af_heart';
-  if(!['kokoro','google-translate','browser'].includes(provider))provider='kokoro';
+  let provider=db.settings.voiceProvider||'edge';
+  const voiceId=db.settings.voiceId||'en-US-JennyNeural';
+  if(!['edge','google-translate','browser'].includes(provider))provider='edge';
   if(provider==='browser'){speakFallback(text);return;}
   if(provider==='google-translate'){
     try{
@@ -1597,14 +1538,13 @@ function speakText(text){
     }catch(e){done();speakFallback(text);}
     return;
   }
-  if(provider==='kokoro'){
-    if(btn){btn.classList.add('loading');btn.querySelector('.voice-label').textContent='Đang tải...';}
-    kokoroSpeak(text,voiceId).then(audio=>{
-      if(btn){btn.classList.remove('loading');btn.querySelector('.voice-label').textContent='Nghe lại';}
+  if(provider==='edge'){
+    try{
+      const audio=edgeTTS(text,voiceId);
       currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
       audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};
       audio.play().catch(()=>{done();speakFallback(text);});
-    }).catch(()=>{if(btn){btn.classList.remove('loading');btn.querySelector('.voice-label').textContent='Nghe lại';}done();speakFallback(text);});
+    }catch(e){done();speakFallback(text);}
     return;
   }
   speakFallback(text);
@@ -1635,23 +1575,24 @@ function testVoice(){
       if(currentAudio)currentAudio.pause();
       currentAudio=audio;audio.playbackRate=parseFloat(document.getElementById('speechRateInput').value)||1;
       audio.onended=()=>{status.textContent='✅ Xong';};
-      audio.onerror=()=>{status.textContent='❌ Lỗi — thử Kokoro hoặc Trình duyệt';btn.disabled=false;btn.textContent='▶ Nghe thử';};
+      audio.onerror=()=>{status.textContent='❌ Lỗi — thử Edge TTS hoặc Trình duyệt';btn.disabled=false;btn.textContent='▶ Nghe thử';};
       status.textContent='🔊 Đang phát...';
-      audio.play().catch(()=>{status.textContent='❌ Google chặn — thử Kokoro';btn.disabled=false;btn.textContent='▶ Nghe thử';});
+      audio.play().catch(()=>{status.textContent='❌ Google chặn — thử Edge TTS';btn.disabled=false;btn.textContent='▶ Nghe thử';});
       btn.disabled=false;btn.textContent='▶ Nghe thử';
     }catch(e){status.textContent='❌ Lỗi';btn.disabled=false;btn.textContent='▶ Nghe thử';}
     return;
   }
-  if(provider==='kokoro'){
-    status.textContent=kokoroTTS?'Đang tạo giọng...':'Đang tải AI model (~90MB lần đầu)...';
-    kokoroSpeak(text,voiceId).then(audio=>{
+  if(provider==='edge'){
+    try{
+      const audio=edgeTTS(text,voiceId);
       if(currentAudio)currentAudio.pause();
       currentAudio=audio;audio.playbackRate=parseFloat(document.getElementById('speechRateInput').value)||1;
       audio.onended=()=>{status.textContent='✅ Xong';};
+      audio.onerror=()=>{status.textContent='❌ Lỗi — thử Google Translate';btn.disabled=false;btn.textContent='▶ Nghe thử';};
       status.textContent='🔊 Đang phát...';
-      audio.play().catch(()=>{status.textContent='❌ Lỗi phát';});
+      audio.play().catch(()=>{status.textContent='❌ Lỗi phát';btn.disabled=false;btn.textContent='▶ Nghe thử';});
       btn.disabled=false;btn.textContent='▶ Nghe thử';
-    }).catch(e=>{status.textContent='❌ Lỗi: '+e.message;btn.disabled=false;btn.textContent='▶ Nghe thử';});
+    }catch(e){status.textContent='❌ Lỗi';btn.disabled=false;btn.textContent='▶ Nghe thử';}
     return;
   }
   status.textContent='❌ Provider không hỗ trợ';btn.disabled=false;btn.textContent='▶ Nghe thử';
@@ -1905,9 +1846,9 @@ function openSettings(){
   document.getElementById('speechRateInput').value=db.settings.speechRate||1;
   document.getElementById('speechRateLabel').textContent=(db.settings.speechRate||1)+'x';
   const vpSel=document.getElementById('voiceProviderSelect');
-  const savedProvider=db.settings.voiceProvider||'kokoro';
+  const savedProvider=db.settings.voiceProvider||'edge';
   const validProviders=[...vpSel.options].map(o=>o.value);
-  vpSel.value=validProviders.includes(savedProvider)?savedProvider:'kokoro';
+  vpSel.value=validProviders.includes(savedProvider)?savedProvider:'edge';
   updateVoiceList();
   if(db.settings.voiceId)document.getElementById('voiceIdSelect').value=db.settings.voiceId;
   document.getElementById('voiceTestStatus').textContent='';
