@@ -2,7 +2,7 @@
   "name": "FlashMind — Học thông minh",
   "short_name": "FlashMind",
   "description": "Ôn tập flashcard thông minh với thuật toán SM-2",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#06061a",
   "theme_color": "#8b5cf6",
