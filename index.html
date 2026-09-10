@@ -262,7 +262,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .voice-play-btn:active{transform:scale(0.95)}
 .voice-icon{font-size:32px;line-height:1}
 .voice-label{font-size:10px;color:rgba(255,255,255,.8);font-weight:700}
-.voice-hint{font-size:12px;color:var(--ink-soft);font-weight:500}
+.voice-flip-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 24px;cursor:pointer;color:var(--ink);font-size:14px;font-weight:700;transition:all .3s;backdrop-filter:blur(8px)}
+.voice-flip-btn:hover{background:rgba(255,255,255,.2);transform:scale(1.05)}
 .voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
 @keyframes speakPulse{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,.4)}50%{box-shadow:0 4px 30px rgba(139,92,246,.7),0 0 60px rgba(139,92,246,.2)}}
 .streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
@@ -1416,7 +1417,8 @@ function showCurrentCard(){
   // Render content — voice mode hides text and plays TTS
   const isVoice=(card.displayMode==='voice');
   if(isVoice){
-    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+esc(card.front).replace(/'/g,"\\'")+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe câu hỏi</span></button><div class="voice-hint">Nhấn để nghe · Lật thẻ để xem đáp án</div></div>';
+    const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
+    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe lại</span></button><button class="voice-flip-btn" onclick="event.stopPropagation();flipCard()">🔄 Lật thẻ</button></div>';
     setTimeout(()=>speakText(card.front),300);
   } else {
     document.getElementById('cardFront').innerHTML=renderContent(card.front);
@@ -1443,8 +1445,8 @@ function showCurrentCard(){
     typeInput.value='';typeInput.className='type-answer-input';typeResult.className='type-answer-result';typeResult.style.display='none';
     setTimeout(()=>typeInput.focus(),100);
   } else {
-    document.getElementById('flashcard').onclick=flipCard;
-    if(hint)hint.style.display='';
+    document.getElementById('flashcard').onclick=isVoice?null:flipCard;
+    if(hint)hint.style.display=isVoice?'none':'';
     typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
   }
   updateReviewProgress();
