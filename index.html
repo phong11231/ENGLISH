@@ -256,6 +256,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .review-btn.easy:hover{background:linear-gradient(135deg,var(--blue),#2563eb);color:#fff;box-shadow:0 0 30px rgba(59,130,246,.5),0 8px 20px rgba(59,130,246,.3);transform:translateY(-4px) scale(1.05)}
 
 /* STREAK SYSTEM */
+#voiceProviderSelect,#voiceIdSelect{color-scheme:dark;appearance:none;-webkit-appearance:none;background-color:rgba(30,20,50,.9);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23fff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+#voiceProviderSelect option,#voiceIdSelect option{background:#1e1432;color:#fff;padding:8px}
 .voice-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:120px}
 .voice-play-btn{background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;width:80px;height:80px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .3s;box-shadow:0 4px 20px rgba(139,92,246,.4)}
 .voice-play-btn:hover{transform:scale(1.1);box-shadow:0 6px 30px rgba(139,92,246,.6)}
@@ -733,13 +735,9 @@ input,textarea,select{font-family:inherit;font-size:inherit}
       <div class="form-group"><label>Tốc độ đọc AI: <span id="speechRateLabel">1x</span></label><input type="range" id="speechRateInput" min="0.5" max="2" step="0.1" value="1" oninput="document.getElementById('speechRateLabel').textContent=this.value+'x'" style="width:100%"></div>
       <div class="form-group"><label>Giọng đọc AI</label>
         <select id="voiceProviderSelect" onchange="updateVoiceList()" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;margin-bottom:8px">
-          <option value="elevenlabs">🎙️ ElevenLabs — Tự nhiên nhất</option>
-          <option value="openai">🤖 OpenAI — Rõ ràng, hay</option>
-          <option value="gemini">✨ Gemini — Nhiều giọng</option>
-          <option value="xai">🔊 xAI/Grok — Biểu cảm</option>
-          <option value="aws-polly">📢 AWS Polly — Ổn định</option>
-          <option value="speechify">🗣️ Speechify</option>
-          <option value="browser">🌐 Trình duyệt (Offline)</option>
+          <option value="kokoro">🧠 Kokoro AI — Giọng người thật, free</option>
+          <option value="google-translate">🌍 Google Translate — Free, nhanh</option>
+          <option value="browser">🌐 Trình duyệt (Offline, free)</option>
         </select>
         <select id="voiceIdSelect" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff"></select>
       </div>
@@ -777,8 +775,6 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 
 <div class="toast" id="toast"></div>
 
-<!-- Puter.js for TTS -->
-<script src="https://js.puter.com/v2/"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -1472,59 +1468,43 @@ function showCurrentCard(){
 }
 
 let currentAudio=null;
-const PUTER_TOKEN='PASTE_YOUR_TOKEN_HERE';
+let kokoroTTS=null, kokoroLoading=false;
 const VOICE_OPTIONS={
-  elevenlabs:[
-    {id:'21m00Tcm4TlvDq8ikWAM',name:'Rachel — Nữ, trầm ấm'},
-    {id:'EXAVITQu4vr4xnSDxMaL',name:'Bella — Nữ, nhẹ nhàng'},
-    {id:'ErXwobaYiN019PkySvjV',name:'Antoni — Nam, rõ ràng'},
-    {id:'MF3mGyEYCl7XYWbV9V6O',name:'Elli — Nữ, trẻ'},
-    {id:'TxGEqnHWrfWFTfGW9XjX',name:'Josh — Nam, trầm'},
-    {id:'VR6AewLTigWG4xSOukaG',name:'Arnold — Nam, mạnh mẽ'},
-    {id:'pNInz6obpgDQGcFmaJgB',name:'Adam — Nam, sâu'},
-    {id:'yoZ06aMxZJJ28mfd3POQ',name:'Sam — Nam, tự nhiên'}
+  kokoro:[
+    {id:'af_heart',name:'Heart — Nữ Mỹ ❤️ (hay nhất)'},
+    {id:'af_sky',name:'Sky — Nữ Mỹ, nhẹ nhàng'},
+    {id:'af_bella',name:'Bella — Nữ Mỹ, ấm'},
+    {id:'af_sarah',name:'Sarah — Nữ Mỹ'},
+    {id:'af_nicole',name:'Nicole — Nữ Mỹ'},
+    {id:'af_nova',name:'Nova — Nữ Mỹ, tươi'},
+    {id:'af_river',name:'River — Nữ Mỹ'},
+    {id:'am_adam',name:'Adam — Nam Mỹ'},
+    {id:'am_michael',name:'Michael — Nam Mỹ'},
+    {id:'am_eric',name:'Eric — Nam Mỹ'},
+    {id:'am_liam',name:'Liam — Nam Mỹ'},
+    {id:'bf_emma',name:'Emma — Nữ Anh 🇬🇧'},
+    {id:'bf_isabella',name:'Isabella — Nữ Anh 🇬🇧'},
+    {id:'bf_lily',name:'Lily — Nữ Anh 🇬🇧'},
+    {id:'bf_alice',name:'Alice — Nữ Anh 🇬🇧'},
+    {id:'bm_george',name:'George — Nam Anh 🇬🇧'},
+    {id:'bm_daniel',name:'Daniel — Nam Anh 🇬🇧'},
+    {id:'bm_lewis',name:'Lewis — Nam Anh 🇬🇧'},
+    {id:'bm_fable',name:'Fable — Nam Anh 🇬🇧'}
   ],
-  openai:[
-    {id:'alloy',name:'Alloy — Trung tính'},{id:'echo',name:'Echo — Nam'},
-    {id:'fable',name:'Fable — Anh-Anh'},{id:'onyx',name:'Onyx — Nam trầm'},
-    {id:'nova',name:'Nova — Nữ tươi'},{id:'shimmer',name:'Shimmer — Nữ nhẹ'},
-    {id:'ash',name:'Ash — Nam'},{id:'coral',name:'Coral — Nữ'},
-    {id:'sage',name:'Sage — Trung tính'},{id:'ballad',name:'Ballad — Kể chuyện'}
-  ],
-  gemini:[
-    {id:'Kore',name:'Kore — Nữ'},{id:'Puck',name:'Puck — Nam vui'},
-    {id:'Charon',name:'Charon — Nam trầm'},{id:'Zephyr',name:'Zephyr — Nữ nhẹ'},
-    {id:'Fenrir',name:'Fenrir — Nam mạnh'},{id:'Leda',name:'Leda — Nữ'},
-    {id:'Orus',name:'Orus — Nam'},{id:'Aoede',name:'Aoede — Nữ'}
-  ],
-  xai:[
-    {id:'eve',name:'Eve — Nữ, năng động'},{id:'ara',name:'Ara — Nữ, ấm'},
-    {id:'rex',name:'Rex — Nam, tự tin'},{id:'sal',name:'Sal — Nam, nhẹ'},
-    {id:'leo',name:'Leo — Nam, uy quyền'}
-  ],
-  'aws-polly':[
-    {id:'Joanna',name:'Joanna — Nữ Mỹ'},{id:'Matthew',name:'Matthew — Nam Mỹ'},
-    {id:'Amy',name:'Amy — Nữ Anh'},{id:'Brian',name:'Brian — Nam Anh'},
-    {id:'Ivy',name:'Ivy — Nữ trẻ'},{id:'Kendra',name:'Kendra — Nữ Mỹ'}
-  ],
-  speechify:[
-    {id:'geffen_32',name:'Geffen'},{id:'dominic_32',name:'Dominic'},
-    {id:'harper_32',name:'Harper'},{id:'hugh_32',name:'Hugh'},{id:'imogen_32',name:'Imogen'}
+  'google-translate':[
+    {id:'en-US',name:'Tiếng Anh Mỹ 🇺🇸'},
+    {id:'en-GB',name:'Tiếng Anh Anh 🇬🇧'},
+    {id:'en-AU',name:'Tiếng Anh Úc 🇦🇺'},
+    {id:'en-IN',name:'Tiếng Anh Ấn 🇮🇳'}
   ],
   browser:[]
-};
-const VOICE_MODELS={
-  elevenlabs:'eleven_multilingual_v2',openai:'gpt-4o-mini-tts',
-  gemini:'gemini-2.5-flash-preview-tts','aws-polly':null,speechify:'simba-3.2',xai:null
 };
 
 function updateVoiceList(){
   const provider=document.getElementById('voiceProviderSelect').value;
   const sel=document.getElementById('voiceIdSelect');
   sel.innerHTML='';
-  if(provider==='browser'){
-    sel.style.display='none';return;
-  }
+  if(provider==='browser'){sel.style.display='none';return;}
   sel.style.display='';
   const opts=VOICE_OPTIONS[provider]||[];
   opts.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;sel.appendChild(o);});
@@ -1532,23 +1512,29 @@ function updateVoiceList(){
   if(saved&&opts.find(v=>v.id===saved))sel.value=saved;
 }
 
-async function puterTTS(text,provider,voiceId){
-  if(provider==='browser')return null;
-  const args={text:text};
-  if(provider)args.provider=provider;
-  if(voiceId)args.voice=voiceId;
-  const model=VOICE_MODELS[provider];
-  if(model)args.model=model;
-  if(provider==='aws-polly')args.engine='neural';
-  const body=JSON.stringify({interface:'puter-tts',driver:'ai-tts',method:'synthesize',args:args});
-  const resp=await fetch('https://api.puter.com/drivers/call',{
-    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+PUTER_TOKEN},body:body
-  });
-  if(!resp.ok)throw new Error('TTS API error '+resp.status);
-  const blob=await resp.blob();
+async function loadKokoro(){
+  if(kokoroTTS)return kokoroTTS;
+  if(kokoroLoading)return new Promise((res)=>{const i=setInterval(()=>{if(kokoroTTS){clearInterval(i);res(kokoroTTS);}},200);});
+  kokoroLoading=true;
+  const{KokoroTTS}=await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm');
+  kokoroTTS=await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX',{dtype:'q8',device:'wasm'});
+  kokoroLoading=false;
+  return kokoroTTS;
+}
+
+async function kokoroSpeak(text,voiceId){
+  const tts=await loadKokoro();
+  const raw=await tts.generate(text,{voice:voiceId||'af_heart'});
+  const wavData=raw.toWav();
+  const blob=new Blob([wavData],{type:'audio/wav'});
   const url=URL.createObjectURL(blob);
-  const audio=new Audio(url);
-  return audio;
+  return new Audio(url);
+}
+
+function googleTranslateTTS(text,lang){
+  const encoded=encodeURIComponent(text.substring(0,200));
+  const url='https://translate.google.com/translate_tts?ie=UTF-8&tl='+(lang||'en-US').split('-')[0]+'&client=tw-ob&q='+encoded;
+  return new Audio(url);
 }
 
 function speakText(text){
@@ -1557,27 +1543,27 @@ function speakText(text){
   const btn=document.querySelector('.voice-play-btn');
   if(btn)btn.classList.add('speaking');
   const done=()=>{if(btn)btn.classList.remove('speaking');};
-  const provider=db.settings.voiceProvider||'elevenlabs';
-  const voiceId=db.settings.voiceId||'21m00Tcm4TlvDq8ikWAM';
+  const provider=db.settings.voiceProvider||'kokoro';
+  const voiceId=db.settings.voiceId||'af_heart';
   if(provider==='browser'){speakFallback(text);return;}
-  const useDirectAPI=PUTER_TOKEN&&PUTER_TOKEN!=='PASTE_YOUR_TOKEN_HERE';
-  if(useDirectAPI){
-    puterTTS(text,provider,voiceId).then(audio=>{
+  if(provider==='google-translate'){
+    try{
+      const audio=googleTranslateTTS(text,voiceId);
+      currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
+      audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};
+      audio.play().catch(()=>{done();speakFallback(text);});
+    }catch(e){done();speakFallback(text);}
+    return;
+  }
+  if(provider==='kokoro'){
+    kokoroSpeak(text,voiceId).then(audio=>{
       currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
       audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};
       audio.play().catch(()=>{done();speakFallback(text);});
     }).catch(()=>{done();speakFallback(text);});
-  } else if(typeof puter!=='undefined'&&puter.ai&&puter.ai.txt2speech){
-    const opts={provider:provider};
-    if(voiceId)opts.voice=voiceId;
-    const model=VOICE_MODELS[provider];if(model)opts.model=model;
-    if(provider==='aws-polly')opts.engine='neural';
-    puter.ai.txt2speech(text,opts).then(audio=>{
-      currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
-      audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};
-      audio.play().catch(()=>{done();speakFallback(text);});
-    }).catch(()=>{done();speakFallback(text);});
-  } else {speakFallback(text);}
+    return;
+  }
+  speakFallback(text);
 }
 
 function testVoice(){
@@ -1599,25 +1585,32 @@ function testVoice(){
     speechSynthesis.speak(u);status.textContent='🔊 Đang phát...';btn.disabled=false;btn.textContent='▶ Nghe thử';
     return;
   }
-  const useDirectAPI=PUTER_TOKEN&&PUTER_TOKEN!=='PASTE_YOUR_TOKEN_HERE';
-  const playResult=(audioPromise)=>{
-    audioPromise.then(audio=>{
-      if(currentAudio){currentAudio.pause();}
+  if(provider==='google-translate'){
+    try{
+      const audio=googleTranslateTTS(text,voiceId);
+      if(currentAudio)currentAudio.pause();
+      currentAudio=audio;audio.playbackRate=parseFloat(document.getElementById('speechRateInput').value)||1;
+      audio.onended=()=>{status.textContent='✅ Xong';};
+      audio.onerror=()=>{status.textContent='❌ Lỗi — thử Kokoro hoặc Trình duyệt';btn.disabled=false;btn.textContent='▶ Nghe thử';};
+      status.textContent='🔊 Đang phát...';
+      audio.play().catch(()=>{status.textContent='❌ Google chặn — thử Kokoro';btn.disabled=false;btn.textContent='▶ Nghe thử';});
+      btn.disabled=false;btn.textContent='▶ Nghe thử';
+    }catch(e){status.textContent='❌ Lỗi';btn.disabled=false;btn.textContent='▶ Nghe thử';}
+    return;
+  }
+  if(provider==='kokoro'){
+    status.textContent=kokoroTTS?'Đang tạo giọng...':'Đang tải AI model (~90MB lần đầu)...';
+    kokoroSpeak(text,voiceId).then(audio=>{
+      if(currentAudio)currentAudio.pause();
       currentAudio=audio;audio.playbackRate=parseFloat(document.getElementById('speechRateInput').value)||1;
       audio.onended=()=>{status.textContent='✅ Xong';};
       status.textContent='🔊 Đang phát...';
       audio.play().catch(()=>{status.textContent='❌ Lỗi phát';});
       btn.disabled=false;btn.textContent='▶ Nghe thử';
     }).catch(e=>{status.textContent='❌ Lỗi: '+e.message;btn.disabled=false;btn.textContent='▶ Nghe thử';});
-  };
-  if(useDirectAPI){
-    playResult(puterTTS(text,provider,voiceId));
-  } else if(typeof puter!=='undefined'&&puter.ai&&puter.ai.txt2speech){
-    const opts={provider:provider};if(voiceId)opts.voice=voiceId;
-    const model=VOICE_MODELS[provider];if(model)opts.model=model;
-    if(provider==='aws-polly')opts.engine='neural';
-    playResult(puter.ai.txt2speech(text,opts));
-  } else {status.textContent='❌ Chưa đăng nhập Puter và chưa có API token';btn.disabled=false;btn.textContent='▶ Nghe thử';}
+    return;
+  }
+  status.textContent='❌ Provider không hỗ trợ';btn.disabled=false;btn.textContent='▶ Nghe thử';
 }
 function speakFallback(text){
   if(!('speechSynthesis' in window))return;
@@ -1867,7 +1860,7 @@ function openSettings(){
   document.getElementById('leechThreshold').value=db.settings.leechThreshold||8;
   document.getElementById('speechRateInput').value=db.settings.speechRate||1;
   document.getElementById('speechRateLabel').textContent=(db.settings.speechRate||1)+'x';
-  document.getElementById('voiceProviderSelect').value=db.settings.voiceProvider||'elevenlabs';
+  document.getElementById('voiceProviderSelect').value=db.settings.voiceProvider||'kokoro';
   updateVoiceList();
   if(db.settings.voiceId)document.getElementById('voiceIdSelect').value=db.settings.voiceId;
   document.getElementById('voiceTestStatus').textContent='';
