@@ -267,6 +267,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .voice-flip-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 24px;cursor:pointer;color:var(--ink);font-size:14px;font-weight:700;transition:all .3s;backdrop-filter:blur(8px)}
 .voice-flip-btn:hover{background:rgba(255,255,255,.2);transform:scale(1.05)}
 .voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
+.voice-play-btn.loading{opacity:.7;pointer-events:none;animation:speakPulse .6s ease-in-out infinite}
 @keyframes speakPulse{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,.4)}50%{box-shadow:0 4px 30px rgba(139,92,246,.7),0 0 60px rgba(139,92,246,.2)}}
 .kokoro-loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:10000}
 .kokoro-loading-card{background:linear-gradient(135deg,rgba(30,20,60,.95),rgba(20,15,40,.95));border:1px solid rgba(139,92,246,.3);border-radius:20px;padding:28px;max-width:340px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
@@ -1540,25 +1541,27 @@ function updateKokoroProgress(p){
 }
 function hideKokoroLoading(){const ov=document.getElementById('kokoroLoadingOverlay');if(ov)ov.remove();}
 
-async function loadKokoro(){
+async function loadKokoro(silent){
   if(kokoroTTS)return kokoroTTS;
   if(kokoroLoading)return new Promise((res)=>{const i=setInterval(()=>{if(kokoroTTS){clearInterval(i);res(kokoroTTS);}},200);});
   kokoroLoading=true;
-  showKokoroLoading();
+  if(!silent)showKokoroLoading();
   try{
     const{KokoroTTS}=await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm');
-    updateKokoroProgress(10);
+    if(!silent)updateKokoroProgress(10);
     kokoroTTS=await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX',{
       dtype:'q8',device:'wasm',
-      progress_callback:(p)=>{if(p.progress!==undefined)updateKokoroProgress(10+p.progress*0.9);}
+      progress_callback:(p)=>{if(!silent&&p.progress!==undefined)updateKokoroProgress(10+p.progress*0.9);}
     });
-    updateKokoroProgress(100);
+    if(!silent)updateKokoroProgress(100);
     try{localStorage.setItem('kokoro_cached','1');}catch(e){}
-    hideKokoroLoading();
-  }catch(e){hideKokoroLoading();kokoroLoading=false;throw e;}
+    if(!silent)hideKokoroLoading();
+  }catch(e){if(!silent)hideKokoroLoading();kokoroLoading=false;throw e;}
   kokoroLoading=false;
   return kokoroTTS;
 }
+// Pre-load Kokoro khi da cache (khoi tao nhanh, khong can overlay)
+if(localStorage.getItem('kokoro_cached'))setTimeout(()=>loadKokoro(true).catch(()=>{}),2000);
 
 async function kokoroSpeak(text,voiceId){
   const tts=await loadKokoro();
@@ -1595,11 +1598,13 @@ function speakText(text){
     return;
   }
   if(provider==='kokoro'){
+    if(btn){btn.classList.add('loading');btn.querySelector('.voice-label').textContent='Đang tải...';}
     kokoroSpeak(text,voiceId).then(audio=>{
+      if(btn){btn.classList.remove('loading');btn.querySelector('.voice-label').textContent='Nghe lại';}
       currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
       audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};
       audio.play().catch(()=>{done();speakFallback(text);});
-    }).catch(()=>{done();speakFallback(text);});
+    }).catch(()=>{if(btn){btn.classList.remove('loading');btn.querySelector('.voice-label').textContent='Nghe lại';}done();speakFallback(text);});
     return;
   }
   speakFallback(text);
