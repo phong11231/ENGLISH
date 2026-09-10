@@ -268,6 +268,15 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .voice-flip-btn:hover{background:rgba(255,255,255,.2);transform:scale(1.05)}
 .voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
 @keyframes speakPulse{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,.4)}50%{box-shadow:0 4px 30px rgba(139,92,246,.7),0 0 60px rgba(139,92,246,.2)}}
+.kokoro-loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:10000}
+.kokoro-loading-card{background:linear-gradient(135deg,rgba(30,20,60,.95),rgba(20,15,40,.95));border:1px solid rgba(139,92,246,.3);border-radius:20px;padding:28px;max-width:340px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.kokoro-loading-card .kl-icon{font-size:48px;margin-bottom:12px}
+.kokoro-loading-card .kl-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px}
+.kokoro-loading-card .kl-desc{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:16px;line-height:1.4}
+.kokoro-loading-card .kl-bar-bg{background:rgba(255,255,255,.1);border-radius:8px;height:8px;overflow:hidden;margin-bottom:8px}
+.kokoro-loading-card .kl-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:8px;transition:width .3s;width:0%}
+.kokoro-loading-card .kl-percent{font-size:12px;color:rgba(255,255,255,.5)}
+@keyframes kokoroInit{0%{width:20%}50%{width:70%}100%{width:20%}}
 .streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
 .streak-widget::before{content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(245,158,11,.1),transparent 70%);pointer-events:none}
 .streak-widget-top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
@@ -1512,12 +1521,41 @@ function updateVoiceList(){
   if(saved&&opts.find(v=>v.id===saved))sel.value=saved;
 }
 
+function showKokoroLoading(){
+  if(document.getElementById('kokoroLoadingOverlay'))return;
+  const isFirstTime=!localStorage.getItem('kokoro_cached');
+  const ov=document.createElement('div');ov.id='kokoroLoadingOverlay';ov.className='kokoro-loading-overlay';
+  if(isFirstTime){
+    ov.innerHTML='<div class="kokoro-loading-card"><div class="kl-icon">🧠</div><div class="kl-title">Đang tải giọng nói AI</div><div class="kl-desc">Tải model giọng nói vào trình duyệt.<br>Lần đầu ~90MB • Lần sau <b>không cần tải lại</b></div><div class="kl-bar-bg"><div class="kl-bar" id="kokoroBar"></div></div><div class="kl-percent" id="kokoroPercent">0%</div></div>';
+  } else {
+    ov.innerHTML='<div class="kokoro-loading-card" style="padding:20px"><div class="kl-icon" style="font-size:36px;margin-bottom:8px">🧠</div><div class="kl-title" style="font-size:14px">Đang khởi tạo giọng nói...</div><div class="kl-desc" style="margin-bottom:8px;font-size:12px">Chỉ vài giây</div><div class="kl-bar-bg"><div class="kl-bar" id="kokoroBar" style="width:30%;animation:kokoroInit 2s ease-in-out infinite"></div></div></div>';
+  }
+  document.body.appendChild(ov);
+}
+function updateKokoroProgress(p){
+  const bar=document.getElementById('kokoroBar');
+  const pct=document.getElementById('kokoroPercent');
+  if(bar)bar.style.width=Math.round(p)+'%';
+  if(pct)pct.textContent=Math.round(p)+'%';
+}
+function hideKokoroLoading(){const ov=document.getElementById('kokoroLoadingOverlay');if(ov)ov.remove();}
+
 async function loadKokoro(){
   if(kokoroTTS)return kokoroTTS;
   if(kokoroLoading)return new Promise((res)=>{const i=setInterval(()=>{if(kokoroTTS){clearInterval(i);res(kokoroTTS);}},200);});
   kokoroLoading=true;
-  const{KokoroTTS}=await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm');
-  kokoroTTS=await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX',{dtype:'q8',device:'wasm'});
+  showKokoroLoading();
+  try{
+    const{KokoroTTS}=await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm');
+    updateKokoroProgress(10);
+    kokoroTTS=await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX',{
+      dtype:'q8',device:'wasm',
+      progress_callback:(p)=>{if(p.progress!==undefined)updateKokoroProgress(10+p.progress*0.9);}
+    });
+    updateKokoroProgress(100);
+    try{localStorage.setItem('kokoro_cached','1');}catch(e){}
+    hideKokoroLoading();
+  }catch(e){hideKokoroLoading();kokoroLoading=false;throw e;}
   kokoroLoading=false;
   return kokoroTTS;
 }
