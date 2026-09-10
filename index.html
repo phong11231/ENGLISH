@@ -809,6 +809,7 @@ function renderDecks(){
     if(parentCards.length>0){
       wrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="startReviewAll('${viewingParentId}')">📚 Ôn tất cả</button>
           <button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Ôn tập (${parentCards.length} thẻ)</button>
           <button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Xem / Sửa thẻ</button>
           <button class="btn btn-ghost" onclick="openDeckModal()">📂 + Tạo bộ thẻ con</button>
@@ -833,6 +834,7 @@ function renderDecks(){
         ${subCount?'<span class="badge badge-sub">'+subCount+' con</span>':''}
       </div>
       <div class="deck-actions" onclick="event.stopPropagation()">
+        ${subCount?'<button class="deck-action-btn" onclick="startReviewAll(\''+id+'\')" title="Ôn tất cả">📚</button>':''}
         <button class="deck-action-btn" onclick="openBrowser('${id}')" title="Xem thẻ">📋</button>
         <button class="deck-action-btn" onclick="openCustomStudyForDeck('${id}')" title="Ôn tùy chỉnh">🎯</button>
         <button class="deck-action-btn" onclick="openEditDeck('${id}')" title="Sửa">✏️</button>
@@ -845,7 +847,7 @@ function renderDecks(){
   if(viewingParentId){
     const ownCards=getDeckCards(viewingParentId);
     if(ownCards.length>0){
-      wrap.innerHTML+=`<div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Ôn thẻ của "${esc(db.decks[viewingParentId].name)}"</button><button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Xem thẻ</button></div>`;
+      wrap.innerHTML+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="startReviewAll('${viewingParentId}')">📚 Ôn tất cả</button><button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Ôn thẻ của "${esc(db.decks[viewingParentId].name)}"</button><button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Xem thẻ</button></div>`;
     }
   }
 }
@@ -1131,6 +1133,22 @@ function downloadFile(name,content,type){
 }
 
 // ===== REVIEW =====
+function startReviewAll(deckId){
+  currentDeckId=deckId;
+  const cards=getAllCardsRecursive(deckId).filter(c=>!c.suspended);
+  if(cards.length===0){toast('Không có thẻ nào để ôn!');return;}
+  reviewQueue=[...cards];
+  for(let i=reviewQueue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[reviewQueue[i],reviewQueue[j]]=[reviewQueue[j],reviewQueue[i]];}
+  reviewIndex=0;undoStack=[];
+  document.getElementById('reviewDeckName').textContent=db.decks[deckId].name+' (Tất cả)';
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('viewReview').classList.add('active');
+  document.getElementById('fabBtn').style.display='none';
+  document.getElementById('reviewDone').style.display='none';
+  document.getElementById('undoBtn').style.display='none';
+  showCurrentCard();
+}
+
 function startReview(deckId){
   currentDeckId=deckId;
   const cards=getDeckCards(deckId).filter(c=>!c.suspended);
