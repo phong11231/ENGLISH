@@ -766,15 +766,16 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 // ===== FIREBASE =====
 firebase.initializeApp({apiKey:"AIzaSyD7UXDjRS0NaT1OYRBvpxqpirZz3SQYVyc",authDomain:"flashmind-8b1bc.firebaseapp.com",projectId:"flashmind-8b1bc",storageBucket:"flashmind-8b1bc.firebasestorage.app",messagingSenderId:"482268690491",appId:"1:482268690491:web:2c53f56d0bdf8d30c7c41e"});
 const auth = firebase.auth(), firestore = firebase.firestore();
-let currentUser = null, unsubDecks = null;
+let currentUser = null, unsubDecks = null, lastUserId = null;
 
 // ===== DATA =====
 let db = { decks:{}, reviewLog:[], settings:{ dailyGoal:20, leechThreshold:8 } };
 
 function loadLocal() {
   try { const r = localStorage.getItem('flashmind_data'); if(r){ db=JSON.parse(r); if(!db.decks)db.decks={}; if(!db.reviewLog)db.reviewLog=[]; if(!db.settings)db.settings={dailyGoal:20,leechThreshold:8}; } } catch(e){ db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}}; }
+  lastUserId=localStorage.getItem('flashmind_lastUser');
 }
-function saveLocal() { try{localStorage.setItem('flashmind_data',JSON.stringify(db))}catch(e){} }
+function saveLocal() { try{localStorage.setItem('flashmind_data',JSON.stringify(db));if(lastUserId)localStorage.setItem('flashmind_lastUser',lastUserId);}catch(e){} }
 
 // ===== AUTH =====
 let authIsRegister=false;
@@ -833,7 +834,7 @@ function signInGoogle(){
   if(isMobile){auth.signInWithRedirect(provider);}
   else{auth.signInWithPopup(provider).then(()=>closeAuthModal()).catch(e=>{if(e.code==='auth/popup-blocked'){auth.signInWithRedirect(provider);}else{showAuthError('Lỗi Google: '+e.message);}});}
 }
-function signOutUser(){ if(unsubDecks){unsubDecks();unsubDecks=null;} auth.signOut(); toggleUserMenu(); loadLocal(); renderCurrentView(); }
+function signOutUser(){ if(unsubDecks){unsubDecks();unsubDecks=null;} lastUserId=null;localStorage.removeItem('flashmind_lastUser'); auth.signOut(); db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}};saveLocal(); toggleUserMenu(); renderCurrentView(); }
 function toggleUserMenu(){ document.getElementById('userMenu').classList.toggle('active'); }
 document.addEventListener('click',e=>{const m=document.getElementById('userMenu'),a=document.getElementById('userAvatar'),b=document.getElementById('userAvatarInitial');if(m&&!m.contains(e.target)&&e.target!==a&&e.target!==b)m.classList.remove('active');});
 
@@ -865,6 +866,9 @@ function decksCol(){return userDoc().collection('decks');}
 function reviewLogCol(){return userDoc().collection('reviewLog');}
 
 async function mergeAndLoadCloud(){
+  const switchedUser=(lastUserId&&lastUserId!==currentUser.uid);
+  lastUserId=currentUser.uid;
+  if(switchedUser){db.decks={};db.reviewLog=[];db.settings={dailyGoal:20,leechThreshold:8};saveLocal();}
   const local=JSON.parse(JSON.stringify(db));
   const snap=await decksCol().get(); const cloudIds=new Set();
   snap.forEach(d=>cloudIds.add(d.id));
