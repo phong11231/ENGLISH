@@ -757,6 +757,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 
 <div class="toast" id="toast"></div>
 
+<!-- Puter.js for ElevenLabs TTS -->
+<script src="https://js.puter.com/v2/"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -1448,9 +1450,23 @@ function showCurrentCard(){
   updateReviewProgress();
 }
 
+let currentAudio=null;
 function speakText(text){
-  if(!('speechSynthesis' in window)){toast('Trình duyệt không hỗ trợ đọc');return;}
-  speechSynthesis.cancel();
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+  const btn=document.querySelector('.voice-play-btn');
+  if(btn)btn.classList.add('speaking');
+  const done=()=>{if(btn)btn.classList.remove('speaking');};
+  if(typeof puter!=='undefined'&&puter.ai&&puter.ai.txt2speech){
+    puter.ai.txt2speech(text,{provider:'elevenlabs',model:'eleven_multilingual_v2'}).then(audio=>{
+      currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
+      audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};
+      audio.play().catch(()=>{done();speakFallback(text);});
+    }).catch(()=>{done();speakFallback(text);});
+  } else {speakFallback(text);}
+}
+function speakFallback(text){
+  if(!('speechSynthesis' in window))return;
   const u=new SpeechSynthesisUtterance(text);
   u.lang='en-US';u.rate=db.settings.speechRate||1;u.pitch=1;
   const voices=speechSynthesis.getVoices();
@@ -1473,6 +1489,7 @@ function renderContent(text){
 
 function flipCard(){
   if(reviewMode==='type')return;
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   const fc=document.getElementById('flashcard');
   if(!fc.classList.contains('flipped')){fc.classList.add('flipped');document.getElementById('reviewActions').style.display='flex';}
