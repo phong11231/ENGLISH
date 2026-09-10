@@ -829,6 +829,13 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&currentUser){
+    if(unsubDecks)unsubDecks();
+    unsubDecks=decksCol().onSnapshot(s=>{db.decks={};s.forEach(d=>{db.decks[d.id]=d.data();});saveLocal();renderCurrentView();});
+    reviewLogCol().orderBy('date','desc').limit(5000).get().then(ls=>{db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();renderCurrentView();});
+  }
+});
 function userDoc(){return firestore.collection('users').doc(currentUser.uid);}
 function decksCol(){return userDoc().collection('decks');}
 function reviewLogCol(){return userDoc().collection('reviewLog');}
@@ -838,7 +845,10 @@ async function mergeAndLoadCloud(){
   const snap=await decksCol().get(); const cloudIds=new Set();
   snap.forEach(d=>cloudIds.add(d.id));
   for(const[id,deck]of Object.entries(local.decks)){if(!cloudIds.has(id))await decksCol().doc(id).set(deck);}
-  if(local.reviewLog.length>0){const b=firestore.batch();local.reviewLog.forEach(e=>b.set(reviewLogCol().doc(),e));await b.commit();}
+  const existingLogs=await reviewLogCol().orderBy('date','desc').limit(5000).get();
+  const existingDates=new Set();existingLogs.forEach(d=>{const e=d.data();existingDates.add(e.date+'_'+e.cardId);});
+  const newLogs=local.reviewLog.filter(e=>!existingDates.has(e.date+'_'+e.cardId));
+  if(newLogs.length>0){const b=firestore.batch();newLogs.forEach(e=>b.set(reviewLogCol().doc(),e));await b.commit();}
   if(unsubDecks)unsubDecks();
   unsubDecks=decksCol().onSnapshot(s=>{db.decks={};s.forEach(d=>{db.decks[d.id]=d.data();});saveLocal();renderCurrentView();});
   const ls=await reviewLogCol().orderBy('date','desc').limit(5000).get();
