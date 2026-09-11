@@ -1441,9 +1441,10 @@ function showCurrentCard(){
     const modeHint=card.displayMode==='voice-repeat'?'🔁 Nghe và nhắc lại câu':card.displayMode==='voice-translate'?'🌐 Nghe và dịch sang tiếng Việt':'🎧 Nghe và trả lời câu hỏi';
     document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe lại</span></button><div class="voice-hint">'+modeHint+'</div></div>';
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
-    const backEl=document.getElementById('cardBack');backEl.style.position='relative';
+    const backFace=document.querySelector('.flashcard-face.back');backFace.style.position='relative';
+    const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
     const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Nghe lại';
-    miniBtn.onclick=function(e){e.stopPropagation();speakText(card.front);};backEl.appendChild(miniBtn);
+    miniBtn.onclick=function(e){e.stopPropagation();speakText(card.front);};backFace.appendChild(miniBtn);
     setTimeout(()=>speakText(card.front),300);
   } else {
     document.getElementById('cardFront').innerHTML=renderContent(card.front);
