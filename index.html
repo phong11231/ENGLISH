@@ -937,7 +937,7 @@ function sm2(card,quality){
     if(quality===1){ni=Math.max(1,Math.round(card.interval*1.2));card.ease=Math.max(1.3,card.ease-0.15);}
     else if(quality===2){ni=Math.round(card.interval*card.ease);}
     else{ni=Math.round(card.interval*card.ease*1.3);card.ease=Math.min(3,card.ease+0.15);}
-    card.interval=Math.min(ni,365);card.due=now+card.interval*DAY;card.reps++;card.status='review';
+    card.interval=Math.min(ni,36500);card.due=now+card.interval*DAY;card.reps++;card.status='review';
   }
   if(card.lapses>=db.settings.leechThreshold)card.leech=true;
   return card;
@@ -947,7 +947,7 @@ function getIntervalText(card,q){
   if(q===0)return'1 min';
   if(card.status==='new'||card.status==='learning'){if(q===1)return'10 min';if(q===2)return'1 day';return'4 days';}
   let iv;if(q===1)iv=Math.max(1,Math.round(card.interval*1.2));else if(q===2)iv=Math.round(card.interval*card.ease);else iv=Math.round(card.interval*card.ease*1.3);
-  iv=Math.min(iv,365);if(iv<30)return iv+' days';if(iv<365)return Math.round(iv/30*10)/10+' months';return Math.round(iv/365*10)/10+' years';
+  iv=Math.min(iv,36500);if(iv===1)return'1 day';if(iv<30)return iv+' days';if(iv<365){const mo=Math.round(iv/30*10)/10;return mo+(mo===1?' month':' months');}const yr=Math.round(iv/365*10)/10;return yr+(yr===1?' year':' years');
 }
 
 // ===== VIEWS =====
