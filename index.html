@@ -1162,6 +1162,7 @@ function saveDeck(){
   const parentId=document.getElementById('deckParentSelect').value||null;
   if(editingDeckId){
     const deck=db.decks[editingDeckId];
+    if(deck._shared&&!isAdmin){toast('This is a default deck and cannot be edited');return;}
     deck.name=name;deck.desc=desc;deck.emoji=selectedEmoji;deck.parentId=parentId;
     saveDeckData(editingDeckId,deck);toast('Updated!');
   } else {
@@ -1172,6 +1173,7 @@ function saveDeck(){
   closeDeckModal();renderDecks();
 }
 function deleteDeck(id){
+  if(db.decks[id]._shared&&!isAdmin){toast('This is a default deck and cannot be deleted');return;}
   if(!confirm('Delete "'+db.decks[id].name+'" and everything inside?'))return;
   // Delete sub-decks recursively
   getSubDecks(id).forEach(([subId])=>deleteDeck(subId));
@@ -1227,6 +1229,7 @@ function saveCard(){
   const type=document.getElementById('cardTypeSelect').value;
   const tags=parseTags(document.getElementById('cardTagsInput').value);
   const deck=db.decks[currentDeckId];if(!deck.cards)deck.cards=[];
+  if(deck._shared&&!isAdmin){toast('This is a default deck and cannot be edited');return;}
 
   const cardReviewMode=document.getElementById('cardReviewMode').value;
   const cardDisplayMode=document.getElementById('cardDisplayMode').value;
@@ -1329,6 +1332,7 @@ function toggleSuspend(cardId){
 }
 
 function deleteCard(cardId){
+  if(db.decks[currentDeckId]._shared&&!isAdmin){toast('This is a default deck and cannot be edited');return;}
   if(!confirm('Delete this card?'))return;
   const deck=db.decks[currentDeckId];deck.cards=deck.cards.filter(c=>c.id!==cardId);
   saveDeckData(currentDeckId,deck);renderCardBrowser();toast('Deleted');
@@ -1339,6 +1343,7 @@ function openBulkAddModal(){if(!requireAuth())return;document.getElementById('bu
 function closeBulkModal(){document.getElementById('bulkModal').classList.remove('active');}
 
 function saveBulkCards(){
+  if(db.decks[currentDeckId]._shared&&!isAdmin){toast('This is a default deck and cannot be edited');return;}
   const text=document.getElementById('bulkInput').value.trim();
   if(!text){toast('Enter data');return;}
   const tags=parseTags(document.getElementById('bulkTagsInput').value);
@@ -2268,6 +2273,7 @@ async function loadSharedDecks(){
       if(!db.decks[id]){
         const data=doc.data();
         delete data.sharedBy;delete data.sharedAt;
+        data._shared=true;
         db.decks[id]=data;
         saveDeckData(id,data);
         added++;
