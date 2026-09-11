@@ -276,7 +276,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 @keyframes voiceBtnGlow{0%,100%{box-shadow:0 4px 16px rgba(139,92,246,.5)}50%{box-shadow:0 4px 24px rgba(139,92,246,.8),0 0 40px rgba(6,182,212,.3)}}
 .voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
 @keyframes speakPulse{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,.4)}50%{box-shadow:0 4px 30px rgba(139,92,246,.7),0 0 60px rgba(139,92,246,.2)}}
-.streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
+.streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;transition:all .5s cubic-bezier(.34,1.56,.64,1);animation:fadeSlideUp .6s cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:.05s}
+.streak-widget:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(139,92,246,.2),0 0 30px rgba(245,158,11,.1);border-color:rgba(139,92,246,.4)}
 .streak-widget::before{content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(245,158,11,.1),transparent 70%);pointer-events:none}
 .streak-widget-top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
 .streak-widget-fire{font-size:52px;line-height:1;filter:drop-shadow(0 0 12px rgba(245,158,11,.5));animation:fireGlow 1.5s ease-in-out infinite alternate}
@@ -424,7 +425,23 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .daily-goal::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(139,92,246,.1),transparent 30%,transparent 70%,rgba(0,255,170,.06));pointer-events:none}
 .daily-goal::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--primary),var(--neon),var(--accent));opacity:.5;animation:navLineShift 4s ease-in-out infinite}
 .daily-goal:hover{border-color:rgba(139,92,246,.3);box-shadow:0 12px 40px rgba(139,92,246,.15),0 0 30px rgba(0,255,170,.05);transform:translateY(-3px)}
-.daily-goal-actions{display:flex;gap:12px;margin-bottom:24px}.daily-goal-actions .btn{flex:1;padding:14px 16px;font-size:15px;font-weight:600}
+.daily-goal-actions{display:flex;gap:14px;margin-bottom:28px;perspective:800px}
+.daily-goal-actions .action-card{flex:1;position:relative;padding:20px 18px;border-radius:var(--r-lg);background:var(--surface);backdrop-filter:blur(24px);border:1px solid var(--glass-border);cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .5s cubic-bezier(.34,1.56,.64,1);overflow:hidden;transform-style:preserve-3d}
+.daily-goal-actions .action-card::before{content:'';position:absolute;inset:-2px;border-radius:calc(var(--r-lg) + 2px);background:linear-gradient(135deg,var(--primary),var(--accent),var(--neon),var(--pink),var(--primary));background-size:400% 400%;opacity:0;z-index:-1;transition:opacity .4s;animation:borderRotate 3s linear infinite}
+.daily-goal-actions .action-card::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from var(--angle,0deg),transparent,rgba(139,92,246,.15),transparent,rgba(0,255,170,.08),transparent);opacity:0;transition:opacity .4s;animation:cardShine 4s linear infinite}
+.daily-goal-actions .action-card:hover{transform:translateY(-8px) rotateX(5deg) scale(1.03);box-shadow:0 20px 50px rgba(139,92,246,.25),0 0 40px rgba(139,92,246,.12);border-color:transparent}
+.daily-goal-actions .action-card:hover::before{opacity:.6}
+.daily-goal-actions .action-card:hover::after{opacity:1}
+.daily-goal-actions .action-card:active{transform:translateY(-2px) scale(.97);transition-duration:.1s}
+.action-card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;z-index:1;transition:all .5s cubic-bezier(.34,1.56,.64,1)}
+.action-card.settings-card .action-card-icon{background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(6,182,212,.15));box-shadow:inset 0 0 20px rgba(139,92,246,.1)}
+.action-card.create-card .action-card-icon{background:linear-gradient(135deg,rgba(0,255,170,.2),rgba(6,182,212,.15));box-shadow:inset 0 0 20px rgba(0,255,170,.1)}
+.daily-goal-actions .action-card:hover .action-card-icon{transform:scale(1.2) rotate(-10deg) translateZ(20px)}
+.action-card-text{position:relative;z-index:1}
+.action-card-title{font-weight:800;font-size:15px;font-family:var(--font-display);letter-spacing:-.01em}
+.action-card-sub{font-size:12px;color:var(--ink-dim);margin-top:2px}
+.action-card-arrow{margin-left:auto;font-size:18px;color:var(--ink-dim);transition:all .4s;position:relative;z-index:1}
+.daily-goal-actions .action-card:hover .action-card-arrow{color:var(--primary-light);transform:translateX(4px)}
 .goal-ring{width:64px;height:64px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;z-index:1;font-family:var(--font-display)}
 .goal-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
 .goal-ring circle{fill:none;stroke-width:5}
@@ -445,12 +462,26 @@ input,textarea,select{font-family:inherit;font-size:inherit}
   .deck-item{padding:14px 16px;gap:12px}.deck-item .deck-color{width:44px;height:44px;font-size:22px}
   .flashcard-content{font-size:18px}.review-actions{flex-wrap:wrap}.review-btn{min-width:calc(50% - 5px)}
   .modal{border-radius:var(--r-lg)}.fab{bottom:16px;right:16px;width:52px;height:52px;border-radius:16px;font-size:24px}
+  .daily-goal-actions{gap:10px}.action-card-icon{width:40px;height:40px;font-size:18px}.action-card-title{font-size:13px}.action-card-sub{font-size:11px}.action-card-arrow{display:none}
   .card-table{font-size:13px}.card-table th,.card-table td{padding:8px 10px}
   .card-table .card-front-col,.card-table .card-back-col{max-width:120px}
   .bg-orb-1{width:300px;height:300px}.bg-orb-2{width:250px;height:250px}.bg-orb-3{width:200px;height:200px}
   .review-container{height:calc(100vh - 56px - 32px);padding:4px 0 0}
 }
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px;opacity:.5}::-webkit-scrollbar-thumb:hover{opacity:1}
+
+/* STAGGER ANIMATIONS */
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(30px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.deck-item{animation:fadeSlideUp .5s cubic-bezier(.34,1.56,.64,1) backwards}
+.deck-item:nth-child(1){animation-delay:.05s}.deck-item:nth-child(2){animation-delay:.1s}.deck-item:nth-child(3){animation-delay:.15s}.deck-item:nth-child(4){animation-delay:.2s}.deck-item:nth-child(5){animation-delay:.25s}.deck-item:nth-child(6){animation-delay:.3s}.deck-item:nth-child(7){animation-delay:.35s}.deck-item:nth-child(8){animation-delay:.4s}
+.stat-card{animation:fadeSlideUp .5s cubic-bezier(.34,1.56,.64,1) backwards}
+.stat-card:nth-child(1){animation-delay:.05s}.stat-card:nth-child(2){animation-delay:.1s}.stat-card:nth-child(3){animation-delay:.15s}.stat-card:nth-child(4){animation-delay:.2s}
+.action-card{animation:fadeSlideUp .6s cubic-bezier(.34,1.56,.64,1) backwards}
+.action-card:nth-child(1){animation-delay:.1s}.action-card:nth-child(2){animation-delay:.2s}
+
+/* FLOATING PARTICLES ON CARDS */
+@keyframes sparkle{0%,100%{opacity:0;transform:scale(0) translateY(0)}50%{opacity:1;transform:scale(1) translateY(-20px)}}
+.deck-item:hover .deck-color::after{content:'✨';position:absolute;font-size:12px;top:-5px;right:-5px;animation:sparkle 1s ease-in-out infinite}
 
 /* STAGGER ANIMATIONS */
 .deck-item{animation:deckIn .7s cubic-bezier(.34,1.56,.64,1) both}
@@ -1082,8 +1113,16 @@ function renderDecks(){
     <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-value">${totalNew}</div><div class="stat-label">NEW</div></div>`;
 
   document.getElementById('dailyGoalWrap').innerHTML=`<div class="daily-goal-actions">
-    <button class="btn btn-primary" onclick="openSettings()">⚙️ Settings</button>
-    <button class="btn btn-primary" onclick="openDeckModal()">📂 Create Deck</button>
+    <div class="action-card settings-card" onclick="openSettings()">
+      <div class="action-card-icon">⚙️</div>
+      <div class="action-card-text"><div class="action-card-title">Settings</div><div class="action-card-sub">Customize your study</div></div>
+      <div class="action-card-arrow">›</div>
+    </div>
+    <div class="action-card create-card" onclick="openDeckModal()">
+      <div class="action-card-icon">📂</div>
+      <div class="action-card-text"><div class="action-card-title">Create Deck</div><div class="action-card-sub">Add new flashcards</div></div>
+      <div class="action-card-arrow">›</div>
+    </div>
   </div>`;
 
   if(deckEntries.length===0&&!viewingParentId){
@@ -2440,6 +2479,20 @@ updateAdminUI();
 
 // ===== INIT =====
 loadLocal();renderDecks();initParticles();loadSharedDecks();
+
+// 3D tilt effect on interactive cards
+document.addEventListener('mousemove',function(e){
+  document.querySelectorAll('.deck-item,.action-card,.stat-card').forEach(function(el){
+    const r=el.getBoundingClientRect();
+    if(e.clientX<r.left-50||e.clientX>r.right+50||e.clientY<r.top-50||e.clientY>r.bottom+50)return;
+    const cx=r.left+r.width/2,cy=r.top+r.height/2;
+    const dx=(e.clientX-cx)/r.width,dy=(e.clientY-cy)/r.height;
+    el.style.transform='perspective(800px) rotateY('+dx*8+'deg) rotateX('+(-dy*8)+'deg) scale(1.02)';
+  });
+});
+document.addEventListener('mouseleave',function(){
+  document.querySelectorAll('.deck-item,.action-card,.stat-card').forEach(function(el){el.style.transform='';});
+});
 </script>
 </body>
 </html>
