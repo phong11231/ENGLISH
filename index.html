@@ -2290,33 +2290,24 @@ async function loadSharedDecks(){
   try{
     const snap=await firestore.collection('sharedDecks').get();
     if(snap.empty)return;
-    let added=0,updated=0;
+    // Remove old shared decks from user
+    const sharedIds=new Set();
+    snap.forEach(d=>sharedIds.add(d.id));
+    for(const id of Object.keys(db.decks)){
+      if(db.decks[id]._shared&&!sharedIds.has(id)){delete db.decks[id];deleteDeckData(id);}
+    }
+    // Add/replace with admin's version
+    let count=0;
     for(const doc of snap.docs){
       const id=doc.id;
       const data=doc.data();
-      const sharedAt=data.sharedAt||0;
       delete data.sharedBy;delete data.sharedAt;
       data._shared=true;
-      if(!db.decks[id]){
-        db.decks[id]=data;
-        saveDeckData(id,data);
-        added++;
-      } else {
-        const local=db.decks[id];
-        const reviewMap={};
-        (local.cards||[]).forEach(c=>{reviewMap[c.front]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview};});
-        const newCards=(data.cards||[]).map(c=>{
-          const r=reviewMap[c.front];
-          if(r){c.status=r.status;c.interval=r.interval;c.ease=r.ease;c.due=r.due;c.reps=r.reps;c.lapses=r.lapses;c.lastReview=r.lastReview;}
-          return c;
-        });
-        data.cards=newCards;
-        db.decks[id]=data;
-        saveDeckData(id,data);
-        updated++;
-      }
+      db.decks[id]=data;
+      saveDeckData(id,data);
+      count++;
     }
-    if(added>0||updated>0){saveLocal();renderCurrentView();if(added)toast(added+' shared deck(s) added!');if(updated)toast(updated+' deck(s) updated!');}
+    if(count>0){saveLocal();renderCurrentView();toast(count+' shared deck(s) synced!');}
   }catch(e){console.error('Load shared decks:',e);}
 }
 updateAdminUI();
