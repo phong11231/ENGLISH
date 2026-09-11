@@ -266,8 +266,9 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .voice-icon{font-size:32px;line-height:1}
 .voice-label{font-size:10px;color:rgba(255,255,255,.8);font-weight:700}
 .voice-hint{font-size:13px;color:rgba(255,255,255,.5);font-style:italic;margin-top:4px}
-.voice-mini-btn{position:absolute;top:8px;right:8px;background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;line-height:36px;text-align:center;opacity:.8;transition:all .3s;box-shadow:0 2px 10px rgba(139,92,246,.3)}
-.voice-mini-btn:hover{opacity:1;transform:scale(1.1)}
+.voice-mini-btn{position:absolute;top:12px;right:12px;background:linear-gradient(135deg,#8b5cf6,#06b6d4);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;font-size:22px;line-height:44px;text-align:center;transition:all .3s;box-shadow:0 4px 16px rgba(139,92,246,.5);z-index:10;animation:voiceBtnGlow 2s ease-in-out infinite}
+.voice-mini-btn:hover{transform:scale(1.15);box-shadow:0 6px 24px rgba(139,92,246,.7)}
+@keyframes voiceBtnGlow{0%,100%{box-shadow:0 4px 16px rgba(139,92,246,.5)}50%{box-shadow:0 4px 24px rgba(139,92,246,.8),0 0 40px rgba(6,182,212,.3)}}
 .voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
 @keyframes speakPulse{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,.4)}50%{box-shadow:0 4px 30px rgba(139,92,246,.7),0 0 60px rgba(139,92,246,.2)}}
 .streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
@@ -1439,7 +1440,10 @@ function showCurrentCard(){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
     const modeHint=card.displayMode==='voice-repeat'?'Nhắc lại câu vừa nghe':card.displayMode==='voice-translate'?'Dịch sang tiếng Việt':'Lật thẻ xem đáp án';
     document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe lại</span></button><div class="voice-hint">'+modeHint+'</div></div>';
-    document.getElementById('cardBack').innerHTML='<div style="position:relative">'+renderContent(card.back)+'<button class="voice-mini-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')" title="Nghe lại">🔊</button></div>';
+    document.getElementById('cardBack').innerHTML=renderContent(card.back);
+    const backEl=document.getElementById('cardBack');backEl.style.position='relative';
+    const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Nghe lại';
+    miniBtn.onclick=function(e){e.stopPropagation();speakText(card.front);};backEl.appendChild(miniBtn);
     setTimeout(()=>speakText(card.front),300);
   } else {
     document.getElementById('cardFront').innerHTML=renderContent(card.front);
