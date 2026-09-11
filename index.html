@@ -2290,19 +2290,33 @@ async function loadSharedDecks(){
   try{
     const snap=await firestore.collection('sharedDecks').get();
     if(snap.empty)return;
-    let added=0;
+    let added=0,updated=0;
     for(const doc of snap.docs){
       const id=doc.id;
+      const data=doc.data();
+      const sharedAt=data.sharedAt||0;
+      delete data.sharedBy;delete data.sharedAt;
+      data._shared=true;
       if(!db.decks[id]){
-        const data=doc.data();
-        delete data.sharedBy;delete data.sharedAt;
-        data._shared=true;
         db.decks[id]=data;
         saveDeckData(id,data);
         added++;
+      } else if(db.decks[id]._shared){
+        const local=db.decks[id];
+        const reviewMap={};
+        (local.cards||[]).forEach(c=>{reviewMap[c.front]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview};});
+        const newCards=(data.cards||[]).map(c=>{
+          const r=reviewMap[c.front];
+          if(r){c.status=r.status;c.interval=r.interval;c.ease=r.ease;c.due=r.due;c.reps=r.reps;c.lapses=r.lapses;c.lastReview=r.lastReview;}
+          return c;
+        });
+        data.cards=newCards;
+        db.decks[id]=data;
+        saveDeckData(id,data);
+        updated++;
       }
     }
-    if(added>0){saveLocal();renderCurrentView();toast(added+' shared deck(s) added!');}
+    if(added>0||updated>0){saveLocal();renderCurrentView();if(added)toast(added+' shared deck(s) added!');if(updated)toast(updated+' deck(s) updated!');}
   }catch(e){console.error('Load shared decks:',e);}
 }
 updateAdminUI();
