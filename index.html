@@ -1542,33 +1542,41 @@ function showCurrentCard(){
       ytWrap.onclick=function(ev){ev.stopPropagation();};
       ytWrap.appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
       backFaceEl.appendChild(ytWrap);
-      const replayBtn=document.createElement('button');replayBtn.className='yt-video-btn';replayBtn.innerHTML='🔄 Replay clip';
+      const btnRow=document.createElement('div');btnRow.className='card-link-btns';btnRow.style.cssText='display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;z-index:2;position:relative;justify-content:center';
+      btnRow.onclick=function(ev){ev.stopPropagation();};
+      const replayBtn=document.createElement('button');replayBtn.className='yt-video-btn';replayBtn.innerHTML='🔄 Replay';
       replayBtn.onclick=function(ev){ev.stopPropagation();ytWrap.innerHTML='';ytWrap.appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));};
-      backFaceEl.appendChild(replayBtn);
+      btnRow.appendChild(replayBtn);
+      const ft=(card.front||'').replace(/<[^>]*>/g,'').trim();
+      if(ft){const db2=document.createElement('button');db2.className='yt-video-btn';db2.innerHTML='📖 Dictionary';db2.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(ft.toLowerCase()),'_blank');};btnRow.appendChild(db2);}
+      if(card.cakeUrl){const cb=document.createElement('button');cb.className='yt-video-btn';cb.innerHTML='🍰 Cake';cb.onclick=function(){window.open(card.cakeUrl,'_blank');};btnRow.appendChild(cb);}
+      backFaceEl.appendChild(btnRow);
       setTimeout(()=>{const ra=document.getElementById('reviewActions');if(ra)ra.scrollIntoView({behavior:'smooth',block:'nearest'});},300);
     };
     backFaceEl.appendChild(ytBtn);
   }
 
-  // Dictionary & Cake buttons
+  // Dictionary & Cake buttons (only when no video)
   const oldLinkBtns=backFaceEl.querySelector('.card-link-btns');if(oldLinkBtns)oldLinkBtns.remove();
-  const frontText=(card.front||'').replace(/<[^>]*>/g,'').trim();
-  if(frontText||card.cakeUrl){
-    const linkWrap=document.createElement('div');linkWrap.className='card-link-btns';linkWrap.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;z-index:2;position:relative';
-    linkWrap.onclick=function(ev){ev.stopPropagation();};
-    if(frontText){
-      const dictBtn=document.createElement('button');dictBtn.className='yt-video-btn';
-      dictBtn.innerHTML='📖 Dictionary';
-      dictBtn.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(frontText.toLowerCase()),'_blank');};
-      linkWrap.appendChild(dictBtn);
+  if(!ytId){
+    const frontText=(card.front||'').replace(/<[^>]*>/g,'').trim();
+    if(frontText||card.cakeUrl){
+      const linkWrap=document.createElement('div');linkWrap.className='card-link-btns';linkWrap.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;z-index:2;position:relative;justify-content:center';
+      linkWrap.onclick=function(ev){ev.stopPropagation();};
+      if(frontText){
+        const dictBtn=document.createElement('button');dictBtn.className='yt-video-btn';
+        dictBtn.innerHTML='📖 Dictionary';
+        dictBtn.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(frontText.toLowerCase()),'_blank');};
+        linkWrap.appendChild(dictBtn);
+      }
+      if(card.cakeUrl){
+        const cakeBtn=document.createElement('button');cakeBtn.className='yt-video-btn';
+        cakeBtn.innerHTML='🍰 Cake';
+        cakeBtn.onclick=function(){window.open(card.cakeUrl,'_blank');};
+        linkWrap.appendChild(cakeBtn);
+      }
+      backFaceEl.appendChild(linkWrap);
     }
-    if(card.cakeUrl){
-      const cakeBtn=document.createElement('button');cakeBtn.className='yt-video-btn';
-      cakeBtn.innerHTML='🍰 Cake';
-      cakeBtn.onclick=function(){window.open(card.cakeUrl,'_blank');};
-      linkWrap.appendChild(cakeBtn);
-    }
-    backFaceEl.appendChild(linkWrap);
   }
 
   document.getElementById('cardTags').innerHTML=(card.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
