@@ -678,6 +678,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
         <div class="form-group" style="flex:1;align-self:flex-end"><button type="button" class="btn btn-ghost" onclick="previewYtClip()" style="width:100%;padding:9px 0">▶ Preview</button></div>
       </div>
       <div id="ytPreviewWrap" style="display:none;margin-bottom:12px;border-radius:var(--r-md);overflow:hidden"><div id="ytPreviewPlayer"></div></div>
+      <div class="form-group"><label>🍰 Cake Link (optional)</label><input type="text" id="cardCakeUrl" placeholder="e.g. https://cake.me/..."></div>
       <div class="form-group"><label>Tags (comma separated)</label><input type="text" id="cardTagsInput" placeholder="e.g. week-1, grammar, hard"></div>
       <div class="form-actions"><button class="btn btn-ghost" onclick="closeCardModal()">Cancel</button><button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Save card</button></div>
     </div>
@@ -949,7 +950,7 @@ function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
 // ===== SM-2 =====
-function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
 
 function sm2(card,quality){
   const now=Date.now(),DAY=86400000; card.lastReview=now;
@@ -1209,6 +1210,7 @@ function openCardModal(cardId){
     document.getElementById('cardYoutubeUrl').value=card.youtubeUrl||'';
     document.getElementById('cardYtStart').value=card.ytStart!=null?card.ytStart:'';
     document.getElementById('cardYtEnd').value=card.ytEnd!=null?card.ytEnd:'';
+    document.getElementById('cardCakeUrl').value=card.cakeUrl||'';
   } else {
     document.getElementById('cardModalTitle').textContent='Add New Card';
     document.getElementById('saveCardBtn').textContent='Save card';
@@ -1217,6 +1219,7 @@ function openCardModal(cardId){
     document.getElementById('cardDisplayMode').value='voice';
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
     document.getElementById('cardYoutubeUrl').value='';document.getElementById('cardYtStart').value='';document.getElementById('cardYtEnd').value='';
+    document.getElementById('cardCakeUrl').value='';
   }
   document.getElementById('cardModal').classList.add('active');
   setTimeout(()=>(document.getElementById('cardTypeSelect').value==='cloze'?document.getElementById('clozeInput'):document.getElementById('cardFrontInput')).focus(),100);
@@ -1236,17 +1239,18 @@ function saveCard(){
   const ytUrl=document.getElementById('cardYoutubeUrl').value.trim();
   const ytStart=document.getElementById('cardYtStart').value?parseFloat(document.getElementById('cardYtStart').value):null;
   const ytEnd=document.getElementById('cardYtEnd').value?parseFloat(document.getElementById('cardYtEnd').value):null;
+  const cakeUrl=document.getElementById('cardCakeUrl').value.trim();
   if(type==='cloze'){
     const text=document.getElementById('clozeInput').value.trim();
     if(!text||!text.includes('{{c')){toast('Need at least 1 {{c1::...}}');return;}
     const nums=new Set();text.replace(/\{\{c(\d+)::/g,(_,n)=>nums.add(parseInt(n)));
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;
+      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;
       toast('Updated!');
     } else {
       nums.forEach(n=>{
-        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;
+        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;
         deck.cards.push(card);
       });
       toast('Added '+nums.size+' cloze cards!');
@@ -1257,10 +1261,10 @@ function saveCard(){
     if(!front||!back){toast('Enter both front and back');return;}
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;toast('Updated!');
+      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;toast('Updated!');
     } else {
-      const card=newCardData();card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;deck.cards.push(card);
-      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
+      const card=newCardData();card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;deck.cards.push(card);
+      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;card.cakeUrl=cakeUrl;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
       else toast('Card added!');
     }
   }
@@ -1544,6 +1548,27 @@ function showCurrentCard(){
       setTimeout(()=>{const ra=document.getElementById('reviewActions');if(ra)ra.scrollIntoView({behavior:'smooth',block:'nearest'});},300);
     };
     backFaceEl.appendChild(ytBtn);
+  }
+
+  // Dictionary & Cake buttons
+  const oldLinkBtns=backFaceEl.querySelector('.card-link-btns');if(oldLinkBtns)oldLinkBtns.remove();
+  const frontText=(card.front||'').replace(/<[^>]*>/g,'').trim();
+  if(frontText||card.cakeUrl){
+    const linkWrap=document.createElement('div');linkWrap.className='card-link-btns';linkWrap.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;z-index:2;position:relative';
+    linkWrap.onclick=function(ev){ev.stopPropagation();};
+    if(frontText){
+      const dictBtn=document.createElement('button');dictBtn.className='yt-video-btn';
+      dictBtn.innerHTML='📖 Dictionary';
+      dictBtn.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(frontText.toLowerCase()),'_blank');};
+      linkWrap.appendChild(dictBtn);
+    }
+    if(card.cakeUrl){
+      const cakeBtn=document.createElement('button');cakeBtn.className='yt-video-btn';
+      cakeBtn.innerHTML='🍰 Cake';
+      cakeBtn.onclick=function(){window.open(card.cakeUrl,'_blank');};
+      linkWrap.appendChild(cakeBtn);
+    }
+    backFaceEl.appendChild(linkWrap);
   }
 
   document.getElementById('cardTags').innerHTML=(card.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
