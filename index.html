@@ -265,7 +265,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .voice-play-btn:active{transform:scale(0.95)}
 .voice-icon{font-size:32px;line-height:1}
 .voice-label{font-size:10px;color:rgba(255,255,255,.8);font-weight:700}
-.voice-hint{font-size:13px;color:rgba(255,255,255,.5);font-style:italic;margin-top:4px}
+.voice-hint{font-size:15px;color:#fff;font-weight:700;margin-top:8px;padding:8px 20px;background:rgba(139,92,246,.3);border:1px solid rgba(139,92,246,.5);border-radius:12px;backdrop-filter:blur(4px)}
 .voice-mini-btn{position:absolute;top:12px;right:12px;background:linear-gradient(135deg,#8b5cf6,#06b6d4);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;font-size:22px;line-height:44px;text-align:center;transition:all .3s;box-shadow:0 4px 16px rgba(139,92,246,.5);z-index:10;animation:voiceBtnGlow 2s ease-in-out infinite}
 .voice-mini-btn:hover{transform:scale(1.15);box-shadow:0 6px 24px rgba(139,92,246,.7)}
 @keyframes voiceBtnGlow{0%,100%{box-shadow:0 4px 16px rgba(139,92,246,.5)}50%{box-shadow:0 4px 24px rgba(139,92,246,.8),0 0 40px rgba(6,182,212,.3)}}
@@ -656,7 +656,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <option value="type">⌨️ Nhập đáp án — Hệ thống chấm</option>
         </select>
       </div>
-      <div class="form-group"><label>Hiển thị câu hỏi</label>
+      <div class="form-group"><label>Dạng câu hỏi</label>
         <select id="cardDisplayMode">
           <option value="text">📝 Hiện text — Đọc câu hỏi</option>
           <option value="voice">🔊 Nghe và trả lời — AI đọc, lật xem đáp án</option>
@@ -1438,7 +1438,7 @@ function showCurrentCard(){
   const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
   if(isVoice){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
-    const modeHint=card.displayMode==='voice-repeat'?'Nhắc lại câu vừa nghe':card.displayMode==='voice-translate'?'Dịch sang tiếng Việt':'Lật thẻ xem đáp án';
+    const modeHint=card.displayMode==='voice-repeat'?'🔁 Nghe và nhắc lại câu':card.displayMode==='voice-translate'?'🌐 Nghe và dịch sang tiếng Việt':'🎧 Nghe và trả lời câu hỏi';
     document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe lại</span></button><div class="voice-hint">'+modeHint+'</div></div>';
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
     const backEl=document.getElementById('cardBack');backEl.style.position='relative';
