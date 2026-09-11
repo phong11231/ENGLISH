@@ -265,6 +265,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .voice-play-btn:active{transform:scale(0.95)}
 .voice-icon{font-size:32px;line-height:1}
 .voice-label{font-size:10px;color:rgba(255,255,255,.8);font-weight:700}
+.voice-hint{font-size:13px;color:rgba(255,255,255,.5);font-style:italic;margin-top:4px}
 .voice-mini-btn{position:absolute;top:8px;right:8px;background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;line-height:36px;text-align:center;opacity:.8;transition:all .3s;box-shadow:0 2px 10px rgba(139,92,246,.3)}
 .voice-mini-btn:hover{opacity:1;transform:scale(1.1)}
 .voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
@@ -657,7 +658,9 @@ input,textarea,select{font-family:inherit;font-size:inherit}
       <div class="form-group"><label>Hiển thị câu hỏi</label>
         <select id="cardDisplayMode">
           <option value="text">📝 Hiện text — Đọc câu hỏi</option>
-          <option value="voice">🔊 AI đọc — Nghe và trả lời</option>
+          <option value="voice">🔊 Nghe và trả lời — AI đọc, lật xem đáp án</option>
+          <option value="voice-repeat">🔁 Nghe và nhắc lại — AI đọc, nhắc lại câu đó</option>
+          <option value="voice-translate">🌐 Nghe và dịch — AI đọc, dịch sang tiếng Việt</option>
         </select>
       </div>
       <div class="form-group"><label>Tags (cách nhau bằng dấu phẩy)</label><input type="text" id="cardTagsInput" placeholder="VD: tuần-1, ngữ-pháp, khó"></div>
@@ -1269,9 +1272,9 @@ function renderCardBrowser(){
       const dt=c.status==='new'?'—':formatDue(c.due);
       const tagHTML=(c.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
       const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
-      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':'';
+      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':'';
       return`<tr><td class="card-front-col">${esc(c.front)}</td><td class="card-back-col">${esc(c.back)}</td>
-        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Nhập đáp án':'Lật thẻ'}${c.displayMode==='voice'?' · AI đọc':''}">${modeLabel}${dispLabel}</td>
+        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Nhập đáp án':'Lật thẻ'}${c.displayMode==='voice'?' · Nghe trả lời':c.displayMode==='voice-repeat'?' · Nghe nhắc lại':c.displayMode==='voice-translate'?' · Nghe dịch':''}">${modeLabel}${dispLabel}</td>
         <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
         <td><span class="card-status ${sc}">${st}</span></td>
         <td style="font-size:13px;color:var(--ink-dim)">${dt}</td>
@@ -1431,10 +1434,11 @@ function showCurrentCard(){
   document.getElementById('undoBtn').style.display=undoStack.length>0?'block':'none';
 
   // Render content — voice mode hides text and plays TTS
-  const isVoice=(card.displayMode==='voice');
+  const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
   if(isVoice){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
-    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe lại</span></button></div>';
+    const modeHint=card.displayMode==='voice-repeat'?'Nhắc lại câu vừa nghe':card.displayMode==='voice-translate'?'Dịch sang tiếng Việt':'Lật thẻ xem đáp án';
+    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe lại</span></button><div class="voice-hint">'+modeHint+'</div></div>';
     document.getElementById('cardBack').innerHTML='<div style="position:relative">'+renderContent(card.back)+'<button class="voice-mini-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')" title="Nghe lại">🔊</button></div>';
     setTimeout(()=>speakText(card.front),300);
   } else {
