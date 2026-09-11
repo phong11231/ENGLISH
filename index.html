@@ -2301,7 +2301,7 @@ async function loadSharedDecks(){
         db.decks[id]=data;
         saveDeckData(id,data);
         added++;
-      } else if(db.decks[id]._shared){
+      } else {
         const local=db.decks[id];
         const reviewMap={};
         (local.cards||[]).forEach(c=>{reviewMap[c.front]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview};});
