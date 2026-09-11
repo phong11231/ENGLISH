@@ -257,6 +257,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 
 /* STREAK SYSTEM */
 #voiceProviderSelect,#voiceIdSelect{color-scheme:dark;appearance:none;-webkit-appearance:none;background-color:rgba(30,20,50,.9);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23fff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+#voiceIdSelect{max-height:300px;overflow-y:auto}
 #voiceProviderSelect option,#voiceIdSelect option{background:#1e1432;color:#fff;padding:8px}
 .voice-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:120px}
 .voice-play-btn{background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;width:80px;height:80px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .3s;box-shadow:0 4px 20px rgba(139,92,246,.4)}
@@ -1469,22 +1470,10 @@ function showCurrentCard(){
 
 let currentAudio=null;
 const EDGE_TTS_API='https://edge-tts-api-gold.vercel.app/api/tts';
+const LOCALE_FLAGS={'en-US':'🇺🇸 Mỹ','en-GB':'🇬🇧 Anh','en-AU':'🇦🇺 Úc','en-CA':'🇨🇦 Canada','en-IN':'🇮🇳 Ấn Độ','en-IE':'🇮🇪 Ireland','en-NZ':'🇳🇿 New Zealand','en-SG':'🇸🇬 Singapore','en-ZA':'🇿🇦 Nam Phi','en-PH':'🇵🇭 Philippines','en-HK':'🇭🇰 Hong Kong','en-KE':'🇰🇪 Kenya','en-NG':'🇳🇬 Nigeria','en-TZ':'🇹🇿 Tanzania'};
+let edgeVoicesCache=null;
 const VOICE_OPTIONS={
-  edge:[
-    {id:'en-US-JennyNeural',name:'Jenny — Nữ Mỹ ❤️ (hay nhất)'},
-    {id:'en-US-AriaNeural',name:'Aria — Nữ Mỹ, tự nhiên'},
-    {id:'en-US-SaraNeural',name:'Sara — Nữ Mỹ, trẻ'},
-    {id:'en-US-MichelleNeural',name:'Michelle — Nữ Mỹ, ấm'},
-    {id:'en-US-GuyNeural',name:'Guy — Nam Mỹ'},
-    {id:'en-US-ChristopherNeural',name:'Christopher — Nam Mỹ'},
-    {id:'en-US-EricNeural',name:'Eric — Nam Mỹ'},
-    {id:'en-US-RogerNeural',name:'Roger — Nam Mỹ, trầm'},
-    {id:'en-GB-SoniaNeural',name:'Sonia — Nữ Anh 🇬🇧'},
-    {id:'en-GB-LibbyNeural',name:'Libby — Nữ Anh 🇬🇧'},
-    {id:'en-GB-RyanNeural',name:'Ryan — Nam Anh 🇬🇧'},
-    {id:'en-AU-NatashaNeural',name:'Natasha — Nữ Úc 🇦🇺'},
-    {id:'en-AU-WilliamNeural',name:'William — Nam Úc 🇦🇺'}
-  ],
+  edge:[],
   'google-translate':[
     {id:'en-US',name:'Tiếng Anh Mỹ 🇺🇸'},
     {id:'en-GB',name:'Tiếng Anh Anh 🇬🇧'},
@@ -1493,6 +1482,28 @@ const VOICE_OPTIONS={
   ],
   browser:[]
 };
+async function loadEdgeVoices(){
+  if(edgeVoicesCache)return edgeVoicesCache;
+  try{
+    const r=await fetch('https://edge-tts-api-gold.vercel.app/api/voices?lang=en');
+    const voices=await r.json();
+    edgeVoicesCache=voices.filter(v=>!v.id.includes('Multilingual')).map(v=>{
+      const name=v.id.split('-').pop().replace('Neural','');
+      const locale=v.id.split('-').slice(0,2).join('-');
+      const flag=LOCALE_FLAGS[locale]||locale;
+      const gender=v.gender==='Female'?'Nữ':'Nam';
+      return{id:v.id,name:name+' — '+gender+' '+flag};
+    });
+    edgeVoicesCache.sort((a,b)=>{
+      const order=['en-US','en-GB','en-AU','en-CA','en-IN'];
+      const la=a.id.split('-').slice(0,2).join('-'),lb=b.id.split('-').slice(0,2).join('-');
+      const ia=order.indexOf(la),ib=order.indexOf(lb);
+      return(ia===-1?99:ia)-(ib===-1?99:ib)||a.name.localeCompare(b.name);
+    });
+    VOICE_OPTIONS.edge=edgeVoicesCache;
+    return edgeVoicesCache;
+  }catch(e){return[];}
+}
 
 function updateVoiceList(){
   const provider=document.getElementById('voiceProviderSelect').value;
@@ -1500,10 +1511,21 @@ function updateVoiceList(){
   sel.innerHTML='';
   if(provider==='browser'){sel.style.display='none';return;}
   sel.style.display='';
-  const opts=VOICE_OPTIONS[provider]||[];
-  opts.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;sel.appendChild(o);});
-  const saved=db.settings.voiceProvider===provider?db.settings.voiceId:null;
-  if(saved&&opts.find(v=>v.id===saved))sel.value=saved;
+  const renderOpts=(opts)=>{
+    sel.innerHTML='';
+    opts.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;sel.appendChild(o);});
+    const saved=db.settings.voiceProvider===provider?db.settings.voiceId:null;
+    if(saved&&opts.find(v=>v.id===saved))sel.value=saved;
+  };
+  if(provider==='edge'){
+    sel.innerHTML='<option>Đang tải giọng...</option>';
+    loadEdgeVoices().then(voices=>{
+      if(voices.length)renderOpts(voices);
+      else{sel.innerHTML='<option value="en-US-JennyNeural">Jenny — Nữ 🇺🇸 Mỹ</option>';}
+    });
+    return;
+  }
+  renderOpts(VOICE_OPTIONS[provider]||[]);
 }
 
 function edgeTTS(text,voiceId){
