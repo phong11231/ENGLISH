@@ -265,8 +265,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .voice-play-btn:active{transform:scale(0.95)}
 .voice-icon{font-size:32px;line-height:1}
 .voice-label{font-size:10px;color:rgba(255,255,255,.8);font-weight:700}
-.voice-flip-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 24px;cursor:pointer;color:var(--ink);font-size:14px;font-weight:700;transition:all .3s;backdrop-filter:blur(8px)}
-.voice-flip-btn:hover{background:rgba(255,255,255,.2);transform:scale(1.05)}
+.voice-mini-btn{position:absolute;top:8px;right:8px;background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;line-height:36px;text-align:center;opacity:.8;transition:all .3s;box-shadow:0 2px 10px rgba(139,92,246,.3)}
+.voice-mini-btn:hover{opacity:1;transform:scale(1.1)}
 .voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
 @keyframes speakPulse{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,.4)}50%{box-shadow:0 4px 30px rgba(139,92,246,.7),0 0 60px rgba(139,92,246,.2)}}
 .streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
@@ -1434,12 +1434,13 @@ function showCurrentCard(){
   const isVoice=(card.displayMode==='voice');
   if(isVoice){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
-    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe lại</span></button><button class="voice-flip-btn" onclick="event.stopPropagation();flipCard()">🔄 Lật thẻ</button></div>';
+    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe lại</span></button></div>';
+    document.getElementById('cardBack').innerHTML='<div style="position:relative">'+renderContent(card.back)+'<button class="voice-mini-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')" title="Nghe lại">🔊</button></div>';
     setTimeout(()=>speakText(card.front),300);
   } else {
     document.getElementById('cardFront').innerHTML=renderContent(card.front);
+    document.getElementById('cardBack').innerHTML=renderContent(card.back);
   }
-  document.getElementById('cardBack').innerHTML=renderContent(card.back);
   document.getElementById('cardTags').innerHTML=(card.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
 
   document.getElementById('intAgain').textContent=getIntervalText(card,0);
@@ -1461,8 +1462,8 @@ function showCurrentCard(){
     typeInput.value='';typeInput.className='type-answer-input';typeResult.className='type-answer-result';typeResult.style.display='none';
     setTimeout(()=>typeInput.focus(),100);
   } else {
-    document.getElementById('flashcard').onclick=isVoice?null:flipCard;
-    if(hint)hint.style.display=isVoice?'none':'';
+    document.getElementById('flashcard').onclick=flipCard;
+    if(hint)hint.style.display='';
     typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
   }
   updateReviewProgress();
@@ -1646,7 +1647,8 @@ function flipCard(){
   if(currentAudio){currentAudio.pause();currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   const fc=document.getElementById('flashcard');
-  if(!fc.classList.contains('flipped')){fc.classList.add('flipped');document.getElementById('reviewActions').style.display='flex';}
+  if(fc.classList.contains('flipped')){fc.classList.remove('flipped');document.getElementById('reviewActions').style.display='none';}
+  else{fc.classList.add('flipped');document.getElementById('reviewActions').style.display='flex';}
 }
 
 function normalize(s){return s.trim().toLowerCase().replace(/\s+/g,' ');}
