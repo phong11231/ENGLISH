@@ -927,6 +927,7 @@ auth.onAuthStateChanged(user=>{
     document.getElementById('navLogin').style.display='flex';
     avImg.style.display='none';avInit.style.display='none';
     db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}};saveLocal();renderCurrentView();
+    loadSharedDecks();
   }
 });
 
@@ -2416,7 +2417,6 @@ async function pushDecksToAll(){
   }catch(e){console.error(e);toast('Push failed: '+e.message);}
 }
 async function loadSharedDecks(){
-  if(!currentUser)return;
   try{
     const snap=await firestore.collection('sharedDecks').get();
     if(snap.empty)return;
@@ -2443,7 +2443,7 @@ async function loadSharedDecks(){
 updateAdminUI();
 
 // ===== INIT =====
-loadLocal();renderDecks();initParticles();
+loadLocal();renderDecks();initParticles();loadSharedDecks();
 </script>
 </body>
 </html>
