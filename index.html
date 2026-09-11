@@ -260,6 +260,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 #voiceIdSelect{max-height:300px;overflow-y:auto}
 #voiceProviderSelect option,#voiceIdSelect option{background:#1e1432;color:#fff;padding:8px}
 .voice-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:120px}
+.yt-card-wrap{width:100%;border-radius:var(--r-md);overflow:hidden;margin-bottom:12px;position:relative;z-index:2}
+.yt-card-wrap iframe{display:block;width:100%;border:none}
 .voice-play-btn{background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;width:80px;height:80px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .3s;box-shadow:0 4px 20px rgba(139,92,246,.4)}
 .voice-play-btn:hover{transform:scale(1.1);box-shadow:0 6px 30px rgba(139,92,246,.6)}
 .voice-play-btn:active{transform:scale(0.95)}
@@ -664,6 +666,13 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <option value="type">⌨️ Type answer — Auto-graded</option>
         </select>
       </div>
+      <div class="form-group"><label>🎬 YouTube Video (optional)</label><input type="text" id="cardYoutubeUrl" placeholder="e.g. https://youtube.com/watch?v=..."></div>
+      <div style="display:flex;gap:8px">
+        <div class="form-group" style="flex:1"><label>Start (seconds)</label><input type="number" id="cardYtStart" placeholder="e.g. 85" min="0" step="0.1"></div>
+        <div class="form-group" style="flex:1"><label>End (seconds)</label><input type="number" id="cardYtEnd" placeholder="e.g. 92" min="0" step="0.1"></div>
+        <div class="form-group" style="flex:1;align-self:flex-end"><button type="button" class="btn btn-ghost" onclick="previewYtClip()" style="width:100%;padding:9px 0">▶ Preview</button></div>
+      </div>
+      <div id="ytPreviewWrap" style="display:none;margin-bottom:12px;border-radius:var(--r-md);overflow:hidden"><div id="ytPreviewPlayer"></div></div>
       <div class="form-group"><label>Tags (comma separated)</label><input type="text" id="cardTagsInput" placeholder="e.g. week-1, grammar, hard"></div>
       <div class="form-actions"><button class="btn btn-ghost" onclick="closeCardModal()">Cancel</button><button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Save card</button></div>
     </div>
@@ -923,7 +932,7 @@ function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
 // ===== SM-2 =====
-function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
 
 function sm2(card,quality){
   const now=Date.now(),DAY=86400000; card.lastReview=now;
@@ -1178,6 +1187,9 @@ function openCardModal(cardId){
     document.getElementById('cardTagsInput').value=(card.tags||[]).join(', ');
     document.getElementById('cardReviewMode').value=card.reviewMode||'flip';
     document.getElementById('cardDisplayMode').value=card.displayMode||'voice';
+    document.getElementById('cardYoutubeUrl').value=card.youtubeUrl||'';
+    document.getElementById('cardYtStart').value=card.ytStart!=null?card.ytStart:'';
+    document.getElementById('cardYtEnd').value=card.ytEnd!=null?card.ytEnd:'';
   } else {
     document.getElementById('cardModalTitle').textContent='Add New Card';
     document.getElementById('saveCardBtn').textContent='Save card';
@@ -1185,11 +1197,12 @@ function openCardModal(cardId){
     document.getElementById('cardReviewMode').value='flip';
     document.getElementById('cardDisplayMode').value='voice';
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
+    document.getElementById('cardYoutubeUrl').value='';document.getElementById('cardYtStart').value='';document.getElementById('cardYtEnd').value='';
   }
   document.getElementById('cardModal').classList.add('active');
   setTimeout(()=>(document.getElementById('cardTypeSelect').value==='cloze'?document.getElementById('clozeInput'):document.getElementById('cardFrontInput')).focus(),100);
 }
-function closeCardModal(){document.getElementById('cardModal').classList.remove('active');}
+function closeCardModal(){destroyYtPlayer();document.getElementById('ytPreviewWrap').style.display='none';document.getElementById('cardModal').classList.remove('active');}
 
 function parseTags(str){return str.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean);}
 
@@ -1200,17 +1213,20 @@ function saveCard(){
 
   const cardReviewMode=document.getElementById('cardReviewMode').value;
   const cardDisplayMode=document.getElementById('cardDisplayMode').value;
+  const ytUrl=document.getElementById('cardYoutubeUrl').value.trim();
+  const ytStart=document.getElementById('cardYtStart').value?parseFloat(document.getElementById('cardYtStart').value):null;
+  const ytEnd=document.getElementById('cardYtEnd').value?parseFloat(document.getElementById('cardYtEnd').value):null;
   if(type==='cloze'){
     const text=document.getElementById('clozeInput').value.trim();
     if(!text||!text.includes('{{c')){toast('Need at least 1 {{c1::...}}');return;}
     const nums=new Set();text.replace(/\{\{c(\d+)::/g,(_,n)=>nums.add(parseInt(n)));
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;
+      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;
       toast('Updated!');
     } else {
       nums.forEach(n=>{
-        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;
+        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;
         deck.cards.push(card);
       });
       toast('Added '+nums.size+' cloze cards!');
@@ -1221,10 +1237,10 @@ function saveCard(){
     if(!front||!back){toast('Enter both front and back');return;}
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;toast('Updated!');
+      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;toast('Updated!');
     } else {
-      const card=newCardData();card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;deck.cards.push(card);
-      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
+      const card=newCardData();card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;deck.cards.push(card);
+      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
       else toast('Card added!');
     }
   }
@@ -1409,7 +1425,62 @@ function startReview(deckId){
   showCurrentCard();
 }
 
-function exitReview(){reviewQueue=[];showView('decks');}
+function exitReview(){destroyYtPlayer();reviewQueue=[];showView('decks');}
+
+// ===== YOUTUBE CLIP =====
+let ytPlayer=null,ytLoopTimer=null,ytApiReady=false;
+function extractYtId(url){if(!url)return null;const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
+
+function destroyYtPlayer(){if(ytLoopTimer){clearInterval(ytLoopTimer);ytLoopTimer=null;}if(ytPlayer&&ytPlayer.destroy){try{ytPlayer.destroy();}catch(e){}}ytPlayer=null;}
+
+function loadYtApi(cb){
+  if(ytApiReady){cb();return;}
+  if(document.querySelector('script[src*="youtube.com/iframe_api"]')){
+    const wait=setInterval(()=>{if(typeof YT!=='undefined'&&YT.Player){ytApiReady=true;clearInterval(wait);cb();}},100);
+    return;
+  }
+  const tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
+  window.onYouTubeIframeAPIReady=function(){ytApiReady=true;cb();};
+}
+
+function createYtPlayer(containerId,videoId,start,end,autoplay){
+  destroyYtPlayer();
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML='';
+  const div=document.createElement('div');div.id=containerId+'_inner';el.appendChild(div);
+  ytPlayer=new YT.Player(div.id,{
+    width:'100%',height:'200',
+    videoId:videoId,
+    playerVars:{autoplay:autoplay?1:0,start:Math.floor(start||0),controls:1,modestbranding:1,rel:0,playsinline:1},
+    events:{
+      onReady:function(e){if(start)e.target.seekTo(start,true);if(autoplay)e.target.playVideo();},
+      onStateChange:function(e){
+        if(e.data===YT.PlayerState.PLAYING&&end!=null){
+          if(ytLoopTimer)clearInterval(ytLoopTimer);
+          ytLoopTimer=setInterval(function(){
+            if(ytPlayer&&ytPlayer.getCurrentTime&&ytPlayer.getCurrentTime()>=end){
+              ytPlayer.seekTo(start||0,true);
+            }
+          },200);
+        }
+        if(e.data===YT.PlayerState.PAUSED||e.data===YT.PlayerState.ENDED){
+          if(ytLoopTimer){clearInterval(ytLoopTimer);ytLoopTimer=null;}
+        }
+      }
+    }
+  });
+}
+
+function previewYtClip(){
+  const url=document.getElementById('cardYoutubeUrl').value.trim();
+  const videoId=extractYtId(url);
+  if(!videoId){toast('Invalid YouTube URL');return;}
+  const start=parseFloat(document.getElementById('cardYtStart').value)||0;
+  const end=document.getElementById('cardYtEnd').value?parseFloat(document.getElementById('cardYtEnd').value):null;
+  document.getElementById('ytPreviewWrap').style.display='block';
+  loadYtApi(()=>createYtPlayer('ytPreviewPlayer',videoId,start,end,true));
+}
 
 
 function showCurrentCard(){
@@ -1450,6 +1521,18 @@ function showCurrentCard(){
     document.getElementById('cardFront').innerHTML=renderContent(card.front);
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
   }
+
+  // YouTube clip embed
+  destroyYtPlayer();
+  const ytId=extractYtId(card.youtubeUrl);
+  if(ytId){
+    const ytWrap=document.createElement('div');ytWrap.className='yt-card-wrap';ytWrap.id='ytCardPlayer';
+    ytWrap.onclick=function(e){e.stopPropagation();};
+    const frontEl=document.getElementById('cardFront');
+    frontEl.insertBefore(ytWrap,frontEl.firstChild);
+    loadYtApi(()=>createYtPlayer('ytCardPlayer',ytId,card.ytStart,card.ytEnd,true));
+  }
+
   document.getElementById('cardTags').innerHTML=(card.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
 
   document.getElementById('intAgain').textContent=getIntervalText(card,0);
