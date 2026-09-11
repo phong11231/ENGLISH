@@ -656,12 +656,12 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <option value="type">⌨️ Nhập đáp án — Hệ thống chấm</option>
         </select>
       </div>
-      <div class="form-group"><label>Dạng câu hỏi</label>
+      <div class="form-group"><label>Question Type</label>
         <select id="cardDisplayMode">
-          <option value="text">📝 Hiện text — Đọc câu hỏi</option>
-          <option value="voice">🔊 Nghe và trả lời — AI đọc, lật xem đáp án</option>
-          <option value="voice-repeat">🔁 Nghe và nhắc lại — AI đọc, nhắc lại câu đó</option>
-          <option value="voice-translate">🌐 Nghe và dịch — AI đọc, dịch sang tiếng Việt</option>
+          <option value="text">📝 Show text — Read the question</option>
+          <option value="voice">🔊 Listen & Answer — AI reads, flip to check</option>
+          <option value="voice-repeat">🔁 Listen & Repeat — AI reads, repeat the sentence</option>
+          <option value="voice-translate">🌐 Listen & Translate — AI reads, translate it</option>
         </select>
       </div>
       <div class="form-group"><label>Tags (cách nhau bằng dấu phẩy)</label><input type="text" id="cardTagsInput" placeholder="VD: tuần-1, ngữ-pháp, khó"></div>
@@ -1438,8 +1438,8 @@ function showCurrentCard(){
   const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
   if(isVoice){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
-    const modeHint=card.displayMode==='voice-repeat'?'🔁 Nghe và nhắc lại câu':card.displayMode==='voice-translate'?'🌐 Nghe và dịch sang tiếng Việt':'🎧 Nghe và trả lời câu hỏi';
-    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Nghe lại</span></button><div class="voice-hint">'+modeHint+'</div></div>';
+    const modeHint=card.displayMode==='voice-repeat'?'🔁 Listen and repeat the sentence':card.displayMode==='voice-translate'?'🌐 Listen and translate the sentence':'🎧 Listen and answer the question';
+    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">'+modeHint+'</div></div>';
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
     const backFace=document.querySelector('.flashcard-face.back');
     const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
