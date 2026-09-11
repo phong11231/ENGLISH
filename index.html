@@ -96,7 +96,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 @keyframes navLineShift{0%,100%{background-position:0% 50%;opacity:.4}50%{background-position:100% 50%;opacity:.8}}
 .nav-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:24px;font-family:var(--font-display);background:linear-gradient(135deg,var(--primary-light),var(--neon),var(--accent),var(--pink));background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradientText 4s ease-in-out infinite;text-shadow:0 0 40px rgba(139,92,246,.3)}
 @keyframes gradientText{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.nav-brand span{font-size:28px;-webkit-text-fill-color:initial;animation:brandFloat 2.5s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(139,92,246,.5))}
+.brand-logo{width:36px;height:36px;border-radius:10px;object-fit:cover;border:2px solid rgba(139,92,246,.4);box-shadow:0 0 12px rgba(139,92,246,.4),0 0 30px rgba(139,92,246,.15);animation:brandFloat 2.5s ease-in-out infinite;transition:all .3s}
+.brand-logo:hover{border-color:var(--neon);box-shadow:0 0 20px rgba(0,255,170,.5),0 0 40px rgba(139,92,246,.3);transform:scale(1.1) rotate(5deg)}
 @keyframes brandFloat{0%,100%{transform:translateY(0) rotate(0deg) scale(1)}50%{transform:translateY(-4px) rotate(8deg) scale(1.1)}}
 .nav-actions{display:flex;align-items:center;gap:6px}
 .nav-btn{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:all .3s cubic-bezier(.34,1.56,.64,1);font-size:18px;position:relative}
@@ -483,6 +484,12 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 @keyframes sparkle{0%,100%{opacity:0;transform:scale(0) translateY(0)}50%{opacity:1;transform:scale(1) translateY(-20px)}}
 .deck-item:hover .deck-color::after{content:'✨';position:absolute;font-size:12px;top:-5px;right:-5px;animation:sparkle 1s ease-in-out infinite}
 
+/* FOOTER */
+.app-footer{display:flex;align-items:center;justify-content:center;gap:10px;padding:24px 20px 40px;font-size:13px;color:var(--ink-dim);position:relative;z-index:1}
+.app-footer strong{color:var(--primary-light);font-weight:700}
+.footer-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,.3);box-shadow:0 0 10px rgba(139,92,246,.3);transition:all .3s}
+.footer-avatar:hover{transform:scale(1.2) rotate(10deg);box-shadow:0 0 20px rgba(139,92,246,.5);border-color:var(--neon)}
+
 /* STAGGER ANIMATIONS */
 .deck-item{animation:deckIn .7s cubic-bezier(.34,1.56,.64,1) both}
 .stat-card{animation:statIn .6s cubic-bezier(.34,1.56,.64,1) both}
@@ -508,7 +515,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 
 <div class="app active" id="appShell">
 <nav class="nav">
-  <div class="nav-brand"><span>🧠</span> FlashMind</div>
+  <div class="nav-brand"><img src="avata.jpg" class="brand-logo" alt="FlashMind"> FlashMind</div>
   <div class="nav-actions">
     <button class="nav-btn active" onclick="showView('decks')" title="Decks" id="navDecks">📚</button>
     <button class="nav-btn" onclick="showView('quiz')" title="Quiz" id="navQuiz">🎯</button>
@@ -664,6 +671,10 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 </main>
 </div>
 
+<footer class="app-footer">
+  <img src="avata.jpg" class="footer-avatar" alt="">
+  <span>Created by <strong>Phong Nguyen</strong></span>
+</footer>
 <button class="fab" onclick="openDeckModal()" title="New deck" id="fabBtn">+</button>
 
 <!-- DECK MODAL -->
