@@ -489,6 +489,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
     <div class="user-menu-name" id="userName"></div>
     <button class="user-menu-item" onclick="syncToCloud()">☁️ Sync to cloud</button>
     <button class="user-menu-item" onclick="exportAllData()">📤 Export data</button>
+    <button class="user-menu-item" onclick="openAdminModal()">🔑 Admin</button>
+    <button class="user-menu-item" id="adminPushBtn" onclick="pushDecksToAll()" style="display:none">📢 Push decks to all users</button>
     <button class="user-menu-item danger" onclick="signOutUser()">🚪 Sign out</button>
   </div>
 </nav>
@@ -790,6 +792,17 @@ input,textarea,select{font-family:inherit;font-size:inherit}
   </div>
 </div>
 
+<div class="modal-overlay" id="adminModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h2>Admin Access</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Admin password</label><input type="password" id="adminPassInput" placeholder="Enter admin password"></div>
+      <div id="adminError" style="color:var(--red);font-size:13px;margin-top:4px;display:none"></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button><button class="btn btn-primary" onclick="verifyAdminPass()">Unlock</button></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Firebase SDK -->
@@ -928,6 +941,7 @@ async function mergeAndLoadCloud(){
   unsubDecks=decksCol().onSnapshot(s=>{db.decks={};s.forEach(d=>{db.decks[d.id]=d.data();});saveLocal();renderCurrentView();});
   const ls=await reviewLogCol().orderBy('date','desc').limit(5000).get();
   db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();renderCurrentView();toast('Synced!');
+  await loadSharedDecks();
 }
 async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}await mergeAndLoadCloud();toggleUserMenu();}
 function saveDeckData(id,data){saveLocal();if(currentUser)decksCol().doc(id).set(data).catch(console.error);}
@@ -2190,6 +2204,68 @@ renderDecks=function(){
   animateCountUp();
   setTimeout(init3DTilt,100);
 };
+
+// ===== ADMIN =====
+let isAdmin=localStorage.getItem('flashmind_admin')==='true';
+function updateAdminUI(){document.getElementById('adminPushBtn').style.display=isAdmin?'block':'none';}
+function openAdminModal(){
+  if(!requireAuth())return;
+  toggleUserMenu();
+  if(isAdmin){toast('You are already admin');updateAdminUI();return;}
+  document.getElementById('adminPassInput').value='';
+  document.getElementById('adminError').style.display='none';
+  document.getElementById('adminModal').classList.add('active');
+  setTimeout(()=>document.getElementById('adminPassInput').focus(),100);
+}
+function closeAdminModal(){document.getElementById('adminModal').classList.remove('active');}
+function verifyAdminPass(){
+  const pass=document.getElementById('adminPassInput').value;
+  if(pass==='Neednottoknow0510'){
+    isAdmin=true;localStorage.setItem('flashmind_admin','true');
+    closeAdminModal();updateAdminUI();toast('Admin unlocked!');
+  } else {
+    document.getElementById('adminError').textContent='Wrong password';
+    document.getElementById('adminError').style.display='block';
+  }
+}
+async function pushDecksToAll(){
+  if(!isAdmin||!currentUser){toast('Admin access required');return;}
+  toggleUserMenu();
+  const deckKeys=Object.keys(db.decks);
+  if(deckKeys.length===0){toast('No decks to push');return;}
+  if(!confirm('Push all your decks ('+deckKeys.length+') to every user?'))return;
+  try{
+    const batch=firestore.batch();
+    const sharedRef=firestore.collection('sharedDecks');
+    const existing=await sharedRef.get();
+    existing.forEach(d=>batch.delete(d.ref));
+    for(const[id,deck] of Object.entries(db.decks)){
+      batch.set(sharedRef.doc(id),Object.assign({},deck,{sharedBy:currentUser.uid,sharedAt:Date.now()}));
+    }
+    await batch.commit();
+    toast('Pushed '+deckKeys.length+' decks to all users!');
+  }catch(e){console.error(e);toast('Push failed: '+e.message);}
+}
+async function loadSharedDecks(){
+  if(!currentUser)return;
+  try{
+    const snap=await firestore.collection('sharedDecks').get();
+    if(snap.empty)return;
+    let added=0;
+    for(const doc of snap.docs){
+      const id=doc.id;
+      if(!db.decks[id]){
+        const data=doc.data();
+        delete data.sharedBy;delete data.sharedAt;
+        db.decks[id]=data;
+        saveDeckData(id,data);
+        added++;
+      }
+    }
+    if(added>0){saveLocal();renderCurrentView();toast(added+' shared deck(s) added!');}
+  }catch(e){console.error('Load shared decks:',e);}
+}
+updateAdminUI();
 
 // ===== INIT =====
 loadLocal();renderDecks();initParticles();
