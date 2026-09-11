@@ -1,9 +1,9 @@
 {
-  "name": "FlashMind — Học thông minh",
+  "name": "FlashMind — Study Smart",
   "short_name": "FlashMind",
-  "description": "Ôn tập flashcard thông minh với thuật toán SM-2",
+  "description": "Smart flashcard review with SM-2 algorithm",
   "start_url": "./",
-  "display": "standalone",
+  "display": "minimal-ui",
   "background_color": "#06061a",
   "theme_color": "#8b5cf6",
   "orientation": "portrait",

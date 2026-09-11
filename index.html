@@ -260,8 +260,10 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 #voiceIdSelect{max-height:300px;overflow-y:auto}
 #voiceProviderSelect option,#voiceIdSelect option{background:#1e1432;color:#fff;padding:8px}
 .voice-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:120px}
-.yt-card-wrap{width:100%;border-radius:var(--r-md);overflow:hidden;margin-bottom:12px;position:relative;z-index:2}
+.yt-card-wrap{width:100%;border-radius:var(--r-md);overflow:hidden;margin-bottom:8px;position:relative;z-index:2}
 .yt-card-wrap iframe{display:block;width:100%;border:none}
+.flashcard-face.has-video{overflow-y:auto;justify-content:flex-start;padding-top:16px}
+.flashcard-face.has-video .flashcard-content{font-size:18px}
 .voice-play-btn{background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;width:80px;height:80px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .3s;box-shadow:0 4px 20px rgba(139,92,246,.4)}
 .voice-play-btn:hover{transform:scale(1.1);box-shadow:0 6px 30px rgba(139,92,246,.6)}
 .voice-play-btn:active{transform:scale(0.95)}
@@ -1501,8 +1503,11 @@ function showCurrentCard(){
 
   // YouTube clip embed
   destroyYtPlayer();
+  const frontFace=document.querySelector('.flashcard-face.front');
+  frontFace.classList.remove('has-video');
   const ytId=extractYtId(card.youtubeUrl);
   if(ytId){
+    frontFace.classList.add('has-video');
     const ytWrap=document.createElement('div');ytWrap.className='yt-card-wrap';
     ytWrap.onclick=function(e){e.stopPropagation();};
     ytWrap.appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
