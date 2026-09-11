@@ -642,6 +642,14 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <option value="cloze">Cloze — Điền khuyết {{c1::từ}}</option>
         </select>
       </div>
+      <div class="form-group"><label>Question Type</label>
+        <select id="cardDisplayMode">
+          <option value="text">📝 Show text — Read the question</option>
+          <option value="voice">🔊 Listen & Answer — AI reads, flip to check</option>
+          <option value="voice-repeat">🔁 Listen & Repeat — AI reads, repeat the sentence</option>
+          <option value="voice-translate">🌐 Listen & Translate — AI reads, translate it</option>
+        </select>
+      </div>
       <div id="basicFields">
         <div class="form-group"><label>Mặt trước (câu hỏi)</label><textarea id="cardFrontInput" placeholder="Nhập câu hỏi, từ vựng... (hỗ trợ hình: ![](url))" rows="3"></textarea></div>
         <div class="form-group"><label>Mặt sau (đáp án)</label><textarea id="cardBackInput" placeholder="Nhập đáp án, nghĩa..." rows="3"></textarea></div>
@@ -654,14 +662,6 @@ input,textarea,select{font-family:inherit;font-size:inherit}
         <select id="cardReviewMode">
           <option value="flip">🔄 Lật thẻ — Tự đánh giá</option>
           <option value="type">⌨️ Nhập đáp án — Hệ thống chấm</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Question Type</label>
-        <select id="cardDisplayMode">
-          <option value="text">📝 Show text — Read the question</option>
-          <option value="voice">🔊 Listen & Answer — AI reads, flip to check</option>
-          <option value="voice-repeat">🔁 Listen & Repeat — AI reads, repeat the sentence</option>
-          <option value="voice-translate">🌐 Listen & Translate — AI reads, translate it</option>
         </select>
       </div>
       <div class="form-group"><label>Tags (cách nhau bằng dấu phẩy)</label><input type="text" id="cardTagsInput" placeholder="VD: tuần-1, ngữ-pháp, khó"></div>
