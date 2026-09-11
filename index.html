@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FlashMind — Học thông minh</title>
+<title>FlashMind — Study Smart</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
@@ -473,18 +473,18 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <nav class="nav">
   <div class="nav-brand"><span>🧠</span> FlashMind</div>
   <div class="nav-actions">
-    <button class="nav-btn active" onclick="showView('decks')" title="Bộ thẻ" id="navDecks">📚</button>
-    <button class="nav-btn" onclick="showView('stats')" title="Thống kê" id="navStats">📊</button>
-    <button class="nav-btn" onclick="toggleTheme()" title="Đổi theme" id="navTheme">🌙</button>
-    <button class="nav-btn" onclick="openAuthModal()" title="Đăng nhập" id="navLogin">👤</button>
+    <button class="nav-btn active" onclick="showView('decks')" title="Decks" id="navDecks">📚</button>
+    <button class="nav-btn" onclick="showView('stats')" title="Stats" id="navStats">📊</button>
+    <button class="nav-btn" onclick="toggleTheme()" title="Theme" id="navTheme">🌙</button>
+    <button class="nav-btn" onclick="openAuthModal()" title="Sign in" id="navLogin">👤</button>
     <img class="user-avatar" id="userAvatar" onclick="toggleUserMenu()" alt="avatar" style="display:none">
     <div class="user-avatar user-avatar-initial" id="userAvatarInitial" onclick="toggleUserMenu()" style="display:none"></div>
   </div>
   <div class="user-menu" id="userMenu">
     <div class="user-menu-name" id="userName"></div>
-    <button class="user-menu-item" onclick="syncToCloud()">☁️ Đồng bộ cloud</button>
-    <button class="user-menu-item" onclick="exportAllData()">📤 Xuất dữ liệu</button>
-    <button class="user-menu-item danger" onclick="signOutUser()">🚪 Đăng xuất</button>
+    <button class="user-menu-item" onclick="syncToCloud()">☁️ Sync to cloud</button>
+    <button class="user-menu-item" onclick="exportAllData()">📤 Export data</button>
+    <button class="user-menu-item danger" onclick="signOutUser()">🚪 Sign out</button>
   </div>
 </nav>
 
@@ -492,8 +492,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <!-- DECKS VIEW -->
 <div class="view active" id="viewDecks">
   <div class="page-header">
-    <h1>Bộ thẻ của bạn</h1>
-    <p>Chọn bộ thẻ để bắt đầu ôn tập</p>
+    <h1>Your Decks</h1>
+    <p>Choose a deck to start studying</p>
   </div>
   <div id="streakWidget"></div>
   <div id="dailyGoalWrap"></div>
@@ -505,14 +505,14 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <!-- REVIEW VIEW -->
 <div class="view" id="viewReview">
   <div class="review-container" style="position:relative">
-    <button class="undo-btn" id="undoBtn" style="display:none" onclick="undoAnswer()">↩ Hoàn tác</button>
+    <button class="undo-btn" id="undoBtn" style="display:none" onclick="undoAnswer()">↩ Undo</button>
     <div style="width:100%;display:flex;align-items:center;gap:12px;margin-bottom:8px">
-      <button class="btn btn-ghost btn-sm" onclick="exitReview()">← Quay lại</button>
+      <button class="btn btn-ghost btn-sm" onclick="exitReview()">← Back</button>
       <h2 style="font-size:18px;font-weight:700;flex:1" id="reviewDeckName"></h2>
     </div>
     <div class="mode-toggle" id="modeIndicator" style="pointer-events:none">
-      <button id="modeFlip">🔄 Lật thẻ</button>
-      <button id="modeType">⌨️ Nhập đáp án</button>
+      <button id="modeFlip">🔄 Flip card</button>
+      <button id="modeType">⌨️ Type answer</button>
     </div>
     <div class="streak-bar" id="streakBar">
       <div class="streak-combo" id="streakCombo">
@@ -525,43 +525,43 @@ input,textarea,select{font-family:inherit;font-size:inherit}
     <div class="review-progress">
       <div class="review-progress-bar"><div class="review-progress-fill" id="reviewProgressFill"></div></div>
       <div class="review-counts">
-        <span class="cnt-new" id="cntNew">0 mới</span>
-        <span class="cnt-learn" id="cntLearn">0 đang học</span>
-        <span class="cnt-due" id="cntDue">0 ôn tập</span>
+        <span class="cnt-new" id="cntNew">0 new</span>
+        <span class="cnt-learn" id="cntLearn">0 learning</span>
+        <span class="cnt-due" id="cntDue">0 review</span>
       </div>
     </div>
     <div class="streak-popup" id="streakPopup"></div>
     <div class="flashcard" id="flashcard" onclick="flipCard()">
       <div class="flashcard-inner">
         <div class="flashcard-face front">
-          <div class="flashcard-label">Câu hỏi</div>
+          <div class="flashcard-label">Question</div>
           <div class="flashcard-content" id="cardFront"></div>
           <div class="flashcard-tags" id="cardTags"></div>
-          <div class="flashcard-hint">Nhấn để xem đáp án · Space</div>
+          <div class="flashcard-hint">Tap to see answer · Space</div>
         </div>
         <div class="flashcard-face back">
-          <div class="flashcard-label">Đáp án</div>
+          <div class="flashcard-label">Answer</div>
           <div class="flashcard-content" id="cardBack"></div>
         </div>
       </div>
     </div>
     <div class="review-actions" id="reviewActions" style="display:none">
-      <button class="review-btn again" onclick="answerCard(0)">Quên<span class="interval" id="intAgain"></span></button>
-      <button class="review-btn hard" onclick="answerCard(1)">Khó<span class="interval" id="intHard"></span></button>
-      <button class="review-btn good" onclick="answerCard(2)">Tốt<span class="interval" id="intGood"></span></button>
-      <button class="review-btn easy" onclick="answerCard(3)">Dễ<span class="interval" id="intEasy"></span></button>
+      <button class="review-btn again" onclick="answerCard(0)">Again<span class="interval" id="intAgain"></span></button>
+      <button class="review-btn hard" onclick="answerCard(1)">Hard<span class="interval" id="intHard"></span></button>
+      <button class="review-btn good" onclick="answerCard(2)">Good<span class="interval" id="intGood"></span></button>
+      <button class="review-btn easy" onclick="answerCard(3)">Easy<span class="interval" id="intEasy"></span></button>
     </div>
     <div class="type-answer-wrap" id="typeAnswerWrap" style="display:none">
-      <input type="text" class="type-answer-input" id="typeAnswerInput" placeholder="Nhập đáp án..." autocomplete="off">
+      <input type="text" class="type-answer-input" id="typeAnswerInput" placeholder="Type your answer..." autocomplete="off">
       <div class="type-answer-result" id="typeAnswerResult"></div>
     </div>
-    <button class="btn-check-answer" id="btnCheckAnswer" style="display:none" onclick="checkTypedAnswer()">Kiểm tra (Enter)</button>
-    <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Thẻ tiếp theo → (Enter)</button>
+    <button class="btn-check-answer" id="btnCheckAnswer" style="display:none" onclick="checkTypedAnswer()">Check (Enter)</button>
+    <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Next card → (Enter)</button>
     <div class="review-done" id="reviewDone" style="display:none">
       <div class="done-icon">🎉</div>
-      <h2>Hoàn thành!</h2>
+      <h2>Complete!</h2>
       <div class="done-stats" id="doneStats"></div>
-      <button class="btn btn-primary" onclick="exitReview()">Quay về bộ thẻ</button>
+      <button class="btn btn-primary" onclick="exitReview()">Back to decks</button>
     </div>
   </div>
 </div>
@@ -569,47 +569,47 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <!-- CARD BROWSER VIEW -->
 <div class="view" id="viewBrowser">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-    <button class="btn btn-ghost btn-sm" onclick="exitBrowser()">← Quay lại</button>
+    <button class="btn btn-ghost btn-sm" onclick="exitBrowser()">← Back</button>
     <h2 style="font-size:18px;font-weight:700;flex:1" id="browserDeckName"></h2>
-    <button class="btn btn-ghost btn-sm" onclick="openBulkAddModal()">📋 Thêm hàng loạt</button>
-    <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📥 Nhập file</button>
-    <button class="btn btn-ghost btn-sm" onclick="exportDeck()">📤 Xuất</button>
-    <button class="btn btn-primary btn-sm" onclick="openCardModal()">+ Thêm thẻ</button>
+    <button class="btn btn-ghost btn-sm" onclick="openBulkAddModal()">📋 Bulk add</button>
+    <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📥 Import</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportDeck()">📤 Export</button>
+    <button class="btn btn-primary btn-sm" onclick="openCardModal()">+ Add card</button>
   </div>
   <div id="tagFilterWrap"></div>
   <div class="card-browser-header">
-    <div class="search-box"><input type="text" placeholder="Tìm thẻ..." id="cardSearch" oninput="filterCards()"></div>
+    <div class="search-box"><input type="text" placeholder="Search cards..." id="cardSearch" oninput="filterCards()"></div>
   </div>
   <div id="cardTableWrap"></div>
 </div>
 
 <!-- STATS VIEW -->
 <div class="view" id="viewStats">
-  <div class="page-header"><h1>Thống kê</h1><p>Tiến độ học tập của bạn</p></div>
+  <div class="page-header"><h1>Statistics</h1><p>Your study progress</p></div>
   <div class="stats-row" id="detailedStats"></div>
   <div style="background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);padding:24px;margin-top:16px">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Lịch sử ôn tập 30 ngày qua</h3>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Review history — last 30 days</h3>
     <div id="heatmapContainer" style="overflow-x:auto"></div>
   </div>
   <div style="background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);padding:24px;margin-top:12px">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Phân bố thẻ theo trạng thái</h3>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Card distribution by status</h3>
     <div id="statusChart"></div>
   </div>
 </div>
 </main>
 </div>
 
-<button class="fab" onclick="openDeckModal()" title="Tạo bộ thẻ mới" id="fabBtn">+</button>
+<button class="fab" onclick="openDeckModal()" title="New deck" id="fabBtn">+</button>
 
 <!-- DECK MODAL -->
 <div class="modal-overlay" id="deckModal">
   <div class="modal">
-    <div class="modal-header"><h2 id="deckModalTitle">Tạo bộ thẻ mới</h2><button class="modal-close" onclick="closeDeckModal()">✕</button></div>
+    <div class="modal-header"><h2 id="deckModalTitle">New Deck</h2><button class="modal-close" onclick="closeDeckModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Tên bộ thẻ</label><input type="text" id="deckNameInput" placeholder="VD: Tiếng Anh, Sinh học 12..."></div>
-      <div class="form-group"><label>Mô tả (tùy chọn)</label><textarea id="deckDescInput" placeholder="Mô tả ngắn..." rows="2"></textarea></div>
-      <div class="form-group"><label>Bộ thẻ cha (tùy chọn)</label><select id="deckParentSelect"><option value="">— Không (bộ thẻ gốc) —</option></select></div>
-      <div class="form-group"><label>Biểu tượng</label>
+      <div class="form-group"><label>Deck name</label><input type="text" id="deckNameInput" placeholder="e.g. English, Biology..."></div>
+      <div class="form-group"><label>Description (optional)</label><textarea id="deckDescInput" placeholder="Short description..." rows="2"></textarea></div>
+      <div class="form-group"><label>Parent deck (optional)</label><select id="deckParentSelect"><option value="">— None (root deck) —</option></select></div>
+      <div class="form-group"><label>Icon</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap" id="emojiPicker">
           <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="📖">📖</button>
           <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="🧮">🧮</button>
@@ -625,7 +625,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <button class="emoji-pick" onclick="pickEmoji(this)" data-emoji="⚡">⚡</button>
         </div>
       </div>
-      <div class="form-actions"><button class="btn btn-ghost" onclick="closeDeckModal()">Hủy</button><button class="btn btn-primary" onclick="saveDeck()" id="saveDeckBtn">Tạo bộ thẻ</button></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeDeckModal()">Cancel</button><button class="btn btn-primary" onclick="saveDeck()" id="saveDeckBtn">Create deck</button></div>
     </div>
   </div>
 </div>
@@ -633,13 +633,13 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <!-- CARD MODAL -->
 <div class="modal-overlay" id="cardModal">
   <div class="modal">
-    <div class="modal-header"><h2 id="cardModalTitle">Thêm thẻ mới</h2><button class="modal-close" onclick="closeCardModal()">✕</button></div>
+    <div class="modal-header"><h2 id="cardModalTitle">Add New Card</h2><button class="modal-close" onclick="closeCardModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Loại thẻ</label>
+      <div class="form-group"><label>Card Type</label>
         <select id="cardTypeSelect" onchange="onCardTypeChange()">
-          <option value="basic">Basic — Câu hỏi / Đáp án</option>
-          <option value="reversed">Basic + Reversed — Tạo thêm thẻ ngược</option>
-          <option value="cloze">Cloze — Điền khuyết {{c1::từ}}</option>
+          <option value="basic">Basic — Question / Answer</option>
+          <option value="reversed">Basic + Reversed — Create reverse card too</option>
+          <option value="cloze">Cloze — Fill in {{c1::blank}}</option>
         </select>
       </div>
       <div class="form-group"><label>Question Type</label>
@@ -651,21 +651,21 @@ input,textarea,select{font-family:inherit;font-size:inherit}
         </select>
       </div>
       <div id="basicFields">
-        <div class="form-group"><label>Mặt trước (câu hỏi)</label><textarea id="cardFrontInput" placeholder="Nhập câu hỏi, từ vựng... (hỗ trợ hình: ![](url))" rows="3"></textarea></div>
-        <div class="form-group"><label>Mặt sau (đáp án)</label><textarea id="cardBackInput" placeholder="Nhập đáp án, nghĩa..." rows="3"></textarea></div>
+        <div class="form-group"><label>Front (question)</label><textarea id="cardFrontInput" placeholder="Enter question, vocabulary... (images: ![](url))" rows="3"></textarea></div>
+        <div class="form-group"><label>Back (answer)</label><textarea id="cardBackInput" placeholder="Enter answer, meaning..." rows="3"></textarea></div>
       </div>
       <div id="clozeFields" style="display:none">
-        <div class="form-group"><label>Nội dung (dùng {{c1::từ cần che}} để tạo chỗ trống)</label><textarea id="clozeInput" placeholder="VD: {{c1::Mitochondria}} is the powerhouse of the cell" rows="3"></textarea></div>
-        <p style="font-size:12px;color:var(--ink-dim);margin-top:-8px">Dùng {{c1::...}}, {{c2::...}} cho nhiều chỗ trống</p>
+        <div class="form-group"><label>Content (use {{c1::word}} to create blanks)</label><textarea id="clozeInput" placeholder="e.g. {{c1::Mitochondria}} is the powerhouse of the cell" rows="3"></textarea></div>
+        <p style="font-size:12px;color:var(--ink-dim);margin-top:-8px">Use {{c1::...}}, {{c2::...}} for multiple blanks</p>
       </div>
-      <div class="form-group"><label>Chế độ ôn tập</label>
+      <div class="form-group"><label>Review Mode</label>
         <select id="cardReviewMode">
-          <option value="flip">🔄 Lật thẻ — Tự đánh giá</option>
-          <option value="type">⌨️ Nhập đáp án — Hệ thống chấm</option>
+          <option value="flip">🔄 Flip card — Self-evaluate</option>
+          <option value="type">⌨️ Type answer — Auto-graded</option>
         </select>
       </div>
-      <div class="form-group"><label>Tags (cách nhau bằng dấu phẩy)</label><input type="text" id="cardTagsInput" placeholder="VD: tuần-1, ngữ-pháp, khó"></div>
-      <div class="form-actions"><button class="btn btn-ghost" onclick="closeCardModal()">Hủy</button><button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Lưu thẻ</button></div>
+      <div class="form-group"><label>Tags (comma separated)</label><input type="text" id="cardTagsInput" placeholder="e.g. week-1, grammar, hard"></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeCardModal()">Cancel</button><button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Save card</button></div>
     </div>
   </div>
 </div>
@@ -673,18 +673,18 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <!-- BULK ADD MODAL -->
 <div class="modal-overlay" id="bulkModal">
   <div class="modal">
-    <div class="modal-header"><h2>Thêm hàng loạt</h2><button class="modal-close" onclick="closeBulkModal()">✕</button></div>
+    <div class="modal-header"><h2>Bulk Add</h2><button class="modal-close" onclick="closeBulkModal()">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">Mỗi dòng 1 thẻ, ngăn cách mặt trước/sau bằng Tab hoặc dấu <code>|</code></p>
-      <textarea class="bulk-textarea" id="bulkInput" placeholder="hello | xin chào&#10;goodbye | tạm biệt&#10;thank you | cảm ơn"></textarea>
-      <div class="form-group" style="margin-top:12px"><label>Chế độ ôn tập</label>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">One card per line, separate front/back with Tab or <code>|</code></p>
+      <textarea class="bulk-textarea" id="bulkInput" placeholder="hello | greeting&#10;goodbye | farewell&#10;thank you | thanks"></textarea>
+      <div class="form-group" style="margin-top:12px"><label>Review Mode</label>
         <select id="bulkReviewMode">
-          <option value="flip">🔄 Lật thẻ</option>
-          <option value="type">⌨️ Nhập đáp án</option>
+          <option value="flip">🔄 Flip card</option>
+          <option value="type">⌨️ Type answer</option>
         </select>
       </div>
-      <div class="form-group"><label>Tags cho tất cả (tùy chọn)</label><input type="text" id="bulkTagsInput" placeholder="VD: tuần-1"></div>
-      <div class="form-actions"><button class="btn btn-ghost" onclick="closeBulkModal()">Hủy</button><button class="btn btn-primary" onclick="saveBulkCards()">Thêm tất cả</button></div>
+      <div class="form-group"><label>Tags for all (optional)</label><input type="text" id="bulkTagsInput" placeholder="e.g. week-1"></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button><button class="btn btn-primary" onclick="saveBulkCards()">Add all</button></div>
     </div>
   </div>
 </div>
@@ -692,11 +692,11 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <!-- IMPORT MODAL -->
 <div class="modal-overlay" id="importModal">
   <div class="modal">
-    <div class="modal-header"><h2>Nhập từ file</h2><button class="modal-close" onclick="closeImportModal()">✕</button></div>
+    <div class="modal-header"><h2>Import from file</h2><button class="modal-close" onclick="closeImportModal()">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">Hỗ trợ JSON (xuất từ FlashMind) hoặc CSV/TXT (mặt trước, mặt sau)</p>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">Supports JSON (exported from FlashMind) or CSV/TXT (front, back)</p>
       <input type="file" id="importFile" accept=".json,.csv,.txt" style="margin-bottom:16px">
-      <div class="form-actions"><button class="btn btn-ghost" onclick="closeImportModal()">Hủy</button><button class="btn btn-primary" onclick="importFile()">Nhập</button></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeImportModal()">Cancel</button><button class="btn btn-primary" onclick="importFile()">Import</button></div>
     </div>
   </div>
 </div>
@@ -704,28 +704,28 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <!-- CUSTOM STUDY MODAL -->
 <div class="modal-overlay" id="customStudyModal">
   <div class="modal">
-    <div class="modal-header"><h2>Ôn tập tùy chỉnh</h2><button class="modal-close" onclick="closeCustomStudy()">✕</button></div>
+    <div class="modal-header"><h2>Custom Study</h2><button class="modal-close" onclick="closeCustomStudy()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Lọc theo</label>
+      <div class="form-group"><label>Filter by</label>
         <select id="customFilter">
-          <option value="all">Tất cả thẻ</option>
-          <option value="difficult">Thẻ khó (ease &lt; 2.0)</option>
-          <option value="leech">Thẻ leech (sai nhiều)</option>
-          <option value="new">Chỉ thẻ mới</option>
+          <option value="all">All cards</option>
+          <option value="difficult">Difficult (ease &lt; 2.0)</option>
+          <option value="leech">Leeches (failed many times)</option>
+          <option value="new">New cards only</option>
           <option value="tag">Theo tag</option>
         </select>
       </div>
-      <div class="form-group" id="customTagGroup" style="display:none"><label>Chọn tag</label><input type="text" id="customTagInput" placeholder="Nhập tag..."></div>
-      <div class="form-group"><label>Số lượng thẻ tối đa</label><input type="number" id="customLimit" value="50" min="1" max="500"></div>
-      <div class="form-group"><label>Thứ tự</label>
+      <div class="form-group" id="customTagGroup" style="display:none"><label>Choose tag</label><input type="text" id="customTagInput" placeholder="Enter tag..."></div>
+      <div class="form-group"><label>Max cards</label><input type="number" id="customLimit" value="50" min="1" max="500"></div>
+      <div class="form-group"><label>Order</label>
         <select id="customOrder">
-          <option value="random">Ngẫu nhiên</option>
+          <option value="random">Random</option>
           <option value="due">Theo due date</option>
-          <option value="added">Mới thêm trước</option>
-          <option value="difficulty">Khó trước</option>
+          <option value="added">Newest first</option>
+          <option value="difficulty">Hardest first</option>
         </select>
       </div>
-      <div class="form-actions"><button class="btn btn-ghost" onclick="closeCustomStudy()">Hủy</button><button class="btn btn-primary" onclick="startCustomStudy()">Bắt đầu ôn</button></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeCustomStudy()">Cancel</button><button class="btn btn-primary" onclick="startCustomStudy()">Start</button></div>
     </div>
   </div>
 </div>
@@ -733,45 +733,45 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <!-- SETTINGS MODAL -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
-    <div class="modal-header"><h2>Cài đặt</h2><button class="modal-close" onclick="closeSettings()">✕</button></div>
+    <div class="modal-header"><h2>Settings</h2><button class="modal-close" onclick="closeSettings()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Mục tiêu hàng ngày (số thẻ)</label><input type="number" id="dailyGoalInput" value="20" min="1" max="500"></div>
-      <div class="form-group"><label>Ngưỡng leech (số lần sai)</label><input type="number" id="leechThreshold" value="8" min="3" max="50"></div>
-      <div class="form-group"><label>Tốc độ đọc AI: <span id="speechRateLabel">1x</span></label><input type="range" id="speechRateInput" min="0.5" max="2" step="0.1" value="1" oninput="document.getElementById('speechRateLabel').textContent=this.value+'x'" style="width:100%"></div>
-      <div class="form-group"><label>Giọng đọc AI</label>
+      <div class="form-group"><label>Daily goal (cards)</label><input type="number" id="dailyGoalInput" value="20" min="1" max="500"></div>
+      <div class="form-group"><label>Leech threshold (fails)</label><input type="number" id="leechThreshold" value="8" min="3" max="50"></div>
+      <div class="form-group"><label>AI speech rate: <span id="speechRateLabel">1x</span></label><input type="range" id="speechRateInput" min="0.5" max="2" step="0.1" value="1" oninput="document.getElementById('speechRateLabel').textContent=this.value+'x'" style="width:100%"></div>
+      <div class="form-group"><label>AI Voice</label>
         <select id="voiceProviderSelect" onchange="updateVoiceList()" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;margin-bottom:8px">
-          <option value="edge">🎙️ Edge TTS — Giọng người thật, nhanh (hay nhất)</option>
+          <option value="edge">🎙️ Edge TTS — Natural voice, fast (best)</option>
           <option value="google-translate">🌍 Google Translate — Free, nhanh</option>
-          <option value="browser">🌐 Trình duyệt (Offline, free)</option>
+          <option value="browser">🌐 Browser (Offline, free)</option>
         </select>
         <select id="voiceIdSelect" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff"></select>
       </div>
-      <div class="form-group"><label>Nghe thử giọng</label>
+      <div class="form-group"><label>Test voice</label>
         <div style="display:flex;gap:8px">
-          <input type="text" id="voiceTestInput" placeholder="Nhập câu tiếng Anh để nghe thử..." value="Hello! How are you today?" style="flex:1">
-          <button class="btn btn-primary" onclick="testVoice()" style="white-space:nowrap" id="testVoiceBtn">▶ Nghe thử</button>
+          <input type="text" id="voiceTestInput" placeholder="Type an English sentence to test..." value="Hello! How are you today?" style="flex:1">
+          <button class="btn btn-primary" onclick="testVoice()" style="white-space:nowrap" id="testVoiceBtn">▶ Test</button>
         </div>
         <div id="voiceTestStatus" style="font-size:12px;opacity:.7;margin-top:4px"></div>
       </div>
-      <div class="form-actions"><button class="btn btn-ghost" onclick="closeSettings()">Hủy</button><button class="btn btn-primary" onclick="saveSettings()">Lưu</button></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeSettings()">Cancel</button><button class="btn btn-primary" onclick="saveSettings()">Save</button></div>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="authModal">
   <div class="modal" style="max-width:380px">
-    <div class="modal-header"><h2 id="authModalTitle">Đăng nhập</h2><button class="modal-close" onclick="closeAuthModal()">✕</button></div>
+    <div class="modal-header"><h2 id="authModalTitle">Sign In</h2><button class="modal-close" onclick="closeAuthModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Tên tài khoản</label><input type="text" id="authEmail" placeholder="Đặt tên gì cũng được" autocomplete="username"></div>
-      <div class="form-group"><label>Mật khẩu</label><input type="password" id="authPass" placeholder="Tối thiểu 6 ký tự" autocomplete="current-password"></div>
-      <div id="authNameGroup" class="form-group" style="display:none"><label>Tên hiển thị</label><input type="text" id="authName" placeholder="Tên của bạn"></div>
+      <div class="form-group"><label>Username</label><input type="text" id="authEmail" placeholder="Choose any name" autocomplete="username"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="authPass" placeholder="Min 6 characters" autocomplete="current-password"></div>
+      <div id="authNameGroup" class="form-group" style="display:none"><label>Display name</label><input type="text" id="authName" placeholder="Your name"></div>
       <div id="authError" style="color:var(--red);font-size:13px;margin-top:4px;display:none"></div>
       <div class="form-actions" style="flex-direction:column;gap:8px">
-        <button class="btn btn-primary" id="authSubmitBtn" onclick="submitAuth()" style="width:100%">Đăng nhập</button>
-        <button class="btn btn-ghost" onclick="signInGoogle()" style="width:100%">🔗 Đăng nhập bằng Google</button>
+        <button class="btn btn-primary" id="authSubmitBtn" onclick="submitAuth()" style="width:100%">Sign In</button>
+        <button class="btn btn-ghost" onclick="signInGoogle()" style="width:100%">🔗 Sign in with Google</button>
         <div style="text-align:center;font-size:13px;opacity:.7;margin-top:4px">
-          <span id="authToggleText">Chưa có tài khoản?</span>
-          <a href="#" onclick="toggleAuthMode(event)" style="color:var(--primary);text-decoration:underline" id="authToggleLink">Đăng ký</a>
+          <span id="authToggleText">Don't have an account?</span>
+          <a href="#" onclick="toggleAuthMode(event)" style="color:var(--primary);text-decoration:underline" id="authToggleLink">Sign Up</a>
         </div>
       </div>
     </div>
@@ -804,10 +804,10 @@ function saveLocal() { try{localStorage.setItem('flashmind_data',JSON.stringify(
 let authIsRegister=false;
 function openAuthModal(){
   authIsRegister=false;
-  document.getElementById('authModalTitle').textContent='Đăng nhập';
-  document.getElementById('authSubmitBtn').textContent='Đăng nhập';
-  document.getElementById('authToggleText').textContent='Chưa có tài khoản?';
-  document.getElementById('authToggleLink').textContent='Đăng ký';
+  document.getElementById('authModalTitle').textContent='Sign In';
+  document.getElementById('authSubmitBtn').textContent='Sign In';
+  document.getElementById('authToggleText').textContent='Don\'t have an account?';
+  document.getElementById('authToggleLink').textContent='Sign Up';
   document.getElementById('authNameGroup').style.display='none';
   document.getElementById('authError').style.display='none';
   document.getElementById('authEmail').value='';
@@ -819,10 +819,10 @@ function closeAuthModal(){ document.getElementById('authModal').classList.remove
 function toggleAuthMode(e){
   e.preventDefault();
   authIsRegister=!authIsRegister;
-  document.getElementById('authModalTitle').textContent=authIsRegister?'Đăng ký':'Đăng nhập';
-  document.getElementById('authSubmitBtn').textContent=authIsRegister?'Tạo tài khoản':'Đăng nhập';
-  document.getElementById('authToggleText').textContent=authIsRegister?'Đã có tài khoản?':'Chưa có tài khoản?';
-  document.getElementById('authToggleLink').textContent=authIsRegister?'Đăng nhập':'Đăng ký';
+  document.getElementById('authModalTitle').textContent=authIsRegister?'Sign Up':'Sign In';
+  document.getElementById('authSubmitBtn').textContent=authIsRegister?'Create Account':'Sign In';
+  document.getElementById('authToggleText').textContent=authIsRegister?'Already have an account?':'Don\'t have an account?';
+  document.getElementById('authToggleLink').textContent=authIsRegister?'Sign In':'Sign Up';
   document.getElementById('authNameGroup').style.display=authIsRegister?'block':'none';
   document.getElementById('authError').style.display='none';
 }
@@ -832,22 +832,22 @@ async function submitAuth(){
   let username=document.getElementById('authEmail').value.trim();
   const pass=document.getElementById('authPass').value;
   const name=document.getElementById('authName').value.trim();
-  if(!username||!pass){showAuthError('Nhập tên tài khoản và mật khẩu');return;}
-  if(username.length<3){showAuthError('Tên tài khoản tối thiểu 3 ký tự');return;}
-  if(pass.length<6){showAuthError('Mật khẩu tối thiểu 6 ký tự');return;}
+  if(!username||!pass){showAuthError('Enter username and password');return;}
+  if(username.length<3){showAuthError('Username must be at least 3 characters');return;}
+  if(pass.length<6){showAuthError('Password must be at least 6 characters');return;}
   const email=username.includes('@')?username:username.toLowerCase().replace(/\s+/g,'')+'@flashmind.app';
   try{
     if(authIsRegister){
       const cred=await auth.createUserWithEmailAndPassword(email,pass);
       await cred.user.updateProfile({displayName:name||username});
-      toast('Đăng ký thành công!');
+      toast('Signed up successfully!');
     } else {
       await auth.signInWithEmailAndPassword(email,pass);
-      toast('Đăng nhập thành công!');
+      toast('Signed in successfully!');
     }
     closeAuthModal();
   }catch(e){
-    const msgs={'auth/email-already-in-use':'Tên tài khoản đã được sử dụng','auth/invalid-email':'Tên tài khoản không hợp lệ','auth/weak-password':'Mật khẩu quá yếu','auth/user-not-found':'Không tìm thấy tài khoản','auth/wrong-password':'Sai mật khẩu','auth/invalid-credential':'Tên tài khoản hoặc mật khẩu không đúng','auth/too-many-requests':'Quá nhiều lần thử, vui lòng đợi'};
+    const msgs={'auth/email-already-in-use':'Username already taken','auth/invalid-email':'Invalid username','auth/weak-password':'Password too weak','auth/user-not-found':'Account not found','auth/wrong-password':'Wrong password','auth/invalid-credential':'Invalid username or password','auth/too-many-requests':'Too many attempts, please wait'};
     showAuthError(msgs[e.code]||e.message);
   }
 }
@@ -855,7 +855,7 @@ function signInGoogle(){
   const provider=new firebase.auth.GoogleAuthProvider();
   const isMobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
   if(isMobile){auth.signInWithRedirect(provider);}
-  else{auth.signInWithPopup(provider).then(()=>closeAuthModal()).catch(e=>{if(e.code==='auth/popup-blocked'){auth.signInWithRedirect(provider);}else{showAuthError('Lỗi Google: '+e.message);}});}
+  else{auth.signInWithPopup(provider).then(()=>closeAuthModal()).catch(e=>{if(e.code==='auth/popup-blocked'){auth.signInWithRedirect(provider);}else{showAuthError('Google error: '+e.message);}});}
 }
 function signOutUser(){ if(unsubDecks){unsubDecks();unsubDecks=null;} lastUserId=null;localStorage.removeItem('flashmind_lastUser'); auth.signOut(); db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}};saveLocal(); toggleUserMenu(); renderCurrentView(); }
 function toggleUserMenu(){ document.getElementById('userMenu').classList.toggle('active'); }
@@ -915,9 +915,9 @@ async function mergeAndLoadCloud(){
   if(unsubDecks)unsubDecks();
   unsubDecks=decksCol().onSnapshot(s=>{db.decks={};s.forEach(d=>{db.decks[d.id]=d.data();});saveLocal();renderCurrentView();});
   const ls=await reviewLogCol().orderBy('date','desc').limit(5000).get();
-  db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();renderCurrentView();toast('Đã đồng bộ!');
+  db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();renderCurrentView();toast('Synced!');
 }
-async function syncToCloud(){if(!currentUser){toast('Đăng nhập trước');return;}await mergeAndLoadCloud();toggleUserMenu();}
+async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}await mergeAndLoadCloud();toggleUserMenu();}
 function saveDeckData(id,data){saveLocal();if(currentUser)decksCol().doc(id).set(data).catch(console.error);}
 function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete().catch(console.error);}
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
@@ -944,10 +944,10 @@ function sm2(card,quality){
 }
 
 function getIntervalText(card,q){
-  if(q===0)return'1 phút';
-  if(card.status==='new'||card.status==='learning'){if(q===1)return'10 phút';if(q===2)return'1 ngày';return'4 ngày';}
+  if(q===0)return'1 min';
+  if(card.status==='new'||card.status==='learning'){if(q===1)return'10 min';if(q===2)return'1 day';return'4 days';}
   let iv;if(q===1)iv=Math.max(1,Math.round(card.interval*1.2));else if(q===2)iv=Math.round(card.interval*card.ease);else iv=Math.round(card.interval*card.ease*1.3);
-  iv=Math.min(iv,365);if(iv<30)return iv+' ngày';if(iv<365)return Math.round(iv/30*10)/10+' tháng';return Math.round(iv/365*10)/10+' năm';
+  iv=Math.min(iv,365);if(iv<30)return iv+' days';if(iv<365)return Math.round(iv/30*10)/10+' months';return Math.round(iv/365*10)/10+' years';
 }
 
 // ===== VIEWS =====
@@ -999,7 +999,7 @@ function renderDecks(){
   // Breadcrumb
   let bcHTML='';
   if(viewingParentId){
-    bcHTML='<div class="breadcrumb"><a onclick="navigateToRoot()">🏠 Tất cả</a>';
+    bcHTML='<div class="breadcrumb"><a onclick="navigateToRoot()">🏠 All</a>';
     let chain=[];let pid=viewingParentId;
     while(pid){chain.unshift(pid);pid=db.decks[pid]?.parentId||null;}
     chain.forEach((cid,i)=>{
@@ -1019,10 +1019,10 @@ function renderDecks(){
   const todayReviews=db.reviewLog.filter(r=>new Date(r.date).toDateString()===new Date().toDateString()).length;
 
   document.getElementById('globalStats').innerHTML=`
-    <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">Tổng thẻ</div></div>
+    <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">TOTAL</div></div>
     <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value">${streak}</div><div class="stat-label">Streak</div></div>
-    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${todayReviews}</div><div class="stat-label">Hôm nay</div></div>
-    <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-value">${totalNew}</div><div class="stat-label">Thẻ mới</div></div>`;
+    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${todayReviews}</div><div class="stat-label">TODAY</div></div>
+    <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-value">${totalNew}</div><div class="stat-label">NEW</div></div>`;
 
   // Daily goal
   const goal=db.settings.dailyGoal||20;
@@ -1030,12 +1030,12 @@ function renderDecks(){
   const circ=2*Math.PI*25;
   document.getElementById('dailyGoalWrap').innerHTML=`<div class="daily-goal">
     <div class="goal-ring"><svg viewBox="0 0 60 60"><defs><linearGradient id="goalGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:var(--primary)"/><stop offset="100%" style="stop-color:var(--accent)"/></linearGradient></defs><circle class="bg" cx="30" cy="30" r="25"/><circle class="fill" cx="30" cy="30" r="25" stroke-dasharray="${circ}" stroke-dashoffset="${circ*(1-pct/100)}"/></svg>${pct}%</div>
-    <div class="goal-info"><div class="goal-title">${todayReviews}/${goal} thẻ hôm nay</div><div class="goal-sub">${pct>=100?'Hoàn thành mục tiêu! 🎉':'Cố lên, còn '+(goal-todayReviews)+' thẻ nữa'}</div></div>
-    <button class="btn btn-ghost btn-sm" onclick="openSettings()" title="Cài đặt">⚙️</button>
+    <div class="goal-info"><div class="goal-title">${todayReviews}/${goal} cards today</div><div class="goal-sub">${pct>=100?'Goal complete! 🎉':'Keep going, '+(goal-todayReviews)+' cards left'}</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="openSettings()" title="Settings">⚙️</button>
   </div>`;
 
   if(deckEntries.length===0&&!viewingParentId){
-    wrap.innerHTML=`<div class="deck-list"><div class="empty-state"><div class="empty-icon">📚</div><h3>Chưa có bộ thẻ nào</h3><p>Tạo bộ thẻ đầu tiên để bắt đầu học nhé!</p><button class="btn btn-primary" onclick="openDeckModal()">+ Tạo bộ thẻ</button></div></div>`;
+    wrap.innerHTML=`<div class="deck-list"><div class="empty-state"><div class="empty-icon">📚</div><h3>No decks yet</h3><p>Create your first deck to start studying!</p><button class="btn btn-primary" onclick="openDeckModal()">+ New Deck</button></div></div>`;
     return;
   }
   if(deckEntries.length===0&&viewingParentId){
@@ -1044,16 +1044,16 @@ function renderDecks(){
     if(parentCards.length>0){
       wrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="startReviewAll('${viewingParentId}')">📚 Ôn tất cả</button>
-          <button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Ôn tập (${parentCards.length} thẻ)</button>
-          <button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Xem / Sửa thẻ</button>
-          <button class="btn btn-ghost" onclick="openDeckModal()">📂 + Tạo bộ thẻ con</button>
+          <button class="btn btn-primary" onclick="startReviewAll('${viewingParentId}')">📚 Study all</button>
+          <button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Study (${parentCards.length} cards)</button>
+          <button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 View / Edit</button>
+          <button class="btn btn-ghost" onclick="openDeckModal()">📂 + Sub-deck</button>
         </div>
       </div>`;
       return;
     }
-    wrap.innerHTML=`<div class="deck-list"><div class="empty-state"><div class="empty-icon">📂</div><h3>Chưa có thẻ nào trong "${pName}"</h3><p>Tạo bộ thẻ con hoặc thêm thẻ trực tiếp</p>
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="openDeckModal()">📂 + Bộ thẻ con</button><button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Thêm thẻ</button></div></div></div>`;
+    wrap.innerHTML=`<div class="deck-list"><div class="empty-state"><div class="empty-icon">📂</div><h3>No cards in "${pName}"</h3><p>Create a sub-deck or add cards directly</p>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="openDeckModal()">📂 + Sub-deck</button><button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Add cards</button></div></div></div>`;
     return;
   }
 
@@ -1064,16 +1064,16 @@ function renderDecks(){
     return`<div class="deck-item" onclick="onDeckClick('${id}')">
       <div class="deck-color">${d.emoji||'📖'}</div>
       <div class="deck-info"><div class="deck-name">${esc(d.name)}</div>
-        <div class="deck-meta"><span>📇 ${cardCount} thẻ</span>${subCount?'<span>📂 '+subCount+' bộ con</span>':''}${d.desc?'<span>'+esc(d.desc)+'</span>':''}</div></div>
+        <div class="deck-meta"><span>📇 ${cardCount} cards</span>${subCount?'<span>📂 '+subCount+' sub-decks</span>':''}${d.desc?'<span>'+esc(d.desc)+'</span>':''}</div></div>
       <div class="deck-badges">
         ${subCount?'<span class="badge badge-sub">'+subCount+' con</span>':''}
       </div>
       <div class="deck-actions" onclick="event.stopPropagation()">
-        ${subCount?'<button class="deck-action-btn" onclick="startReviewAll(\''+id+'\')" title="Ôn tất cả">📚</button>':''}
-        <button class="deck-action-btn" onclick="openBrowser('${id}')" title="Xem thẻ">📋</button>
-        <button class="deck-action-btn" onclick="openCustomStudyForDeck('${id}')" title="Ôn tùy chỉnh">🎯</button>
-        <button class="deck-action-btn" onclick="openEditDeck('${id}')" title="Sửa">✏️</button>
-        <button class="deck-action-btn delete" onclick="deleteDeck('${id}')" title="Xóa">🗑️</button>
+        ${subCount?'<button class="deck-action-btn" onclick="startReviewAll(\''+id+'\')" title="Study all">📚</button>':''}
+        <button class="deck-action-btn" onclick="openBrowser('${id}')" title="View cards">📋</button>
+        <button class="deck-action-btn" onclick="openCustomStudyForDeck('${id}')" title="Custom study">🎯</button>
+        <button class="deck-action-btn" onclick="openEditDeck('${id}')" title="Edit">✏️</button>
+        <button class="deck-action-btn delete" onclick="deleteDeck('${id}')" title="Delete">🗑️</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -1082,7 +1082,7 @@ function renderDecks(){
   if(viewingParentId){
     const ownCards=getDeckCards(viewingParentId);
     if(ownCards.length>0){
-      wrap.innerHTML+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="startReviewAll('${viewingParentId}')">📚 Ôn tất cả</button><button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Ôn thẻ của "${esc(db.decks[viewingParentId].name)}"</button><button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 Xem thẻ</button></div>`;
+      wrap.innerHTML+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="startReviewAll('${viewingParentId}')">📚 Study all</button><button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Study "${esc(db.decks[viewingParentId].name)}"</button><button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 View cards</button></div>`;
     }
   }
 }
@@ -1096,8 +1096,8 @@ function requireAuth(){if(!currentUser){openAuthModal();return false;}return tru
 function openDeckModal(){
   if(!requireAuth())return;
   editingDeckId=null;
-  document.getElementById('deckModalTitle').textContent='Tạo bộ thẻ mới';
-  document.getElementById('saveDeckBtn').textContent='Tạo bộ thẻ';
+  document.getElementById('deckModalTitle').textContent='New Deck';
+  document.getElementById('saveDeckBtn').textContent='Create deck';
   document.getElementById('deckNameInput').value='';
   document.getElementById('deckDescInput').value='';
   selectedEmoji='📖';updateEmojiSelection();
@@ -1108,8 +1108,8 @@ function openDeckModal(){
 }
 function openEditDeck(id){
   editingDeckId=id;const d=db.decks[id];
-  document.getElementById('deckModalTitle').textContent='Sửa bộ thẻ';
-  document.getElementById('saveDeckBtn').textContent='Cập nhật';
+  document.getElementById('deckModalTitle').textContent='Edit Deck';
+  document.getElementById('saveDeckBtn').textContent='Update';
   document.getElementById('deckNameInput').value=d.name;
   document.getElementById('deckDescInput').value=d.desc||'';
   selectedEmoji=d.emoji||'📖';updateEmojiSelection();
@@ -1123,7 +1123,7 @@ function updateEmojiSelection(){document.querySelectorAll('.emoji-pick').forEach
 
 function populateParentSelect(excludeId){
   const sel=document.getElementById('deckParentSelect');
-  sel.innerHTML='<option value="">— Không (bộ thẻ gốc) —</option>';
+  sel.innerHTML='<option value="">— None (root deck) —</option>';
   Object.entries(db.decks).forEach(([id,d])=>{
     if(id!==excludeId)sel.innerHTML+=`<option value="${id}">${esc(d.emoji||'')} ${esc(d.name)}</option>`;
   });
@@ -1131,25 +1131,25 @@ function populateParentSelect(excludeId){
 
 function saveDeck(){
   const name=document.getElementById('deckNameInput').value.trim();
-  if(!name){toast('Vui lòng nhập tên');return;}
+  if(!name){toast('Please enter a name');return;}
   const desc=document.getElementById('deckDescInput').value.trim();
   const parentId=document.getElementById('deckParentSelect').value||null;
   if(editingDeckId){
     const deck=db.decks[editingDeckId];
     deck.name=name;deck.desc=desc;deck.emoji=selectedEmoji;deck.parentId=parentId;
-    saveDeckData(editingDeckId,deck);toast('Đã cập nhật!');
+    saveDeckData(editingDeckId,deck);toast('Updated!');
   } else {
     const id=crypto.randomUUID();
     const deck={name,desc,emoji:selectedEmoji,cards:[],created:Date.now(),parentId};
-    db.decks[id]=deck;saveDeckData(id,deck);toast('Đã tạo bộ thẻ!');
+    db.decks[id]=deck;saveDeckData(id,deck);toast('Deck created!');
   }
   closeDeckModal();renderDecks();
 }
 function deleteDeck(id){
-  if(!confirm('Xóa "'+db.decks[id].name+'" và tất cả bên trong?'))return;
+  if(!confirm('Delete "'+db.decks[id].name+'" and everything inside?'))return;
   // Delete sub-decks recursively
   getSubDecks(id).forEach(([subId])=>deleteDeck(subId));
-  delete db.decks[id];deleteDeckData(id);renderDecks();toast('Đã xóa');
+  delete db.decks[id];deleteDeckData(id);renderDecks();toast('Deleted');
 }
 
 // ===== CARD MODAL =====
@@ -1165,8 +1165,8 @@ function openCardModal(cardId){
   document.getElementById('cardTypeSelect').value='basic';onCardTypeChange();
   if(cardId){
     const card=getDeckCards(currentDeckId).find(c=>c.id===cardId);
-    document.getElementById('cardModalTitle').textContent='Sửa thẻ';
-    document.getElementById('saveCardBtn').textContent='Cập nhật';
+    document.getElementById('cardModalTitle').textContent='Edit Card';
+    document.getElementById('saveCardBtn').textContent='Update';
     if(card.type==='cloze'){
       document.getElementById('cardTypeSelect').value='cloze';onCardTypeChange();
       document.getElementById('clozeInput').value=card.clozeText||card.front;
@@ -1179,8 +1179,8 @@ function openCardModal(cardId){
     document.getElementById('cardReviewMode').value=card.reviewMode||'flip';
     document.getElementById('cardDisplayMode').value=card.displayMode||'voice';
   } else {
-    document.getElementById('cardModalTitle').textContent='Thêm thẻ mới';
-    document.getElementById('saveCardBtn').textContent='Lưu thẻ';
+    document.getElementById('cardModalTitle').textContent='Add New Card';
+    document.getElementById('saveCardBtn').textContent='Save card';
     document.getElementById('cardFrontInput').value='';document.getElementById('cardBackInput').value='';
     document.getElementById('cardReviewMode').value='flip';
     document.getElementById('cardDisplayMode').value='voice';
@@ -1202,30 +1202,30 @@ function saveCard(){
   const cardDisplayMode=document.getElementById('cardDisplayMode').value;
   if(type==='cloze'){
     const text=document.getElementById('clozeInput').value.trim();
-    if(!text||!text.includes('{{c')){toast('Cần có ít nhất 1 {{c1::...}}');return;}
+    if(!text||!text.includes('{{c')){toast('Need at least 1 {{c1::...}}');return;}
     const nums=new Set();text.replace(/\{\{c(\d+)::/g,(_,n)=>nums.add(parseInt(n)));
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
       card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;
-      toast('Đã cập nhật!');
+      toast('Updated!');
     } else {
       nums.forEach(n=>{
         const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;
         deck.cards.push(card);
       });
-      toast('Đã thêm '+nums.size+' thẻ cloze!');
+      toast('Added '+nums.size+' cloze cards!');
     }
   } else {
     const front=document.getElementById('cardFrontInput').value.trim();
     const back=document.getElementById('cardBackInput').value.trim();
-    if(!front||!back){toast('Nhập cả mặt trước và sau');return;}
+    if(!front||!back){toast('Enter both front and back');return;}
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;toast('Đã cập nhật!');
+      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;toast('Updated!');
     } else {
       const card=newCardData();card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;deck.cards.push(card);
-      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;deck.cards.push(rc);toast('Đã thêm 2 thẻ (gốc + ngược)!');}
-      else toast('Đã thêm thẻ!');
+      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
+      else toast('Card added!');
     }
   }
   saveDeckData(currentDeckId,deck);closeCardModal();renderCardBrowser();
@@ -1250,7 +1250,7 @@ function renderTagFilter(){
   const allTags=new Set();cards.forEach(c=>(c.tags||[]).forEach(t=>allTags.add(t)));
   if(allTags.size===0){document.getElementById('tagFilterWrap').innerHTML='';return;}
   let html='<div class="tag-filter"><span style="font-size:12px;font-weight:700;color:var(--ink-dim);padding:4px 0">Tags:</span>';
-  html+=`<span class="tag ${!activeTagFilter?'active':''}" onclick="activeTagFilter=null;renderTagFilter();renderCardBrowser()">Tất cả</span>`;
+  html+=`<span class="tag ${!activeTagFilter?'active':''}" onclick="activeTagFilter=null;renderTagFilter();renderCardBrowser()">All</span>`;
   allTags.forEach(t=>{html+=`<span class="tag ${activeTagFilter===t?'active':''}" onclick="activeTagFilter='${t}';renderTagFilter();renderCardBrowser()">${esc(t)}</span>`;});
   document.getElementById('tagFilterWrap').innerHTML=html+'</div>';
 }
@@ -1262,27 +1262,27 @@ function renderCardBrowser(){
   if(activeTagFilter)filtered=filtered.filter(c=>(c.tags||[]).includes(activeTagFilter));
   const wrap=document.getElementById('cardTableWrap');
   if(filtered.length===0){
-    wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">📝</div><h3>${cards.length===0?'Chưa có thẻ nào':'Không tìm thấy'}</h3><p>${cards.length===0?'Thêm thẻ đầu tiên':'Thử từ khóa khác'}</p>${cards.length===0?'<button class="btn btn-primary" onclick="openCardModal()">+ Thêm thẻ</button>':''}</div>`;
+    wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">📝</div><h3>${cards.length===0?'No cards yet':'No results'}</h3><p>${cards.length===0?'Add your first card':'Try different keywords'}</p>${cards.length===0?'<button class="btn btn-primary" onclick="openCardModal()">+ Add card</button>':''}</div>`;
     return;
   }
   wrap.innerHTML=`<div style="overflow-x:auto"><table class="card-table">
-    <thead><tr><th>Mặt trước</th><th>Mặt sau</th><th>Chế độ</th><th>Tags</th><th>Trạng thái</th><th>Lần tới</th><th></th></tr></thead>
+    <thead><tr><th>Front</th><th>Back</th><th>Mode</th><th>Tags</th><th>Status</th><th>Next</th><th></th></tr></thead>
     <tbody>${filtered.map(c=>{
       const sc=c.suspended?'status-suspended':c.status==='new'?'status-new':c.status==='learning'?'status-learning':'status-review';
-      const st=c.suspended?'Tạm ẩn':c.status==='new'?'Mới':c.status==='learning'?'Đang học':'Ôn tập';
+      const st=c.suspended?'Suspended':c.status==='new'?'New':c.status==='learning'?'Learning':'Review';
       const dt=c.status==='new'?'—':formatDue(c.due);
       const tagHTML=(c.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
       const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
       const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':'';
       return`<tr><td class="card-front-col">${esc(c.front)}</td><td class="card-back-col">${esc(c.back)}</td>
-        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Nhập đáp án':'Lật thẻ'}${c.displayMode==='voice'?' · Nghe trả lời':c.displayMode==='voice-repeat'?' · Nghe nhắc lại':c.displayMode==='voice-translate'?' · Nghe dịch':''}">${modeLabel}${dispLabel}</td>
+        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':''}">${modeLabel}${dispLabel}</td>
         <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
         <td><span class="card-status ${sc}">${st}</span></td>
         <td style="font-size:13px;color:var(--ink-dim)">${dt}</td>
         <td style="white-space:nowrap">
-          <button class="card-edit-btn" onclick="openCardModal('${c.id}')" title="Sửa">✏️</button>
-          <button class="card-edit-btn" onclick="toggleSuspend('${c.id}')" title="${c.suspended?'Bỏ ẩn':'Tạm ẩn'}">${c.suspended?'👁':'⏸'}</button>
-          <button class="card-edit-btn" onclick="deleteCard('${c.id}')" title="Xóa" style="color:var(--red)">🗑️</button>
+          <button class="card-edit-btn" onclick="openCardModal('${c.id}')" title="Edit">✏️</button>
+          <button class="card-edit-btn" onclick="toggleSuspend('${c.id}')" title="${c.suspended?'Unsuspend':'Suspend'}">${c.suspended?'👁':'⏸'}</button>
+          <button class="card-edit-btn" onclick="deleteCard('${c.id}')" title="Delete" style="color:var(--red)">🗑️</button>
         </td></tr>`;
     }).join('')}</tbody></table></div>`;
 }
@@ -1292,13 +1292,13 @@ function filterCards(){renderCardBrowser();}
 function toggleSuspend(cardId){
   const deck=db.decks[currentDeckId];const card=deck.cards.find(c=>c.id===cardId);
   card.suspended=!card.suspended;saveDeckData(currentDeckId,deck);renderCardBrowser();
-  toast(card.suspended?'Đã tạm ẩn thẻ':'Đã bỏ ẩn thẻ');
+  toast(card.suspended?'Card suspended':'Card unsuspended');
 }
 
 function deleteCard(cardId){
-  if(!confirm('Xóa thẻ này?'))return;
+  if(!confirm('Delete this card?'))return;
   const deck=db.decks[currentDeckId];deck.cards=deck.cards.filter(c=>c.id!==cardId);
-  saveDeckData(currentDeckId,deck);renderCardBrowser();toast('Đã xóa');
+  saveDeckData(currentDeckId,deck);renderCardBrowser();toast('Deleted');
 }
 
 // ===== BULK ADD =====
@@ -1307,7 +1307,7 @@ function closeBulkModal(){document.getElementById('bulkModal').classList.remove(
 
 function saveBulkCards(){
   const text=document.getElementById('bulkInput').value.trim();
-  if(!text){toast('Nhập dữ liệu');return;}
+  if(!text){toast('Enter data');return;}
   const tags=parseTags(document.getElementById('bulkTagsInput').value);
   const bulkRM=document.getElementById('bulkReviewMode').value;
   const deck=db.decks[currentDeckId];if(!deck.cards)deck.cards=[];
@@ -1320,8 +1320,8 @@ function saveBulkCards(){
       const card=newCardData();card.front=parts[0];card.back=parts[1];card.tags=tags;card.reviewMode=bulkRM;deck.cards.push(card);count++;
     }
   });
-  if(count===0){toast('Không tìm thấy thẻ hợp lệ');return;}
-  saveDeckData(currentDeckId,deck);closeBulkModal();renderCardBrowser();toast('Đã thêm '+count+' thẻ!');
+  if(count===0){toast('No valid cards found');return;}
+  saveDeckData(currentDeckId,deck);closeBulkModal();renderCardBrowser();toast('Added '+count+' cards!');
 }
 
 // ===== IMPORT/EXPORT =====
@@ -1330,7 +1330,7 @@ function closeImportModal(){document.getElementById('importModal').classList.rem
 
 function importFile(){
   const file=document.getElementById('importFile').files[0];
-  if(!file){toast('Chọn file');return;}
+  if(!file){toast('Choose a file');return;}
   const reader=new FileReader();
   reader.onload=e=>{
     const text=e.target.result;
@@ -1340,8 +1340,8 @@ function importFile(){
         const data=JSON.parse(text);
         if(Array.isArray(data)){data.forEach(c=>{const card=newCardData();card.front=c.front||'';card.back=c.back||'';card.tags=c.tags||[];deck.cards.push(card);});}
         else if(data.cards){data.cards.forEach(c=>{const card=newCardData();Object.assign(card,c);card.id=crypto.randomUUID();deck.cards.push(card);});}
-        toast('Đã nhập '+deck.cards.length+' thẻ');
-      }catch(err){toast('File JSON không hợp lệ');}
+        toast('Imported '+deck.cards.length+' cards');
+      }catch(err){toast('Invalid JSON file');}
     } else {
       const lines=text.split('\n').filter(l=>l.trim());let count=0;
       lines.forEach(line=>{
@@ -1349,7 +1349,7 @@ function importFile(){
         const parts=line.split(sep).map(s=>s.trim().replace(/^"|"$/g,''));
         if(parts.length>=2&&parts[0]&&parts[1]){const card=newCardData();card.front=parts[0];card.back=parts[1];deck.cards.push(card);count++;}
       });
-      toast('Đã nhập '+count+' thẻ');
+      toast('Imported '+count+' cards');
     }
     saveDeckData(currentDeckId,deck);closeImportModal();renderCardBrowser();
   };
@@ -1377,12 +1377,12 @@ function downloadFile(name,content,type){
 function startReviewAll(deckId){
   currentDeckId=deckId;
   const cards=getAllCardsRecursive(deckId).filter(c=>!c.suspended);
-  if(cards.length===0){toast('Không có thẻ nào để ôn!');return;}
+  if(cards.length===0){toast('No cards to review!');return;}
   reviewQueue=[...cards];
   for(let i=reviewQueue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[reviewQueue[i],reviewQueue[j]]=[reviewQueue[j],reviewQueue[i]];}
   reviewIndex=0;undoStack=[];
   streak=0;bestStreak=0;sessionXp=0;sessionCorrect=0;sessionTotal=0;updateStreakUI();
-  document.getElementById('reviewDeckName').textContent=db.decks[deckId].name+' (Tất cả)';
+  document.getElementById('reviewDeckName').textContent=db.decks[deckId].name+' (All)';
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('viewReview').classList.add('active');
   document.getElementById('fabBtn').style.display='none';
@@ -1394,7 +1394,7 @@ function startReviewAll(deckId){
 function startReview(deckId){
   currentDeckId=deckId;
   const cards=getDeckCards(deckId).filter(c=>!c.suspended);
-  if(cards.length===0){toast('Bộ thẻ chưa có thẻ nào!');return;}
+  if(cards.length===0){toast('Deck has no cards!');return;}
   reviewQueue=[...cards];
   for(let i=reviewQueue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[reviewQueue[i],reviewQueue[j]]=[reviewQueue[j],reviewQueue[i]];}
   reviewIndex=0;undoStack=[];
@@ -1421,10 +1421,10 @@ function showCurrentCard(){
     document.getElementById('btnNextCard').style.display='none';
     document.getElementById('reviewDone').style.display='block';
     document.getElementById('doneStats').innerHTML=
-      '<div class="done-stat"><div class="done-stat-value xp">'+sessionXp+'</div><div class="done-stat-label">XP kiếm được</div></div>'+
-      '<div class="done-stat"><div class="done-stat-value streak">'+bestStreak+'</div><div class="done-stat-label">Streak cao nhất</div></div>'+
-      '<div class="done-stat"><div class="done-stat-value correct">'+sessionCorrect+'</div><div class="done-stat-label">Trả lời đúng</div></div>'+
-      '<div class="done-stat"><div class="done-stat-value total">'+sessionTotal+'</div><div class="done-stat-label">Tổng câu hỏi</div></div>';
+      '<div class="done-stat"><div class="done-stat-value xp">'+sessionXp+'</div><div class="done-stat-label">XP earned</div></div>'+
+      '<div class="done-stat"><div class="done-stat-value streak">'+bestStreak+'</div><div class="done-stat-label">Best streak</div></div>'+
+      '<div class="done-stat"><div class="done-stat-value correct">'+sessionCorrect+'</div><div class="done-stat-label">Correct</div></div>'+
+      '<div class="done-stat"><div class="done-stat-value total">'+sessionTotal+'</div><div class="done-stat-label">Total</div></div>';
     updateReviewProgress();return;
   }
   const card=reviewQueue[reviewIndex];
@@ -1443,7 +1443,7 @@ function showCurrentCard(){
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
     const backFace=document.querySelector('.flashcard-face.back');
     const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
-    const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Nghe lại';
+    const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Replay';
     miniBtn.onclick=function(e){e.stopPropagation();speakText(card.front);};backFace.appendChild(miniBtn);
     setTimeout(()=>speakText(card.front),300);
   } else {
@@ -1480,15 +1480,15 @@ function showCurrentCard(){
 
 let currentAudio=null;
 const EDGE_TTS_API='https://edge-tts-api-gold.vercel.app/api/tts';
-const LOCALE_FLAGS={'en-US':'🇺🇸 Mỹ','en-GB':'🇬🇧 Anh','en-AU':'🇦🇺 Úc','en-CA':'🇨🇦 Canada','en-IN':'🇮🇳 Ấn Độ','en-IE':'🇮🇪 Ireland','en-NZ':'🇳🇿 New Zealand','en-SG':'🇸🇬 Singapore','en-ZA':'🇿🇦 Nam Phi','en-PH':'🇵🇭 Philippines','en-HK':'🇭🇰 Hong Kong','en-KE':'🇰🇪 Kenya','en-NG':'🇳🇬 Nigeria','en-TZ':'🇹🇿 Tanzania'};
+const LOCALE_FLAGS={'en-US':'🇺🇸 US','en-GB':'🇬🇧 UK','en-AU':'🇦🇺 Australia','en-CA':'🇨🇦 Canada','en-IN':'🇮🇳 India','en-IE':'🇮🇪 Ireland','en-NZ':'🇳🇿 New Zealand','en-SG':'🇸🇬 Singapore','en-ZA':'🇿🇦 South Africa','en-PH':'🇵🇭 Philippines','en-HK':'🇭🇰 Hong Kong','en-KE':'🇰🇪 Kenya','en-NG':'🇳🇬 Nigeria','en-TZ':'🇹🇿 Tanzania'};
 let edgeVoicesCache=null;
 const VOICE_OPTIONS={
   edge:[],
   'google-translate':[
-    {id:'en-US',name:'Tiếng Anh Mỹ 🇺🇸'},
-    {id:'en-GB',name:'Tiếng Anh Anh 🇬🇧'},
-    {id:'en-AU',name:'Tiếng Anh Úc 🇦🇺'},
-    {id:'en-IN',name:'Tiếng Anh Ấn 🇮🇳'}
+    {id:'en-US',name:'American English 🇺🇸'},
+    {id:'en-GB',name:'British English 🇬🇧'},
+    {id:'en-AU',name:'Australian English 🇦🇺'},
+    {id:'en-IN',name:'Indian English 🇮🇳'}
   ],
   browser:[]
 };
@@ -1501,7 +1501,7 @@ async function loadEdgeVoices(){
       const name=v.id.split('-').pop().replace('Neural','');
       const locale=v.id.split('-').slice(0,2).join('-');
       const flag=LOCALE_FLAGS[locale]||locale;
-      const gender=v.gender==='Female'?'Nữ':'Nam';
+      const gender=v.gender==='Female'?'Female':'Male';
       return{id:v.id,name:name+' — '+gender+' '+flag};
     });
     edgeVoicesCache.sort((a,b)=>{
@@ -1528,10 +1528,10 @@ function updateVoiceList(){
     if(saved&&opts.find(v=>v.id===saved))sel.value=saved;
   };
   if(provider==='edge'){
-    sel.innerHTML='<option>Đang tải giọng...</option>';
+    sel.innerHTML='<option>Loading voices...</option>';
     loadEdgeVoices().then(voices=>{
       if(voices.length)renderOpts(voices);
-      else{sel.innerHTML='<option value="en-US-JennyNeural">Jenny — Nữ 🇺🇸 Mỹ</option>';}
+      else{sel.innerHTML='<option value="en-US-JennyNeural">Jenny — Female 🇺🇸 US</option>';}
     });
     return;
   }
@@ -1584,21 +1584,21 @@ function speakText(text){
 
 function testVoice(){
   const text=document.getElementById('voiceTestInput').value.trim();
-  if(!text){toast('Nhập câu để nghe thử');return;}
+  if(!text){toast('Enter a sentence to preview');return;}
   const provider=document.getElementById('voiceProviderSelect').value;
   const voiceId=document.getElementById('voiceIdSelect').value;
   const status=document.getElementById('voiceTestStatus');
   const btn=document.getElementById('testVoiceBtn');
-  btn.disabled=true;btn.textContent='⏳ Đang tải...';
-  status.textContent='Đang tạo giọng nói...';
+  btn.disabled=true;btn.textContent='⏳ Loading...';
+  status.textContent='Generating voice...';
   if(provider==='browser'){
-    if(!('speechSynthesis' in window)){status.textContent='Trình duyệt không hỗ trợ';btn.disabled=false;btn.textContent='▶ Nghe thử';return;}
+    if(!('speechSynthesis' in window)){status.textContent='Browser not supported';btn.disabled=false;btn.textContent='▶ Preview';return;}
     const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=parseFloat(document.getElementById('speechRateInput').value)||1;
     const voices=speechSynthesis.getVoices();
     const preferred=voices.find(v=>v.name.includes('Google US English'))||voices.find(v=>v.lang.startsWith('en'));
     if(preferred)u.voice=preferred;
-    u.onend=()=>{status.textContent='✅ Xong';btn.disabled=false;btn.textContent='▶ Nghe thử';};
-    speechSynthesis.speak(u);status.textContent='🔊 Đang phát...';btn.disabled=false;btn.textContent='▶ Nghe thử';
+    u.onend=()=>{status.textContent='✅ Done';btn.disabled=false;btn.textContent='▶ Preview';};
+    speechSynthesis.speak(u);status.textContent='🔊 Playing...';btn.disabled=false;btn.textContent='▶ Preview';
     return;
   }
   if(provider==='google-translate'){
@@ -1606,12 +1606,12 @@ function testVoice(){
       const audio=googleTranslateTTS(text,voiceId);
       if(currentAudio)currentAudio.pause();
       currentAudio=audio;audio.playbackRate=parseFloat(document.getElementById('speechRateInput').value)||1;
-      audio.onended=()=>{status.textContent='✅ Xong';};
-      audio.onerror=()=>{status.textContent='❌ Lỗi — thử Edge TTS hoặc Trình duyệt';btn.disabled=false;btn.textContent='▶ Nghe thử';};
-      status.textContent='🔊 Đang phát...';
-      audio.play().catch(()=>{status.textContent='❌ Google chặn — thử Edge TTS';btn.disabled=false;btn.textContent='▶ Nghe thử';});
-      btn.disabled=false;btn.textContent='▶ Nghe thử';
-    }catch(e){status.textContent='❌ Lỗi';btn.disabled=false;btn.textContent='▶ Nghe thử';}
+      audio.onended=()=>{status.textContent='✅ Done';};
+      audio.onerror=()=>{status.textContent='❌ Error — try Edge TTS or Browser';btn.disabled=false;btn.textContent='▶ Preview';};
+      status.textContent='🔊 Playing...';
+      audio.play().catch(()=>{status.textContent='❌ Google blocked — try Edge TTS';btn.disabled=false;btn.textContent='▶ Preview';});
+      btn.disabled=false;btn.textContent='▶ Preview';
+    }catch(e){status.textContent='❌ Error';btn.disabled=false;btn.textContent='▶ Preview';}
     return;
   }
   if(provider==='edge'){
@@ -1619,15 +1619,15 @@ function testVoice(){
       const audio=edgeTTS(text,voiceId);
       if(currentAudio)currentAudio.pause();
       currentAudio=audio;audio.playbackRate=parseFloat(document.getElementById('speechRateInput').value)||1;
-      audio.onended=()=>{status.textContent='✅ Xong';};
-      audio.onerror=()=>{status.textContent='❌ Lỗi — thử Google Translate';btn.disabled=false;btn.textContent='▶ Nghe thử';};
-      status.textContent='🔊 Đang phát...';
-      audio.play().catch(()=>{status.textContent='❌ Lỗi phát';btn.disabled=false;btn.textContent='▶ Nghe thử';});
-      btn.disabled=false;btn.textContent='▶ Nghe thử';
-    }catch(e){status.textContent='❌ Lỗi';btn.disabled=false;btn.textContent='▶ Nghe thử';}
+      audio.onended=()=>{status.textContent='✅ Done';};
+      audio.onerror=()=>{status.textContent='❌ Error — try Google Translate';btn.disabled=false;btn.textContent='▶ Preview';};
+      status.textContent='🔊 Playing...';
+      audio.play().catch(()=>{status.textContent='❌ Playback error';btn.disabled=false;btn.textContent='▶ Preview';});
+      btn.disabled=false;btn.textContent='▶ Preview';
+    }catch(e){status.textContent='❌ Error';btn.disabled=false;btn.textContent='▶ Preview';}
     return;
   }
-  status.textContent='❌ Provider không hỗ trợ';btn.disabled=false;btn.textContent='▶ Nghe thử';
+  status.textContent='❌ Provider not supported';btn.disabled=false;btn.textContent='▶ Preview';
 }
 function speakFallback(text){
   if(!('speechSynthesis' in window))return;
@@ -1669,11 +1669,11 @@ function checkTypedAnswer(){
   document.getElementById('flashcard').classList.add('flipped');
   if(correct){
     input.className='type-answer-input correct';result.className='type-answer-result correct';
-    result.textContent='✓ Chính xác!';result.style.display='block';
+    result.textContent='✓ Correct!';result.style.display='block';
     answerCard(2);setTimeout(()=>showCurrentCard(),1200);
   } else {
     input.className='type-answer-input wrong';result.className='type-answer-result wrong';
-    result.innerHTML='✗ Sai — Đáp án: <strong>'+esc(card.back)+'</strong>';result.style.display='block';
+    result.innerHTML='✗ Wrong — Answer: <strong>'+esc(card.back)+'</strong>';result.style.display='block';
     document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
   }
 }
@@ -1729,12 +1729,12 @@ function showXpFloat(xp,el){
 }
 
 const streakMilestones=[
-  {at:3,emoji:'⚡',text:'Combo x2!',sub:'XP nhân đôi'},
-  {at:5,emoji:'🔥',text:'On Fire!',sub:'XP nhân 3'},
-  {at:10,emoji:'💥',text:'UNSTOPPABLE!',sub:'XP nhân 5'},
-  {at:20,emoji:'💎',text:'LEGENDARY!',sub:'XP nhân 10'},
-  {at:50,emoji:'👑',text:'GODLIKE!',sub:'Không thể cản'},
-  {at:100,emoji:'🏆',text:'ULTIMATE!',sub:'Siêu trí nhớ'}
+  {at:3,emoji:'⚡',text:'Combo x2!',sub:'XP doubled'},
+  {at:5,emoji:'🔥',text:'On Fire!',sub:'XP x3'},
+  {at:10,emoji:'💥',text:'UNSTOPPABLE!',sub:'XP x5'},
+  {at:20,emoji:'💎',text:'LEGENDARY!',sub:'XP x10'},
+  {at:50,emoji:'👑',text:'GODLIKE!',sub:'Unstoppable'},
+  {at:100,emoji:'🏆',text:'ULTIMATE!',sub:'Super memory'}
 ];
 
 function showStreakMilestone(s){
@@ -1797,7 +1797,7 @@ function undoAnswer(){
   if(realCard)Object.assign(realCard,last.prev);
   reviewIndex=last.index;
   if(last.prevStreak!==undefined){streak=last.prevStreak;sessionXp=last.prevXp;sessionCorrect=last.prevCorrect;sessionTotal--;updateStreakUI();}
-  saveDeckData(currentDeckId,deck);showCurrentCard();toast('Đã hoàn tác');
+  saveDeckData(currentDeckId,deck);showCurrentCard();toast('Undone');
 }
 
 function updateReviewProgress(){
@@ -1805,9 +1805,9 @@ function updateReviewProgress(){
   const pct=reviewQueue.length>0?(done/reviewQueue.length*100):100;
   document.getElementById('reviewProgressFill').style.width=pct+'%';
   const rem=reviewQueue.slice(reviewIndex);
-  document.getElementById('cntNew').textContent=rem.filter(c=>c.status==='new').length+' mới';
-  document.getElementById('cntLearn').textContent=rem.filter(c=>c.status==='learning').length+' đang học';
-  document.getElementById('cntDue').textContent=rem.filter(c=>c.status==='review').length+' ôn tập';
+  document.getElementById('cntNew').textContent=rem.filter(c=>c.status==='new').length+' new';
+  document.getElementById('cntLearn').textContent=rem.filter(c=>c.status==='learning').length+' learning';
+  document.getElementById('cntDue').textContent=rem.filter(c=>c.status==='review').length+' review';
 }
 
 // ===== CUSTOM STUDY =====
@@ -1836,11 +1836,11 @@ function startCustomStudy(){
   else if(order==='difficulty')cards.sort((a,b)=>a.ease-b.ease);
 
   cards=cards.slice(0,limit);
-  if(cards.length===0){toast('Không tìm thấy thẻ phù hợp');return;}
+  if(cards.length===0){toast('No matching cards found');return;}
 
   currentDeckId=deckId;reviewQueue=cards;reviewIndex=0;undoStack=[];
   streak=0;bestStreak=0;sessionXp=0;sessionCorrect=0;sessionTotal=0;updateStreakUI();
-  document.getElementById('reviewDeckName').textContent=db.decks[deckId].name+' (Tùy chỉnh)';
+  document.getElementById('reviewDeckName').textContent=db.decks[deckId].name+' (Custom)';
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('viewReview').classList.add('active');
   document.getElementById('fabBtn').style.display='none';
@@ -1851,7 +1851,7 @@ function startCustomStudy(){
 
 function renderStreakWidget(){
   const s=calcStreak();const xp=db.settings.totalXp||0;
-  const dayNames=['CN','T2','T3','T4','T5','T6','T7'];
+  const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const today=new Date();const todayDay=today.getDay();
   const reviewDays=new Set();db.reviewLog.forEach(r=>reviewDays.add(new Date(r.date).toDateString()));
   let weekHTML='';
@@ -1865,8 +1865,8 @@ function renderStreakWidget(){
     '<div class="streak-widget">'+
     '<div class="streak-widget-top">'+
     '<div class="streak-widget-fire">🔥</div>'+
-    '<div class="streak-widget-info"><div class="streak-widget-days">'+s+' ngày</div><div class="streak-widget-label">'+(s>0?'Streak liên tiếp — tiếp tục phát huy!':'Ôn tập hôm nay để bắt đầu streak!')+'</div></div>'+
-    '<div class="streak-widget-xp"><div class="streak-widget-xp-val">'+xp+'</div><div class="streak-widget-xp-label">Tổng XP</div></div>'+
+    '<div class="streak-widget-info"><div class="streak-widget-days">'+s+' days</div><div class="streak-widget-label">'+(s>0?'Streak going — keep it up!':'Review today to start a streak!')+'</div></div>'+
+    '<div class="streak-widget-xp"><div class="streak-widget-xp-val">'+xp+'</div><div class="streak-widget-xp-label">Total XP</div></div>'+
     '</div>'+
     '<div class="streak-widget-week">'+weekHTML+'</div>'+
     '</div>';
@@ -1894,7 +1894,7 @@ function saveSettings(){
   db.settings.speechRate=parseFloat(document.getElementById('speechRateInput').value)||1;
   db.settings.voiceProvider=document.getElementById('voiceProviderSelect').value;
   db.settings.voiceId=document.getElementById('voiceIdSelect').value;
-  saveLocal();closeSettings();renderDecks();toast('Đã lưu cài đặt');
+  saveLocal();closeSettings();renderDecks();toast('Settings saved');
 }
 
 // ===== STATS =====
@@ -1915,24 +1915,24 @@ function renderStats(){
   const todayReviews=db.reviewLog.filter(r=>new Date(r.date).toDateString()===new Date().toDateString()).length;
 
   document.getElementById('detailedStats').innerHTML=`
-    <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">Tổng thẻ</div></div>
+    <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">TOTAL</div></div>
     <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value">${calcStreak()}</div><div class="stat-label">Streak</div></div>
-    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${todayReviews}</div><div class="stat-label">Ôn hôm nay</div></div>
-    <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value">${matureCards}</div><div class="stat-label">Thuần thục</div></div>
-    <div class="stat-card"><div class="stat-icon">⏸</div><div class="stat-value">${suspendedCards}</div><div class="stat-label">Tạm ẩn</div></div>
+    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${todayReviews}</div><div class="stat-label">Reviewed today</div></div>
+    <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value">${matureCards}</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-card"><div class="stat-icon">⏸</div><div class="stat-value">${suspendedCards}</div><div class="stat-label">Suspended</div></div>
     <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value">${leechCards}</div><div class="stat-label">Leech</div></div>`;
 
   let hmHTML='<div class="heatmap">';
   for(let i=29;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toDateString();
     const count=db.reviewLog.filter(r=>new Date(r.date).toDateString()===ds).length;
     const level=count===0?0:count<=5?1:count<=15?2:count<=30?3:4;
-    hmHTML+=`<div class="heatmap-day" data-count="${level}" title="${d.toLocaleDateString('vi')}: ${count} lượt"></div>`;}
+    hmHTML+=`<div class="heatmap-day" data-count="${level}" title="${d.toLocaleDateString('en')}: ${count} reviews"></div>`;}
   document.getElementById('heatmapContainer').innerHTML=hmHTML+'</div>';
 
   const total=totalCards||1;
   document.getElementById('statusChart').innerHTML=`
     <div class="status-bar"><div style="width:${newCards/total*100}%;background:var(--blue)"></div><div style="width:${learningCards/total*100}%;background:var(--orange)"></div><div style="width:${(reviewCards-matureCards)/total*100}%;background:var(--green)"></div><div style="width:${matureCards/total*100}%;background:var(--primary)"></div></div>
-    <div class="status-legend"><span><span class="dot" style="background:var(--blue)"></span>Mới: ${newCards}</span><span><span class="dot" style="background:var(--orange)"></span>Đang học: ${learningCards}</span><span><span class="dot" style="background:var(--green)"></span>Ôn tập: ${reviewCards-matureCards}</span><span><span class="dot" style="background:var(--primary)"></span>Thuần thục: ${matureCards}</span></div>`;
+    <div class="status-legend"><span><span class="dot" style="background:var(--blue)"></span>New: ${newCards}</span><span><span class="dot" style="background:var(--orange)"></span>Learning: ${learningCards}</span><span><span class="dot" style="background:var(--green)"></span>Review: ${reviewCards-matureCards}</span><span><span class="dot" style="background:var(--primary)"></span>Mastered: ${matureCards}</span></div>`;
 }
 
 // ===== THEME =====
@@ -1961,7 +1961,7 @@ document.addEventListener('keydown',e=>{
 
 // ===== HELPERS =====
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-function formatDue(ts){const diff=ts-Date.now();if(diff<=0)return'Bây giờ';const m=Math.round(diff/60000);if(m<60)return m+' phút';const h=Math.round(m/60);if(h<24)return h+' giờ';const d=Math.round(h/24);if(d<30)return d+' ngày';return Math.round(d/30)+' tháng';}
+function formatDue(ts){const diff=ts-Date.now();if(diff<=0)return'Now';const m=Math.round(diff/60000);if(m<60)return m+' min';const h=Math.round(m/60);if(h<24)return h+' hours';const d=Math.round(h/24);if(d<30)return d+' days';return Math.round(d/30)+' months';}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),2500);}
 
 // ===== PARTICLES + SHOOTING STARS + CURSOR GLOW =====
