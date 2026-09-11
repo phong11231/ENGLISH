@@ -1519,6 +1519,13 @@ function showCurrentCard(){
       ytWrap.onclick=function(ev){ev.stopPropagation();};
       ytWrap.appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
       backFaceEl.appendChild(ytWrap);
+      const replayBtn=document.createElement('button');replayBtn.className='yt-video-btn';replayBtn.innerHTML='🔄 Replay clip';
+      replayBtn.onclick=function(ev){
+        ev.stopPropagation();
+        ytWrap.innerHTML='';
+        ytWrap.appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
+      };
+      backFaceEl.appendChild(replayBtn);
     };
     backFaceEl.appendChild(ytBtn);
   }
