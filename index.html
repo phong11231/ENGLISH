@@ -424,6 +424,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .daily-goal::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(139,92,246,.1),transparent 30%,transparent 70%,rgba(0,255,170,.06));pointer-events:none}
 .daily-goal::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--primary),var(--neon),var(--accent));opacity:.5;animation:navLineShift 4s ease-in-out infinite}
 .daily-goal:hover{border-color:rgba(139,92,246,.3);box-shadow:0 12px 40px rgba(139,92,246,.15),0 0 30px rgba(0,255,170,.05);transform:translateY(-3px)}
+.daily-goal-actions{display:flex;gap:12px;margin-bottom:24px}.daily-goal-actions .btn{flex:1;padding:14px 16px;font-size:15px;font-weight:600}
 .goal-ring{width:64px;height:64px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;z-index:1;font-family:var(--font-display)}
 .goal-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
 .goal-ring circle{fill:none;stroke-width:5}
@@ -1080,14 +1081,9 @@ function renderDecks(){
     <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${todayReviews}</div><div class="stat-label">TODAY</div></div>
     <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-value">${totalNew}</div><div class="stat-label">NEW</div></div>`;
 
-  // Daily goal
-  const goal=db.settings.dailyGoal||20;
-  const pct=Math.min(100,Math.round(todayReviews/goal*100));
-  const circ=2*Math.PI*25;
-  document.getElementById('dailyGoalWrap').innerHTML=`<div class="daily-goal">
-    <div class="goal-ring"><svg viewBox="0 0 60 60"><defs><linearGradient id="goalGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:var(--primary)"/><stop offset="100%" style="stop-color:var(--accent)"/></linearGradient></defs><circle class="bg" cx="30" cy="30" r="25"/><circle class="fill" cx="30" cy="30" r="25" stroke-dasharray="${circ}" stroke-dashoffset="${circ*(1-pct/100)}"/></svg>${pct}%</div>
-    <div class="goal-info"><div class="goal-title">${todayReviews}/${goal} cards today</div><div class="goal-sub">${pct>=100?'Goal complete! 🎉':'Keep going, '+(goal-todayReviews)+' cards left'}</div></div>
-    <button class="btn btn-ghost btn-sm" onclick="openSettings()" title="Settings">⚙️</button>
+  document.getElementById('dailyGoalWrap').innerHTML=`<div class="daily-goal-actions">
+    <button class="btn btn-primary" onclick="openSettings()">⚙️ Settings</button>
+    <button class="btn btn-primary" onclick="openDeckModal()">📂 Create Deck</button>
   </div>`;
 
   if(deckEntries.length===0&&!viewingParentId){
