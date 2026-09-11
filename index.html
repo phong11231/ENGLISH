@@ -1462,7 +1462,7 @@ function buildYtEmbed(videoId,start,end){
   if(start!=null)src+='&start='+Math.floor(start);
   if(end!=null)src+='&end='+Math.floor(end);
   iframe.src=src;
-  iframe.width='100%';iframe.height='250';
+  iframe.width='100%';iframe.height='180';
   iframe.style.border='none';iframe.style.display='block';iframe.style.borderRadius='var(--r-md)';
   iframe.setAttribute('allowfullscreen','');
   iframe.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
@@ -1541,6 +1541,7 @@ function showCurrentCard(){
       const replayBtn=document.createElement('button');replayBtn.className='yt-video-btn';replayBtn.innerHTML='🔄 Replay clip';
       replayBtn.onclick=function(ev){ev.stopPropagation();ytWrap.innerHTML='';ytWrap.appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));};
       backFaceEl.appendChild(replayBtn);
+      setTimeout(()=>{const ra=document.getElementById('reviewActions');if(ra)ra.scrollIntoView({behavior:'smooth',block:'nearest'});},300);
     };
     backFaceEl.appendChild(ytBtn);
   }
