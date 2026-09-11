@@ -96,8 +96,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 @keyframes navLineShift{0%,100%{background-position:0% 50%;opacity:.4}50%{background-position:100% 50%;opacity:.8}}
 .nav-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:24px;font-family:var(--font-display);background:linear-gradient(135deg,var(--primary-light),var(--neon),var(--accent),var(--pink));background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradientText 4s ease-in-out infinite;text-shadow:0 0 40px rgba(139,92,246,.3)}
 @keyframes gradientText{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.brand-logo{width:36px;height:36px;border-radius:10px;object-fit:cover;border:2px solid rgba(139,92,246,.4);box-shadow:0 0 12px rgba(139,92,246,.4),0 0 30px rgba(139,92,246,.15);animation:brandFloat 2.5s ease-in-out infinite;transition:all .3s}
-.brand-logo:hover{border-color:var(--neon);box-shadow:0 0 20px rgba(0,255,170,.5),0 0 40px rgba(139,92,246,.3);transform:scale(1.1) rotate(5deg)}
+.nav-brand span{font-size:28px;-webkit-text-fill-color:initial;animation:brandFloat 2.5s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(139,92,246,.5))}
 @keyframes brandFloat{0%,100%{transform:translateY(0) rotate(0deg) scale(1)}50%{transform:translateY(-4px) rotate(8deg) scale(1.1)}}
 .nav-actions{display:flex;align-items:center;gap:6px}
 .nav-btn{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:all .3s cubic-bezier(.34,1.56,.64,1);font-size:18px;position:relative}
@@ -515,7 +514,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 
 <div class="app active" id="appShell">
 <nav class="nav">
-  <div class="nav-brand"><img src="avata.jpg" class="brand-logo" alt="FlashMind"> FlashMind</div>
+  <div class="nav-brand"><span>🧠</span> FlashMind</div>
   <div class="nav-actions">
     <button class="nav-btn active" onclick="showView('decks')" title="Decks" id="navDecks">📚</button>
     <button class="nav-btn" onclick="showView('quiz')" title="Quiz" id="navQuiz">🎯</button>
