@@ -1724,7 +1724,9 @@ function showCurrentCard(){
   if(isDialogue){
     // Dialogue mode: auto-play all fronts sequentially, voice-only (hidden text)
     const el=document.getElementById('cardFront');
-    el.innerHTML='<div class="voice-card"><button class="voice-play-btn dialogue-main-speaker" onclick="event.stopPropagation();replayDialogue()"><span class="voice-icon">🔊</span><span class="voice-label">Playing...</span></button><div class="voice-hint">🎧 Listen to the dialogue</div></div><div class="front-counter">1 / '+fronts.length+'</div>';
+    const dlgYtId=extractYtId(card.youtubeUrl);
+    let ytBtnHtml=dlgYtId?'<button class="yt-video-btn dialogue-yt-toggle" onclick="event.stopPropagation();toggleDialogueVideo()" style="margin-top:8px">🎬 Watch video</button>':'';
+    el.innerHTML='<div class="voice-card"><button class="voice-play-btn dialogue-main-speaker" onclick="event.stopPropagation();replayDialogue()"><span class="voice-icon">🔊</span><span class="voice-label">Playing...</span></button><div class="voice-hint">🎧 Listen to the dialogue</div>'+ytBtnHtml+'</div><div class="front-counter">1 / '+fronts.length+'</div>';
     document.getElementById('cardBack').innerHTML='';
     window._dialoguePlaying=true;
     function playDialogueLine(idx){
@@ -2130,6 +2132,35 @@ function toggleAllDialogueText(){
   const texts=document.querySelectorAll('.dialogue-text');
   const anyHidden=Array.from(texts).some(t=>t.classList.contains('hidden-text'));
   texts.forEach(t=>{if(anyHidden)t.classList.remove('hidden-text');else t.classList.add('hidden-text');});
+}
+function toggleDialogueVideo(){
+  const fc=document.getElementById('flashcard');
+  const card=reviewQueue[reviewIndex];
+  const ytId=extractYtId(card.youtubeUrl);
+  if(!ytId)return;
+  const existing=document.querySelector('.dialogue-outer-layout');
+  if(existing){
+    const ytOuter=existing.querySelector('.dialogue-yt-outer');
+    if(ytOuter){destroyYtPlayer();ytOuter.remove();}
+    existing.replaceWith(fc);
+    fc.classList.remove('dialogue-mode');
+    const btn=fc.querySelector('.dialogue-yt-toggle');
+    if(btn)btn.textContent='🎬 Watch video';
+    return;
+  }
+  fc.classList.add('dialogue-mode');
+  const wrapper=document.createElement('div');
+  wrapper.className='dialogue-outer-layout';
+  fc.parentNode.insertBefore(wrapper,fc);
+  const ytDiv=document.createElement('div');
+  ytDiv.className='dialogue-yt-outer';
+  ytDiv.innerHTML='<div class="dialogue-yt-wrap"></div>';
+  ytDiv.onclick=function(e){e.stopPropagation();};
+  ytDiv.querySelector('.dialogue-yt-wrap').appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
+  wrapper.appendChild(ytDiv);
+  wrapper.appendChild(fc);
+  const btn=fc.querySelector('.dialogue-yt-toggle');
+  if(btn)btn.textContent='✕ Hide video';
 }
 function showDialogueAnswer(){
   const fc=document.getElementById('flashcard');
