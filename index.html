@@ -268,7 +268,9 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .flashcard.dialogue-mode{max-width:500px;perspective:none;flex:none;min-height:auto}
 .flashcard.dialogue-mode .flashcard-inner{transform:none!important;transform-style:flat;position:relative;height:auto}
 .flashcard.dialogue-mode .flashcard-face.front{position:relative;inset:auto;height:auto;min-height:0;justify-content:flex-start;text-align:left;padding:20px}
-.flashcard.dialogue-mode .flashcard-face.back{display:none}
+.flashcard.dialogue-mode:not(.flipped) .flashcard-face.back{display:none}
+.flashcard.dialogue-mode.flipped .flashcard-face.front{display:none}
+.flashcard.dialogue-mode.flipped .flashcard-face.back{position:relative;inset:auto;height:auto;min-height:0;padding:20px;backface-visibility:visible;transform:none}
 .dialogue-outer-layout{display:flex;gap:24px;align-items:flex-start;width:100%;max-width:100%}
 .dialogue-outer-layout .dialogue-yt-outer{flex:1;min-width:0}
 .dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap{aspect-ratio:16/9;border-radius:var(--r-xl);overflow:hidden;background:#000;box-shadow:var(--shadow-xl)}
@@ -1356,6 +1358,8 @@ function updateFrontRemoveButtons(){
     const btn=r.querySelector('.front-remove-btn');
     if(btn)btn.style.display=rows.length>1?'block':'none';
   });
+  const backGroup=document.getElementById('cardBackInput')?.closest('.form-group');
+  if(backGroup)backGroup.style.display=rows.length>1?'none':'block';
 }
 function getFrontValues(){
   return Array.from(document.querySelectorAll('#frontFieldsWrap .front-input')).map(t=>t.value.trim()).filter(Boolean);
@@ -1449,7 +1453,7 @@ function saveCard(){
   } else {
     const fronts=getFrontValues();
     const back=document.getElementById('cardBackInput').value.trim();
-    if(fronts.length===0||!back){toast('Enter both front and back');return;}
+    if(fronts.length===0||(fronts.length===1&&!back)){toast('Enter both front and back');return;}
     const front=fronts[0];
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
@@ -1647,13 +1651,14 @@ function exitReview(){destroyYtPlayer();cleanupDialogueLayout();reviewQueue=[];s
 function cleanupDialogueLayout(){
   const outer=document.querySelector('.dialogue-outer-layout');
   if(outer){const fc=outer.querySelector('.flashcard');if(fc){outer.parentNode.insertBefore(fc,outer);}outer.remove();}
+  const extraBtns=document.querySelector('.card-link-btns-outer');if(extraBtns)extraBtns.remove();
 }
 
 // ===== YOUTUBE CLIP =====
 function extractYtId(url){if(!url)return null;const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
 
 function destroyYtPlayer(){
-  document.querySelectorAll('.yt-card-wrap iframe, #ytPreviewPlayer iframe').forEach(f=>f.remove());
+  document.querySelectorAll('.yt-card-wrap iframe, .dialogue-yt-wrap iframe, #ytPreviewPlayer iframe').forEach(f=>f.remove());
 }
 
 function buildYtEmbed(videoId,start,end){
@@ -1764,36 +1769,13 @@ function showCurrentCard(){
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
   }
 
-  // YouTube clip button on back
+  // YouTube handled in flipCard (outside card layout)
   destroyYtPlayer();
   const backFaceEl=document.querySelector('.flashcard-face.back');
   backFaceEl.classList.remove('has-video');
   const oldYtBtn=backFaceEl.querySelector('.yt-video-btn');if(oldYtBtn)oldYtBtn.remove();
   const oldYtWrap=backFaceEl.querySelector('.yt-card-wrap');if(oldYtWrap)oldYtWrap.remove();
   const ytId=extractYtId(card.youtubeUrl);
-  if(ytId){
-    const ytBtn=document.createElement('button');ytBtn.className='yt-video-btn';ytBtn.innerHTML='🎬 Watch real video';
-    ytBtn.onclick=function(e){
-      e.stopPropagation();
-      ytBtn.style.display='none';
-      backFaceEl.classList.add('has-video');
-      const ytWrap=document.createElement('div');ytWrap.className='yt-card-wrap';
-      ytWrap.onclick=function(ev){ev.stopPropagation();};
-      ytWrap.appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
-      backFaceEl.appendChild(ytWrap);
-      const btnRow=document.createElement('div');btnRow.className='card-link-btns';btnRow.style.cssText='display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;z-index:2;position:relative;justify-content:center';
-      btnRow.onclick=function(ev){ev.stopPropagation();};
-      const replayBtn=document.createElement('button');replayBtn.className='yt-video-btn';replayBtn.innerHTML='🔄 Replay';
-      replayBtn.onclick=function(ev){ev.stopPropagation();ytWrap.innerHTML='';ytWrap.appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));};
-      btnRow.appendChild(replayBtn);
-      const ft=(card.front||'').replace(/<[^>]*>/g,'').trim();
-      if(ft){const db2=document.createElement('button');db2.className='yt-video-btn';db2.innerHTML='📖 Dictionary';db2.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(ft.toLowerCase()),'_blank');};btnRow.appendChild(db2);}
-      if(card.cakeUrl){const cb=document.createElement('button');cb.className='yt-video-btn';cb.innerHTML='🍰 Cake';cb.onclick=function(){window.open(card.cakeUrl,'_blank');};btnRow.appendChild(cb);}
-      backFaceEl.appendChild(btnRow);
-      setTimeout(()=>{const ra=document.getElementById('reviewActions');if(ra)ra.scrollIntoView({behavior:'smooth',block:'nearest'});},300);
-    };
-    backFaceEl.appendChild(ytBtn);
-  }
 
   // Dictionary & Cake buttons (only when no video)
   const oldLinkBtns=backFaceEl.querySelector('.card-link-btns');if(oldLinkBtns)oldLinkBtns.remove();
@@ -2103,8 +2085,42 @@ function flipCard(){
     }
     return;
   }
-  if(fc.classList.contains('flipped')){fc.classList.remove('flipped');document.getElementById('reviewActions').style.display='none';}
-  else{fc.classList.add('flipped');document.getElementById('reviewActions').style.display='flex';}
+  if(fc.classList.contains('flipped')){
+    fc.classList.remove('flipped');
+    fc.classList.remove('dialogue-mode');
+    cleanupDialogueLayout();
+    document.getElementById('reviewActions').style.display='none';
+  } else {
+    fc.classList.add('flipped');
+    document.getElementById('reviewActions').style.display='flex';
+    const card=reviewQueue[reviewIndex];
+    const ytId=extractYtId(card.youtubeUrl);
+    if(ytId){
+      fc.classList.add('dialogue-mode');
+      const backFaceEl=fc.querySelector('.flashcard-face.back');
+      const oldBtn=backFaceEl.querySelector('.yt-video-btn');if(oldBtn)oldBtn.remove();
+      const oldWrap=backFaceEl.querySelector('.yt-card-wrap');if(oldWrap)oldWrap.remove();
+      const oldBtnRow=backFaceEl.querySelector('.card-link-btns');if(oldBtnRow)oldBtnRow.remove();
+      cleanupDialogueLayout();
+      const wrapper=document.createElement('div');
+      wrapper.className='dialogue-outer-layout';
+      fc.parentNode.insertBefore(wrapper,fc);
+      const ytDiv=document.createElement('div');
+      ytDiv.className='dialogue-yt-outer';
+      ytDiv.innerHTML='<div class="dialogue-yt-wrap"></div>';
+      ytDiv.onclick=function(e){e.stopPropagation();};
+      ytDiv.querySelector('.dialogue-yt-wrap').appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
+      wrapper.appendChild(ytDiv);
+      wrapper.appendChild(fc);
+      const ft=(card.front||'').replace(/<[^>]*>/g,'').trim();
+      let extraBtns='<div class="card-link-btns-outer" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center" onclick="event.stopPropagation()">';
+      extraBtns+='<button class="yt-video-btn" onclick="event.stopPropagation();var w=document.querySelector(\'.dialogue-yt-wrap\');w.innerHTML=\'\';w.appendChild(buildYtEmbed(\''+ytId+'\','+(card.ytStart||'null')+','+(card.ytEnd||'null')+'))">🔄 Replay</button>';
+      if(ft)extraBtns+='<button class="yt-video-btn" onclick="window.open(\'https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(ft.toLowerCase())+'\',\'_blank\')">📖 Dictionary</button>';
+      if(card.cakeUrl)extraBtns+='<button class="yt-video-btn" onclick="window.open(\''+card.cakeUrl+'\',\'_blank\')">🍰 Cake</button>';
+      extraBtns+='</div>';
+      backFaceEl.insertAdjacentHTML('beforeend',extraBtns);
+    }
+  }
 }
 function toggleDialogueText(lineEl){
   const txt=lineEl.querySelector('.dialogue-text');
