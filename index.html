@@ -809,6 +809,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <option value="voice-translate">🌐 Listen & Translate — AI reads, translate it</option>
         </select>
       </div>
+      <div class="form-group"><label>Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span></label><input id="cardNameInput" placeholder="e.g. Greeting, At the store..." maxlength="60" style="width:100%;padding:8px 12px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--glass-border);color:var(--ink);font-size:14px"></div>
       <div id="basicFields">
         <div class="form-group"><label>Front (question) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— multiple = dialogue mode</span></label>
           <div id="frontFieldsWrap">
@@ -1108,7 +1109,7 @@ function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
 // ===== SM-2 =====
-function newCardData(){return{id:crypto.randomUUID(),front:'',fronts:[],back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+function newCardData(){return{id:crypto.randomUUID(),cardName:'',front:'',fronts:[],back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
 
 function sm2(card,quality){
   const now=Date.now(),DAY=86400000; card.lastReview=now;
@@ -1416,6 +1417,7 @@ function openCardModal(cardId){
     document.getElementById('cardTagsInput').value=(card.tags||[]).join(', ');
     document.getElementById('cardReviewMode').value=card.reviewMode||'flip';
     document.getElementById('cardDisplayMode').value=card.displayMode||'voice';
+    document.getElementById('cardNameInput').value=card.cardName||'';
     document.getElementById('cardYoutubeUrl').value=card.youtubeUrl||'';
     document.getElementById('cardYtStart').value=card.ytStart!=null?card.ytStart:'';
     document.getElementById('cardYtEnd').value=card.ytEnd!=null?card.ytEnd:'';
@@ -1423,6 +1425,7 @@ function openCardModal(cardId){
   } else {
     document.getElementById('cardModalTitle').textContent='Add New Card';
     document.getElementById('saveCardBtn').textContent='Save card';
+    document.getElementById('cardNameInput').value='';
     setFrontFields(['']);document.getElementById('cardBackInput').value='';
     document.getElementById('cardReviewMode').value='flip';
     document.getElementById('cardDisplayMode').value='voice';
@@ -1449,17 +1452,18 @@ function saveCard(){
   const ytStart=document.getElementById('cardYtStart').value?parseFloat(document.getElementById('cardYtStart').value):null;
   const ytEnd=document.getElementById('cardYtEnd').value?parseFloat(document.getElementById('cardYtEnd').value):null;
   const cakeUrl=document.getElementById('cardCakeUrl').value.trim();
+  const cardName=document.getElementById('cardNameInput').value.trim();
   if(type==='cloze'){
     const text=document.getElementById('clozeInput').value.trim();
     if(!text||!text.includes('{{c')){toast('Need at least 1 {{c1::...}}');return;}
     const nums=new Set();text.replace(/\{\{c(\d+)::/g,(_,n)=>nums.add(parseInt(n)));
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;
+      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;
       toast('Updated!');
     } else {
       nums.forEach(n=>{
-        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;
+        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;
         deck.cards.push(card);
       });
       toast('Added '+nums.size+' cloze cards!');
@@ -1471,10 +1475,10 @@ function saveCard(){
     const front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;toast('Updated!');
+      card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;toast('Updated!');
     } else {
-      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;deck.cards.push(card);
-      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.fronts=[back];rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;rc.cakeUrl=cakeUrl;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
+      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;deck.cards.push(card);
+      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.fronts=[back];rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;rc.cakeUrl=cakeUrl;rc.cardName=cardName;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
       else toast('Card added!');
     }
   }
@@ -1508,7 +1512,7 @@ function renderTagFilter(){
 function renderCardBrowser(){
   const cards=getDeckCards(currentDeckId);
   const search=(document.getElementById('cardSearch')?.value||'').toLowerCase();
-  let filtered=cards.filter(c=>c.front.toLowerCase().includes(search)||c.back.toLowerCase().includes(search));
+  let filtered=cards.filter(c=>c.front.toLowerCase().includes(search)||c.back.toLowerCase().includes(search)||(c.cardName||'').toLowerCase().includes(search));
   if(activeTagFilter)filtered=filtered.filter(c=>(c.tags||[]).includes(activeTagFilter));
   const wrap=document.getElementById('cardTableWrap');
   if(filtered.length===0){
@@ -1524,7 +1528,8 @@ function renderCardBrowser(){
       const tagHTML=(c.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
       const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
       const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':'';
-      return`<tr><td class="card-front-col">${esc(c.front)}</td><td class="card-back-col">${esc(c.back)}</td>
+      const displayFront=c.cardName||c.front;
+      return`<tr><td class="card-front-col">${esc(displayFront)}</td><td class="card-back-col">${esc(c.back)}</td>
         <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':''}">${modeLabel}${dispLabel}</td>
         <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
         <td><span class="card-status ${sc}">${st}</span></td>
