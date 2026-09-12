@@ -1340,9 +1340,12 @@ function saveDeck(){
 function deleteDeck(id){
   if(db.decks[id]._shared&&!isAdmin){toast('This is a default deck and cannot be deleted');return;}
   if(!confirm('Delete "'+db.decks[id].name+'" and everything inside?'))return;
+  const wasShared=db.decks[id]._shared;
   // Delete sub-decks recursively
   getSubDecks(id).forEach(([subId])=>deleteDeck(subId));
-  delete db.decks[id];deleteDeckData(id);renderDecks();toast('Deleted');
+  delete db.decks[id];deleteDeckData(id);
+  if(wasShared&&isAdmin&&typeof firestore!=='undefined'){firestore.collection('sharedDecks').doc(id).delete().catch(console.error);}
+  renderDecks();toast('Deleted');
 }
 
 // ===== CARD MODAL =====
