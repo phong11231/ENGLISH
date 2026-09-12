@@ -278,13 +278,15 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .dialogue-outer-layout{display:flex;gap:24px;align-items:stretch;width:100%;max-width:100%;flex:1;min-height:0}
 .dialogue-outer-layout .dialogue-yt-outer{flex:1;min-width:0;display:flex;align-items:flex-start}
 .dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap{aspect-ratio:16/9;border-radius:var(--r-xl);overflow:hidden;background:#000;box-shadow:var(--shadow-xl);width:100%}
-.dialogue-outer-layout .flashcard.dialogue-mode{flex:0 0 auto;width:400px;max-width:400px;overflow-y:auto}
+.dialogue-outer-layout .dialogue-right-col{flex:0 0 auto;width:400px;max-width:400px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+.dialogue-outer-layout .flashcard.dialogue-mode{flex:0 0 auto;width:100%;max-width:100%}
 .main:has(.dialogue-outer-layout){max-width:100%;padding-left:30px;padding-right:30px}
 .review-container:has(.dialogue-outer-layout){display:flex;flex-direction:column;overflow:hidden;height:calc(100vh - 68px)}
 @media(max-width:800px){
   .dialogue-outer-layout{flex-direction:column;align-items:center}
   .dialogue-outer-layout .dialogue-yt-outer{width:100%}
-  .dialogue-outer-layout .flashcard.dialogue-mode{width:100%;max-width:100%;overflow-y:visible}
+  .dialogue-outer-layout .dialogue-right-col{width:100%;max-width:100%;overflow-y:visible}
+  .dialogue-outer-layout .flashcard.dialogue-mode{width:100%;max-width:100%}
   .main:has(.dialogue-outer-layout){padding-left:16px;padding-right:16px}
   .review-container:has(.dialogue-outer-layout){overflow:auto;height:auto}
 }
@@ -1677,7 +1679,13 @@ function startReview(deckId){
 function exitReview(){destroyYtPlayer();cleanupDialogueLayout();reviewQueue=[];showView('decks');}
 function cleanupDialogueLayout(){
   const outer=document.querySelector('.dialogue-outer-layout');
-  if(outer){const fc=outer.querySelector('.flashcard');if(fc){outer.parentNode.insertBefore(fc,outer);}outer.remove();}
+  if(outer){
+    const rc=outer.querySelector('.dialogue-right-col');
+    const fc=rc?rc.querySelector('.flashcard'):outer.querySelector('.flashcard');
+    if(fc)outer.parentNode.insertBefore(fc,outer);
+    outer.remove();
+  }
+  const actBar=document.querySelector('.dialogue-action-bar');if(actBar)actBar.remove();
   const extraBtns=document.querySelector('.card-link-btns-outer');if(extraBtns)extraBtns.remove();
 }
 
@@ -2163,11 +2171,6 @@ function flipCard(){
         const spkLabel=spk?'<span class="dialogue-speaker">'+esc(spk)+'</span>':'';
         transcriptHtml+='<div class="dialogue-line'+(i%2===1?' alt':'')+'" onclick="event.stopPropagation();toggleDialogueText(this)"><button class="dialogue-speak-btn" onclick="event.stopPropagation();'+speakFn+'" title="Play">🔊</button>'+spkLabel+'<div class="dialogue-text hidden-text">'+renderContent(txt)+'</div><button class="dialogue-eye-btn" onclick="event.stopPropagation();toggleDialogueText(this.closest(\'.dialogue-line\'))" title="Show/Hide">👁</button></div>';
       });
-      transcriptHtml+='<div style="display:flex;gap:8px;margin-top:6px;align-self:center;flex-wrap:wrap;justify-content:center">';
-      transcriptHtml+='<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';w.appendChild(buildYtEmbed(\''+ytId+'\','+(card.ytStart!=null?card.ytStart:'null')+','+(card.ytEnd!=null?card.ytEnd:'null')+'));}">🔄 Replay</button>';
-      transcriptHtml+='<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toggleAllDialogueText()">Show / Hide all</button>';
-      transcriptHtml+='<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();flipCard()">↩ Flip back</button>';
-      transcriptHtml+='</div>';
       transcriptHtml+='</div>';
       el.innerHTML=transcriptHtml;
       // YouTube outside the card
@@ -2177,17 +2180,28 @@ function flipCard(){
         if(ytOuter)ytOuter.remove();
         oldOuter.replaceWith(fc);
       }
+      // Action buttons above the card
+      const oldActBar=document.querySelector('.dialogue-action-bar');if(oldActBar)oldActBar.remove();
+      const actBar=document.createElement('div');actBar.className='dialogue-action-bar';
+      actBar.style.cssText='display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;justify-content:center';
+      actBar.onclick=function(e){e.stopPropagation();};
+      actBar.innerHTML='<button class="btn btn-ghost btn-sm" onclick="var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';w.appendChild(buildYtEmbed(\''+ytId+'\','+(card.ytStart!=null?card.ytStart:'null')+','+(card.ytEnd!=null?card.ytEnd:'null')+'));}">🔄 Replay</button><button class="btn btn-ghost btn-sm" onclick="toggleAllDialogueText()">Show / Hide all</button><button class="btn btn-ghost btn-sm" onclick="flipCard()">↩ Flip back</button>';
+      fc.parentNode.insertBefore(actBar,fc);
       if(ytId){
         const wrapper=document.createElement('div');
         wrapper.className='dialogue-outer-layout';
-        fc.parentNode.insertBefore(wrapper,fc);
+        actBar.parentNode.insertBefore(wrapper,actBar);
         const ytDiv=document.createElement('div');
         ytDiv.className='dialogue-yt-outer';
         ytDiv.innerHTML='<div class="dialogue-yt-wrap"></div>';
         ytDiv.onclick=function(e){e.stopPropagation();};
         ytDiv.querySelector('.dialogue-yt-wrap').appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
         wrapper.appendChild(ytDiv);
-        wrapper.appendChild(fc);
+        const rightCol=document.createElement('div');
+        rightCol.className='dialogue-right-col';
+        rightCol.appendChild(actBar);
+        rightCol.appendChild(fc);
+        wrapper.appendChild(rightCol);
       }
       const hint=document.querySelector('.flashcard-hint');
       if(hint)hint.style.display='none';
