@@ -2058,7 +2058,10 @@ function flipCard(){
         const safe=esc(t).replace(/'/g,"\\'").replace(/\n/g,' ');
         transcriptHtml+='<div class="dialogue-line'+(i%2===1?' alt':'')+'" onclick="event.stopPropagation();toggleDialogueText(this)"><button class="dialogue-speak-btn" onclick="event.stopPropagation();speakText(\''+safe+'\')" title="Play">🔊</button><div class="dialogue-text hidden-text">'+renderContent(t)+'</div><button class="dialogue-eye-btn" onclick="event.stopPropagation();toggleDialogueText(this.closest(\'.dialogue-line\'))" title="Show/Hide">👁</button></div>';
       });
-      transcriptHtml+='<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toggleAllDialogueText()" style="margin-top:6px;align-self:center">Show / Hide all</button>';
+      transcriptHtml+='<div style="display:flex;gap:8px;margin-top:6px;align-self:center;flex-wrap:wrap;justify-content:center">';
+      transcriptHtml+='<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toggleAllDialogueText()">Show / Hide all</button>';
+      transcriptHtml+='<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();flipCard()">↩ Flip back</button>';
+      transcriptHtml+='</div>';
       transcriptHtml+='</div>';
       el.innerHTML=transcriptHtml;
       // YouTube outside the card
