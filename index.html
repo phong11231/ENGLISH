@@ -818,6 +818,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <button type="button" class="btn btn-ghost btn-sm" onclick="addFrontField()" style="margin-top:6px">+ Add dialogue line</button>
         </div>
         <div class="form-group"><label>Back (answer)</label><textarea id="cardBackInput" placeholder="Enter answer, meaning..." rows="3"></textarea></div>
+        <div class="form-group"><label>Definition <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional, show when you forget the meaning</span></label><textarea id="cardDefinitionInput" placeholder="e.g. nghĩa tiếng Việt, explanation..." rows="2"></textarea></div>
       </div>
       <div id="clozeFields" style="display:none">
         <div class="form-group"><label>Content (use {{c1::word}} to create blanks)</label><textarea id="clozeInput" placeholder="e.g. {{c1::Mitochondria}} is the powerhouse of the cell" rows="3"></textarea></div>
@@ -1109,7 +1110,7 @@ function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
 // ===== SM-2 =====
-function newCardData(){return{id:crypto.randomUUID(),cardName:'',front:'',fronts:[],back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+function newCardData(){return{id:crypto.randomUUID(),cardName:'',front:'',fronts:[],back:'',definition:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
 
 function sm2(card,quality){
   const now=Date.now(),DAY=86400000; card.lastReview=now;
@@ -1418,6 +1419,7 @@ function openCardModal(cardId){
     document.getElementById('cardReviewMode').value=card.reviewMode||'flip';
     document.getElementById('cardDisplayMode').value=card.displayMode||'voice';
     document.getElementById('cardNameInput').value=card.cardName||'';
+    document.getElementById('cardDefinitionInput').value=card.definition||'';
     document.getElementById('cardYoutubeUrl').value=card.youtubeUrl||'';
     document.getElementById('cardYtStart').value=card.ytStart!=null?card.ytStart:'';
     document.getElementById('cardYtEnd').value=card.ytEnd!=null?card.ytEnd:'';
@@ -1426,6 +1428,7 @@ function openCardModal(cardId){
     document.getElementById('cardModalTitle').textContent='Add New Card';
     document.getElementById('saveCardBtn').textContent='Save card';
     document.getElementById('cardNameInput').value='';
+    document.getElementById('cardDefinitionInput').value='';
     setFrontFields(['']);document.getElementById('cardBackInput').value='';
     document.getElementById('cardReviewMode').value='flip';
     document.getElementById('cardDisplayMode').value='voice';
@@ -1453,17 +1456,18 @@ function saveCard(){
   const ytEnd=document.getElementById('cardYtEnd').value?parseFloat(document.getElementById('cardYtEnd').value):null;
   const cakeUrl=document.getElementById('cardCakeUrl').value.trim();
   const cardName=document.getElementById('cardNameInput').value.trim();
+  const definition=document.getElementById('cardDefinitionInput').value.trim();
   if(type==='cloze'){
     const text=document.getElementById('clozeInput').value.trim();
     if(!text||!text.includes('{{c')){toast('Need at least 1 {{c1::...}}');return;}
     const nums=new Set();text.replace(/\{\{c(\d+)::/g,(_,n)=>nums.add(parseInt(n)));
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;
+      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;
       toast('Updated!');
     } else {
       nums.forEach(n=>{
-        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;
+        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;
         deck.cards.push(card);
       });
       toast('Added '+nums.size+' cloze cards!');
@@ -1475,9 +1479,9 @@ function saveCard(){
     const front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;toast('Updated!');
+      card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;toast('Updated!');
     } else {
-      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;deck.cards.push(card);
+      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;deck.cards.push(card);
       if(type==='reversed'){const rc=newCardData();rc.front=back;rc.fronts=[back];rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;rc.cakeUrl=cakeUrl;rc.cardName=cardName;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
       else toast('Card added!');
     }
@@ -1826,6 +1830,22 @@ function showCurrentCard(){
       }
       backFaceEl.appendChild(linkWrap);
     }
+  }
+
+  // Definition button
+  const oldDefBtn=backFaceEl.querySelector('.definition-wrap');if(oldDefBtn)oldDefBtn.remove();
+  if(card.definition){
+    const defWrap=document.createElement('div');defWrap.className='definition-wrap';defWrap.style.cssText='margin-top:10px;text-align:center;z-index:2;position:relative';
+    defWrap.onclick=function(ev){ev.stopPropagation();};
+    const defBtn=document.createElement('button');defBtn.className='yt-video-btn';defBtn.innerHTML='📝 Xem định nghĩa';
+    const defContent=document.createElement('div');defContent.style.cssText='display:none;margin-top:8px;padding:10px 14px;border-radius:var(--r-sm);background:var(--surface-2,rgba(255,255,255,0.08));color:var(--ink);font-size:14px;text-align:left;line-height:1.5;white-space:pre-wrap';
+    defContent.innerHTML=renderContent(card.definition);
+    defBtn.onclick=function(){
+      if(defContent.style.display==='none'){defContent.style.display='block';defBtn.innerHTML='📝 Ẩn định nghĩa';}
+      else{defContent.style.display='none';defBtn.innerHTML='📝 Xem định nghĩa';}
+    };
+    defWrap.appendChild(defBtn);defWrap.appendChild(defContent);
+    backFaceEl.appendChild(defWrap);
   }
 
   document.getElementById('cardTags').innerHTML=(card.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
