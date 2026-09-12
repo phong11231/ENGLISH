@@ -2085,6 +2085,16 @@ function flipCard(){
       document.getElementById('reviewActions').style.display='flex';
       return;
     }
+    // Already shown transcript — toggle back to voice question
+    window._dialogueShown=false;
+    const el2=document.getElementById('cardFront');
+    const dlgYtId2=extractYtId(card.youtubeUrl);
+    let ytBtn2=dlgYtId2?'<button class="yt-video-btn dialogue-yt-toggle" onclick="event.stopPropagation();toggleDialogueVideo()" style="margin-top:8px">🎬 Watch video</button>':'';
+    el2.innerHTML='<div class="voice-card"><button class="voice-play-btn dialogue-main-speaker" onclick="event.stopPropagation();replayDialogue()"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">🎧 Listen to the dialogue</div>'+ytBtn2+'</div><div class="front-counter">'+fronts.length+' / '+fronts.length+'</div>';
+    cleanupDialogueLayout();
+    document.getElementById('reviewActions').style.display='none';
+    const hint2=document.querySelector('.flashcard-hint');
+    if(hint2){hint2.style.display='';hint2.textContent='Tap to see transcript';}
     return;
   }
   if(fc.classList.contains('flipped')){
