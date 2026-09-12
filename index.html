@@ -245,7 +245,10 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .modal-body{padding:20px 24px 24px}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:var(--ink-soft)}
-.front-field-row{display:flex;gap:6px;margin-bottom:6px;align-items:flex-start}
+.front-field-row{display:flex;gap:6px;margin-bottom:6px;align-items:flex-start;flex-wrap:wrap}
+.front-speaker-wrap{width:100%;display:none}
+.front-field-row:not(:first-child) .front-speaker-wrap,#frontFieldsWrap:has(.front-field-row:nth-child(2)) .front-field-row:first-child .front-speaker-wrap{display:block}
+.front-speaker{width:120px;padding:6px 10px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--glass-border);color:var(--primary);font-size:12px;font-weight:600;font-family:inherit}
 .front-field-row .front-input{flex:1;padding:10px 14px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--glass-border);color:var(--ink);font-size:14px;resize:vertical;font-family:inherit}
 .front-field-row .front-remove-btn{width:32px;height:32px;border-radius:var(--r-sm);background:rgba(239,68,68,.15);border:none;color:#ef4444;font-size:16px;cursor:pointer;flex-shrink:0;margin-top:4px;transition:background .2s}
 .front-field-row .front-remove-btn:hover{background:rgba(239,68,68,.3)}
@@ -256,6 +259,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .dialogue-line{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--glass-border);cursor:pointer;transition:background .2s}
 .dialogue-line:hover{background:var(--surface)}
 .dialogue-line.alt{opacity:.85}
+.dialogue-speaker{font-size:11px;font-weight:700;color:var(--primary);white-space:nowrap;min-width:40px;text-align:center}
 .dialogue-speak-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;border:none;background:var(--primary);color:#fff;font-size:15px;cursor:pointer;transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center}
 .dialogue-speak-btn:hover{transform:scale(1.15);box-shadow:var(--glow-primary)}
 .dialogue-text{flex:1;font-size:14px;line-height:1.5}
@@ -1340,13 +1344,15 @@ function deleteDeck(id){
 }
 
 // ===== CARD MODAL =====
-function addFrontField(value){
+function addFrontField(value,speaker){
   const wrap=document.getElementById('frontFieldsWrap');
   const row=document.createElement('div');row.className='front-field-row';
-  row.innerHTML='<textarea class="front-input" placeholder="Next dialogue line..." rows="2">'+(value?esc(value):'')+'</textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove">✕</button>';
+  const txt=typeof value==='object'?(value.text||''):value||'';
+  const spk=typeof value==='object'?(value.speaker||''):speaker||'';
+  row.innerHTML='<div class="front-speaker-wrap"><input class="front-speaker" placeholder="Speaker" value="'+esc(spk)+'" maxlength="20"></div><textarea class="front-input" placeholder="Next dialogue line..." rows="2">'+esc(txt)+'</textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove">✕</button>';
   wrap.appendChild(row);
   updateFrontRemoveButtons();
-  if(!value)row.querySelector('.front-input').focus();
+  if(!txt)row.querySelector('.front-input').focus();
 }
 function removeFrontField(btn){
   btn.closest('.front-field-row').remove();
@@ -1362,15 +1368,23 @@ function updateFrontRemoveButtons(){
   if(backGroup)backGroup.style.display=rows.length>1?'none':'block';
 }
 function getFrontValues(){
-  return Array.from(document.querySelectorAll('#frontFieldsWrap .front-input')).map(t=>t.value.trim()).filter(Boolean);
+  const rows=document.querySelectorAll('#frontFieldsWrap .front-field-row');
+  return Array.from(rows).map(r=>{
+    const text=(r.querySelector('.front-input')?.value||'').trim();
+    const speaker=(r.querySelector('.front-speaker')?.value||'').trim();
+    if(!text)return null;
+    return speaker?{text,speaker}:text;
+  }).filter(Boolean);
 }
 function setFrontFields(fronts){
   const wrap=document.getElementById('frontFieldsWrap');
   wrap.innerHTML='';
   if(!fronts||fronts.length===0)fronts=[''];
   fronts.forEach((f,i)=>{
+    const txt=typeof f==='object'?(f.text||''):f;
+    const spk=typeof f==='object'?(f.speaker||''):'';
     const row=document.createElement('div');row.className='front-field-row';
-    row.innerHTML='<textarea class="front-input" placeholder="'+(i===0?'Enter question, vocabulary...':'Next dialogue line...')+'" rows="2">'+esc(f)+'</textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove">✕</button>';
+    row.innerHTML='<div class="front-speaker-wrap"><input class="front-speaker" placeholder="Speaker" value="'+esc(spk)+'" maxlength="20"></div><textarea class="front-input" placeholder="'+(i===0?'Enter question, vocabulary...':'Next dialogue line...')+'" rows="2">'+esc(txt)+'</textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove">✕</button>';
     wrap.appendChild(row);
   });
   updateFrontRemoveButtons();
@@ -1454,7 +1468,7 @@ function saveCard(){
     const fronts=getFrontValues();
     const back=document.getElementById('cardBackInput').value.trim();
     if(fronts.length===0||(fronts.length===1&&!back)){toast('Enter both front and back');return;}
-    const front=fronts[0];
+    const front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
       card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;toast('Updated!');
@@ -1729,6 +1743,7 @@ function showCurrentCard(){
     el.innerHTML='<div class="voice-card"><button class="voice-play-btn dialogue-main-speaker" onclick="event.stopPropagation();replayDialogue()"><span class="voice-icon">🔊</span><span class="voice-label">Playing...</span></button><div class="voice-hint">🎧 Listen to the dialogue</div>'+ytBtnHtml+'</div><div class="front-counter">1 / '+fronts.length+'</div>';
     document.getElementById('cardBack').innerHTML='';
     window._dialoguePlaying=true;
+    window._dialogueVoiceMap=assignDialogueVoices(fronts);
     function playDialogueLine(idx){
       if(idx>=fronts.length){
         window._dialoguePlaying=false;
@@ -1742,7 +1757,10 @@ function showCurrentCard(){
       }
       window._cardFrontIdx=idx;
       el.querySelector('.front-counter').textContent=(idx+1)+' / '+fronts.length;
-      speakText(fronts[idx]);
+      const lineText=getDialogueText(fronts[idx]);
+      const lineSpeaker=getDialogueSpeaker(fronts[idx]);
+      const lineVoice=lineSpeaker&&window._dialogueVoiceMap[lineSpeaker];
+      if(lineVoice){speakTextAs(lineText,lineVoice);}else{speakText(lineText);}
       // Wait for audio to end then play next with delay
       function waitAndNext(){
         if(currentAudio&&!currentAudio.ended&&!currentAudio.paused){
@@ -1938,6 +1956,45 @@ function speakText(text){
   speakFallback(text);
 }
 
+function speakTextAs(text,forceVoiceId){
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+  const btn=document.querySelector('.voice-play-btn');
+  if(btn)btn.classList.add('speaking');
+  const done=()=>{if(btn)btn.classList.remove('speaking');};
+  let provider=db.settings.voiceProvider||'edge';
+  if(!['edge','google-translate','browser'].includes(provider))provider='edge';
+  if(provider==='browser'){speakFallback(text);return;}
+  if(provider==='google-translate'){
+    try{const audio=googleTranslateTTS(text,forceVoiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};audio.play().catch(()=>{done();speakFallback(text);});}catch(e){done();speakFallback(text);}
+    return;
+  }
+  try{const audio=edgeTTS(text,forceVoiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};audio.play().catch(()=>{done();speakFallback(text);});}catch(e){done();speakFallback(text);}
+}
+
+function assignDialogueVoices(fronts){
+  const map={};
+  const voices=(edgeVoicesCache&&edgeVoicesCache.length>1)?edgeVoicesCache.slice():[];
+  const used=[];
+  const defaultVoice=db.settings.voiceId||'en-US-JennyNeural';
+  fronts.forEach(f=>{
+    const spk=typeof f==='object'?f.speaker:'';
+    if(!spk||map[spk])return;
+    const available=voices.filter(v=>used.indexOf(v.id)===-1);
+    if(available.length>0){
+      const pick=available[Math.floor(Math.random()*available.length)];
+      map[spk]=pick.id;
+      used.push(pick.id);
+    } else {
+      map[spk]=defaultVoice;
+    }
+  });
+  return map;
+}
+
+function getDialogueText(f){return typeof f==='object'?f.text:f;}
+function getDialogueSpeaker(f){return typeof f==='object'?(f.speaker||''):'';}
+
 function testVoice(){
   const text=document.getElementById('voiceTestInput').value.trim();
   if(!text){toast('Enter a sentence to preview');return;}
@@ -2024,7 +2081,8 @@ function replayDialogue(){
       return;
     }
     el.querySelector('.front-counter').textContent=(idx+1)+' / '+fronts.length;
-    speakText(fronts[idx]);
+    const lt=getDialogueText(fronts[idx]),ls=getDialogueSpeaker(fronts[idx]),lv=ls&&window._dialogueVoiceMap?window._dialogueVoiceMap[ls]:null;
+    if(lv){speakTextAs(lt,lv);}else{speakText(lt);}
     function waitNext(){
       if(currentAudio&&!currentAudio.ended&&!currentAudio.paused){
         currentAudio.onended=function(){window._dialogueTimer=setTimeout(()=>playLine(idx+1),800);};
@@ -2054,9 +2112,15 @@ function flipCard(){
       const card=reviewQueue[reviewIndex];
       const ytId=extractYtId(card.youtubeUrl);
       let transcriptHtml='<div class="dialogue-list front-transition">';
-      fronts.forEach(function(t,i){
-        const safe=esc(t).replace(/'/g,"\\'").replace(/\n/g,' ');
-        transcriptHtml+='<div class="dialogue-line'+(i%2===1?' alt':'')+'" onclick="event.stopPropagation();toggleDialogueText(this)"><button class="dialogue-speak-btn" onclick="event.stopPropagation();speakText(\''+safe+'\')" title="Play">🔊</button><div class="dialogue-text hidden-text">'+renderContent(t)+'</div><button class="dialogue-eye-btn" onclick="event.stopPropagation();toggleDialogueText(this.closest(\'.dialogue-line\'))" title="Show/Hide">👁</button></div>';
+      const vMap=window._dialogueVoiceMap||{};
+      fronts.forEach(function(f,i){
+        const txt=getDialogueText(f);
+        const spk=getDialogueSpeaker(f);
+        const safe=esc(txt).replace(/'/g,"\\'").replace(/\n/g,' ');
+        const vid=spk&&vMap[spk]?vMap[spk]:'';
+        const speakFn=vid?'speakTextAs(\''+safe+'\',\''+vid+'\')':'speakText(\''+safe+'\')';
+        const spkLabel=spk?'<span class="dialogue-speaker">'+esc(spk)+'</span>':'';
+        transcriptHtml+='<div class="dialogue-line'+(i%2===1?' alt':'')+'" onclick="event.stopPropagation();toggleDialogueText(this)"><button class="dialogue-speak-btn" onclick="event.stopPropagation();'+speakFn+'" title="Play">🔊</button>'+spkLabel+'<div class="dialogue-text hidden-text">'+renderContent(txt)+'</div><button class="dialogue-eye-btn" onclick="event.stopPropagation();toggleDialogueText(this.closest(\'.dialogue-line\'))" title="Show/Hide">👁</button></div>';
       });
       transcriptHtml+='<div style="display:flex;gap:8px;margin-top:6px;align-self:center;flex-wrap:wrap;justify-content:center">';
       transcriptHtml+='<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toggleAllDialogueText()">Show / Hide all</button>';
