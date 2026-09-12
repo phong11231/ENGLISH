@@ -275,17 +275,18 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .flashcard.dialogue-mode:not(.flipped) .flashcard-face.back{display:none}
 .flashcard.dialogue-mode.flipped .flashcard-face.front{display:none}
 .flashcard.dialogue-mode.flipped .flashcard-face.back{position:relative;inset:auto;height:auto;min-height:0;padding:20px;backface-visibility:visible;transform:none}
-.dialogue-outer-layout{display:flex;gap:24px;align-items:flex-start;width:100%;max-width:100%}
-.dialogue-outer-layout .dialogue-yt-outer{flex:1;min-width:0}
+.dialogue-outer-layout{display:flex;gap:24px;align-items:flex-start;width:100%;max-width:100%;height:calc(100vh - 130px)}
+.dialogue-outer-layout .dialogue-yt-outer{flex:1;min-width:0;position:sticky;top:0;align-self:flex-start}
 .dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap{aspect-ratio:16/9;border-radius:var(--r-xl);overflow:hidden;background:#000;box-shadow:var(--shadow-xl)}
-.dialogue-outer-layout .flashcard.dialogue-mode{flex:0 0 auto;width:400px;max-width:400px}
+.dialogue-outer-layout .flashcard.dialogue-mode{flex:0 0 auto;width:400px;max-width:400px;max-height:calc(100vh - 130px);overflow-y:auto}
 .main:has(.dialogue-outer-layout){max-width:100%;padding-left:30px;padding-right:30px}
-.review-container:has(.dialogue-outer-layout){overflow:auto;height:auto;min-height:calc(100vh - 68px - 44px)}
+.review-container:has(.dialogue-outer-layout){overflow:hidden;height:auto;min-height:calc(100vh - 68px - 44px)}
 @media(max-width:800px){
-  .dialogue-outer-layout{flex-direction:column;align-items:center}
-  .dialogue-outer-layout .dialogue-yt-outer{width:100%}
-  .dialogue-outer-layout .flashcard.dialogue-mode{width:100%;max-width:100%}
+  .dialogue-outer-layout{flex-direction:column;align-items:center;height:auto}
+  .dialogue-outer-layout .dialogue-yt-outer{width:100%;position:static}
+  .dialogue-outer-layout .flashcard.dialogue-mode{width:100%;max-width:100%;max-height:none;overflow-y:visible}
   .main:has(.dialogue-outer-layout){padding-left:16px;padding-right:16px}
+  .review-container:has(.dialogue-outer-layout){overflow:auto}
 }
 .form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:15px;transition:all .25s ease;outline:none;backdrop-filter:blur(8px)}
 .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg),var(--glow-primary)}
