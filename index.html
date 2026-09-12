@@ -1743,7 +1743,7 @@ function showCurrentCard(){
     el.innerHTML='<div class="voice-card"><button class="voice-play-btn dialogue-main-speaker" onclick="event.stopPropagation();replayDialogue()"><span class="voice-icon">🔊</span><span class="voice-label">Playing...</span></button><div class="voice-hint">🎧 Listen to the dialogue</div>'+ytBtnHtml+'</div><div class="front-counter">1 / '+fronts.length+'</div>';
     document.getElementById('cardBack').innerHTML='';
     window._dialoguePlaying=true;
-    window._dialogueVoiceMap=assignDialogueVoices(fronts);
+    window._dialogueVoiceMap={};
     function playDialogueLine(idx){
       if(idx>=fronts.length){
         window._dialoguePlaying=false;
@@ -1773,7 +1773,10 @@ function showCurrentCard(){
       }
       setTimeout(waitAndNext,200);
     }
-    setTimeout(()=>playDialogueLine(0),300);
+    assignDialogueVoices(fronts).then(m=>{
+      window._dialogueVoiceMap=m;
+      setTimeout(()=>playDialogueLine(0),300);
+    });
   } else if(isVoice){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
     const modeHint=card.displayMode==='voice-repeat'?'🔁 Listen and repeat the sentence':card.displayMode==='voice-translate'?'🌐 Listen and translate the sentence':'🎧 Listen and answer the question';
@@ -1972,7 +1975,8 @@ function speakTextAs(text,forceVoiceId){
   try{const audio=edgeTTS(text,forceVoiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};audio.play().catch(()=>{done();speakFallback(text);});}catch(e){done();speakFallback(text);}
 }
 
-function assignDialogueVoices(fronts){
+async function assignDialogueVoices(fronts){
+  if(!edgeVoicesCache)await loadEdgeVoices();
   const map={};
   const voices=(edgeVoicesCache&&edgeVoicesCache.length>1)?edgeVoicesCache.slice():[];
   const used=[];
