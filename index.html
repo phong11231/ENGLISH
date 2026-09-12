@@ -2207,7 +2207,7 @@ function flipCard(){
       wrapper.appendChild(fc);
       const ft=(card.front||'').replace(/<[^>]*>/g,'').trim();
       let extraBtns='<div class="card-link-btns-outer" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center" onclick="event.stopPropagation()">';
-      extraBtns+='<button class="yt-video-btn" onclick="event.stopPropagation();var w=document.querySelector(\'.dialogue-yt-wrap\');w.innerHTML=\'\';w.appendChild(buildYtEmbed(\''+ytId+'\','+(card.ytStart||'null')+','+(card.ytEnd||'null')+'))">🔄 Replay</button>';
+      extraBtns+='<button class="yt-video-btn" onclick="event.stopPropagation();var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';w.appendChild(buildYtEmbed(\''+ytId+'\','+(card.ytStart!=null?card.ytStart:'null')+','+(card.ytEnd!=null?card.ytEnd:'null')+'));}">🔄 Replay</button>';
       if(ft)extraBtns+='<button class="yt-video-btn" onclick="window.open(\'https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(ft.toLowerCase())+'\',\'_blank\')">📖 Dictionary</button>';
       if(card.cakeUrl)extraBtns+='<button class="yt-video-btn" onclick="window.open(\''+card.cakeUrl+'\',\'_blank\')">🍰 Cake</button>';
       extraBtns+='</div>';
