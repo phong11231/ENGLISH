@@ -1764,18 +1764,18 @@ function showCurrentCard(){
       // Wait for audio to end then play next with delay
       function waitAndNext(){
         if(currentAudio&&!currentAudio.ended&&!currentAudio.paused){
-          currentAudio.onended=function(){window._dialogueTimer=setTimeout(()=>playDialogueLine(idx+1),100);};
+          currentAudio.onended=function(){window._dialogueTimer=setTimeout(()=>playDialogueLine(idx+1),20);};
         } else if('speechSynthesis' in window&&speechSynthesis.speaking){
-          const check=setInterval(()=>{if(!speechSynthesis.speaking){clearInterval(check);window._dialogueTimer=setTimeout(()=>playDialogueLine(idx+1),100);}},100);
+          const check=setInterval(()=>{if(!speechSynthesis.speaking){clearInterval(check);window._dialogueTimer=setTimeout(()=>playDialogueLine(idx+1),20);}},50);
         } else {
-          window._dialogueTimer=setTimeout(()=>playDialogueLine(idx+1),400);
+          window._dialogueTimer=setTimeout(()=>playDialogueLine(idx+1),100);
         }
       }
-      setTimeout(waitAndNext,50);
+      setTimeout(waitAndNext,20);
     }
     assignDialogueVoices(fronts).then(m=>{
       window._dialogueVoiceMap=m;
-      setTimeout(()=>playDialogueLine(0),300);
+      setTimeout(()=>playDialogueLine(0),100);
     });
   } else if(isVoice){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
@@ -2097,14 +2097,14 @@ function replayDialogue(){
     if(lv){speakTextAs(lt,lv);}else{speakText(lt);}
     function waitNext(){
       if(currentAudio&&!currentAudio.ended&&!currentAudio.paused){
-        currentAudio.onended=function(){window._dialogueTimer=setTimeout(()=>playLine(idx+1),100);};
+        currentAudio.onended=function(){window._dialogueTimer=setTimeout(()=>playLine(idx+1),20);};
       } else if('speechSynthesis' in window&&speechSynthesis.speaking){
-        const chk=setInterval(()=>{if(!speechSynthesis.speaking){clearInterval(chk);window._dialogueTimer=setTimeout(()=>playLine(idx+1),100);}},100);
+        const chk=setInterval(()=>{if(!speechSynthesis.speaking){clearInterval(chk);window._dialogueTimer=setTimeout(()=>playLine(idx+1),20);}},50);
       } else {
-        window._dialogueTimer=setTimeout(()=>playLine(idx+1),400);
+        window._dialogueTimer=setTimeout(()=>playLine(idx+1),100);
       }
     }
-    setTimeout(waitNext,50);
+    setTimeout(waitNext,20);
   }
   playLine(0);
 }
