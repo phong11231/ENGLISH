@@ -252,6 +252,14 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .front-transition{animation:frontSlide .4s cubic-bezier(.4,0,.2,1)}
 @keyframes frontSlide{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .front-counter{position:absolute;top:12px;right:16px;font-size:12px;color:var(--ink-dim);background:var(--surface-2);padding:2px 8px;border-radius:10px}
+.dialogue-list{display:flex;flex-direction:column;gap:8px;width:100%;text-align:left}
+.dialogue-line{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--glass-border)}
+.dialogue-line.alt{background:var(--surface);opacity:.85}
+.dialogue-speak-btn{flex-shrink:0;width:36px;height:36px;border-radius:50%;border:none;background:var(--primary);color:#fff;font-size:16px;cursor:pointer;transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center}
+.dialogue-speak-btn:hover{transform:scale(1.15);box-shadow:var(--glow-primary)}
+.dialogue-text{flex:1;font-size:15px;line-height:1.5}
+.dialogue-answer-btn{margin-top:16px;width:100%;padding:12px;font-size:15px;border-radius:var(--r-md)}
+.dialogue-yt-wrap{margin-top:12px;border-radius:var(--r-md);overflow:hidden;aspect-ratio:16/9;background:#000}
 .form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:15px;transition:all .25s ease;outline:none;backdrop-filter:blur(8px)}
 .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg),var(--glow-primary)}
 .form-group textarea{resize:vertical;min-height:80px}
@@ -1666,36 +1674,66 @@ function showCurrentCard(){
   }
   const card=reviewQueue[reviewIndex];
   const fronts=card.fronts&&card.fronts.length>1?card.fronts:[card.front];
+  const isDialogue=fronts.length>1;
   window._cardFronts=fronts;
   window._cardFrontIdx=0;
+  window._dialogueShown=false;
+  window._dialoguePlaying=false;
+  if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
   document.getElementById('flashcard').style.display='block';
   document.getElementById('reviewDone').style.display='none';
   document.getElementById('flashcard').classList.remove('flipped');
   document.getElementById('reviewActions').style.display='none';
   document.getElementById('undoBtn').style.display=undoStack.length>0?'block':'none';
 
-  // Render content — voice mode hides text and plays TTS
   const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
-  function renderFrontContent(text){
+
+  if(isDialogue){
+    // Dialogue mode: auto-play all fronts sequentially, voice-only (hidden text)
     const el=document.getElementById('cardFront');
-    if(fronts.length>1){
-      el.innerHTML=(isVoice?'<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+esc(text).replace(/'/g,"\\'").replace(/\n/g,' ')+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button></div>':'')+'<div class="front-transition">'+renderContent(text)+'</div><div class="front-counter">'+(window._cardFrontIdx+1)+' / '+fronts.length+'</div>';
-    } else if(isVoice){
-      const safeText=esc(text).replace(/'/g,"\\'").replace(/\n/g,' ');
-      const modeHint=card.displayMode==='voice-repeat'?'🔁 Listen and repeat the sentence':card.displayMode==='voice-translate'?'🌐 Listen and translate the sentence':'🎧 Listen and answer the question';
-      el.innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">'+modeHint+'</div></div>';
-    } else {
-      el.innerHTML=renderContent(text);
+    el.innerHTML='<div class="voice-card"><button class="voice-play-btn dialogue-main-speaker" onclick="event.stopPropagation();replayDialogue()"><span class="voice-icon">🔊</span><span class="voice-label">Playing...</span></button><div class="voice-hint">🎧 Listen to the dialogue</div></div><div class="front-counter">1 / '+fronts.length+'</div>';
+    document.getElementById('cardBack').innerHTML='';
+    window._dialoguePlaying=true;
+    function playDialogueLine(idx){
+      if(idx>=fronts.length){
+        window._dialoguePlaying=false;
+        const btn=el.querySelector('.dialogue-main-speaker .voice-label');
+        if(btn)btn.textContent='Replay';
+        el.querySelector('.front-counter').textContent=fronts.length+' / '+fronts.length;
+        const hint=document.querySelector('.flashcard-hint');
+        if(hint){hint.style.display='';hint.textContent='Tap to see transcript';}
+        window._cardFrontIdx=fronts.length;
+        return;
+      }
+      window._cardFrontIdx=idx;
+      el.querySelector('.front-counter').textContent=(idx+1)+' / '+fronts.length;
+      speakText(fronts[idx]);
+      // Wait for audio to end then play next with delay
+      function waitAndNext(){
+        if(currentAudio&&!currentAudio.ended&&!currentAudio.paused){
+          currentAudio.onended=function(){window._dialogueTimer=setTimeout(()=>playDialogueLine(idx+1),800);};
+        } else if('speechSynthesis' in window&&speechSynthesis.speaking){
+          const check=setInterval(()=>{if(!speechSynthesis.speaking){clearInterval(check);window._dialogueTimer=setTimeout(()=>playDialogueLine(idx+1),800);}},100);
+        } else {
+          window._dialogueTimer=setTimeout(()=>playDialogueLine(idx+1),2000);
+        }
+      }
+      setTimeout(waitAndNext,200);
     }
-  }
-  renderFrontContent(fronts[0]);
-  document.getElementById('cardBack').innerHTML=renderContent(card.back);
-  if(isVoice){
+    setTimeout(()=>playDialogueLine(0),300);
+  } else if(isVoice){
+    const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
+    const modeHint=card.displayMode==='voice-repeat'?'🔁 Listen and repeat the sentence':card.displayMode==='voice-translate'?'🌐 Listen and translate the sentence':'🎧 Listen and answer the question';
+    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">'+modeHint+'</div></div>';
+    document.getElementById('cardBack').innerHTML=renderContent(card.back);
     const backFace=document.querySelector('.flashcard-face.back');
     const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
     const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Replay';
     miniBtn.onclick=function(e){e.stopPropagation();speakText(card.front);};backFace.appendChild(miniBtn);
-    setTimeout(()=>speakText(fronts[0]),300);
+    setTimeout(()=>speakText(card.front),300);
+  } else {
+    document.getElementById('cardFront').innerHTML=renderContent(card.front);
+    document.getElementById('cardBack').innerHTML=renderContent(card.back);
   }
 
   // YouTube clip button on back
@@ -1774,7 +1812,7 @@ function showCurrentCard(){
     setTimeout(()=>typeInput.focus(),100);
   } else {
     document.getElementById('flashcard').onclick=flipCard;
-    if(hint){hint.style.display='';hint.textContent=fronts.length>1?'Tap to continue dialogue · Space':'Tap to see answer · Space';}
+    if(hint){hint.style.display='';hint.textContent=isDialogue?'Listening... tap to skip':'Tap to see answer · Space';}
     typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
   }
   updateReviewProgress();
@@ -1957,32 +1995,83 @@ function renderContent(text){
   return html;
 }
 
+function replayDialogue(){
+  const fronts=window._cardFronts||[];
+  if(fronts.length<2)return;
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+  if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
+  window._dialoguePlaying=true;
+  const el=document.getElementById('cardFront');
+  const btn=el.querySelector('.dialogue-main-speaker .voice-label');
+  if(btn)btn.textContent='Playing...';
+  function playLine(idx){
+    if(idx>=fronts.length){
+      window._dialoguePlaying=false;
+      if(btn)btn.textContent='Replay';
+      return;
+    }
+    el.querySelector('.front-counter').textContent=(idx+1)+' / '+fronts.length;
+    speakText(fronts[idx]);
+    function waitNext(){
+      if(currentAudio&&!currentAudio.ended&&!currentAudio.paused){
+        currentAudio.onended=function(){window._dialogueTimer=setTimeout(()=>playLine(idx+1),800);};
+      } else if('speechSynthesis' in window&&speechSynthesis.speaking){
+        const chk=setInterval(()=>{if(!speechSynthesis.speaking){clearInterval(chk);window._dialogueTimer=setTimeout(()=>playLine(idx+1),800);}},100);
+      } else {
+        window._dialogueTimer=setTimeout(()=>playLine(idx+1),2000);
+      }
+    }
+    setTimeout(waitNext,200);
+  }
+  playLine(0);
+}
 function flipCard(){
   if(reviewMode==='type')return;
   if(currentAudio){currentAudio.pause();currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
+  if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
   const fc=document.getElementById('flashcard');
-  // Multi-front: advance to next front before flipping
   const fronts=window._cardFronts||[];
+  // Dialogue mode
   if(fronts.length>1&&!fc.classList.contains('flipped')){
-    const idx=window._cardFrontIdx||0;
-    if(idx<fronts.length-1){
-      window._cardFrontIdx=idx+1;
+    window._dialoguePlaying=false;
+    if(!window._dialogueShown){
+      window._dialogueShown=true;
       const el=document.getElementById('cardFront');
       const card=reviewQueue[reviewIndex];
-      const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
-      const text=fronts[window._cardFrontIdx];
-      if(isVoice){
-        el.innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+esc(text).replace(/'/g,"\\'").replace(/\n/g,' ')+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button></div><div class="front-transition">'+renderContent(text)+'</div><div class="front-counter">'+(window._cardFrontIdx+1)+' / '+fronts.length+'</div>';
-        speakText(text);
-      } else {
-        el.innerHTML='<div class="front-transition">'+renderContent(text)+'</div><div class="front-counter">'+(window._cardFrontIdx+1)+' / '+fronts.length+'</div>';
+      const ytId=extractYtId(card.youtubeUrl);
+      let html='<div class="dialogue-list front-transition">';
+      fronts.forEach(function(t,i){
+        const safe=esc(t).replace(/'/g,"\\'").replace(/\n/g,' ');
+        html+='<div class="dialogue-line'+(i%2===1?' alt':'')+'"><button class="dialogue-speak-btn" onclick="event.stopPropagation();speakText(\''+safe+'\')" title="Play">🔊</button><div class="dialogue-text">'+renderContent(t)+'</div></div>';
+      });
+      html+='</div>';
+      if(ytId){
+        html+='<div class="dialogue-yt-wrap" onclick="event.stopPropagation()"><div id="dialogueYtEmbed"></div></div>';
       }
+      html+='<button class="btn btn-primary dialogue-answer-btn" onclick="event.stopPropagation();showDialogueAnswer()">Xem đáp án</button>';
+      el.innerHTML=html;
+      if(ytId){
+        document.getElementById('dialogueYtEmbed').appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
+      }
+      const hint=document.querySelector('.flashcard-hint');
+      if(hint)hint.style.display='none';
       return;
     }
+    return;
   }
   if(fc.classList.contains('flipped')){fc.classList.remove('flipped');document.getElementById('reviewActions').style.display='none';}
   else{fc.classList.add('flipped');document.getElementById('reviewActions').style.display='flex';}
+}
+function showDialogueAnswer(){
+  const fc=document.getElementById('flashcard');
+  const card=reviewQueue[reviewIndex];
+  if(card.back){
+    document.getElementById('cardBack').innerHTML=renderContent(card.back);
+    fc.classList.add('flipped');
+  }
+  document.getElementById('reviewActions').style.display='flex';
 }
 
 function normalize(s){return s.trim().toLowerCase().replace(/\s+/g,' ');}
