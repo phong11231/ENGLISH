@@ -245,6 +245,13 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .modal-body{padding:20px 24px 24px}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:var(--ink-soft)}
+.front-field-row{display:flex;gap:6px;margin-bottom:6px;align-items:flex-start}
+.front-field-row .front-input{flex:1;padding:10px 14px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--glass-border);color:var(--ink);font-size:14px;resize:vertical;font-family:inherit}
+.front-field-row .front-remove-btn{width:32px;height:32px;border-radius:var(--r-sm);background:rgba(239,68,68,.15);border:none;color:#ef4444;font-size:16px;cursor:pointer;flex-shrink:0;margin-top:4px;transition:background .2s}
+.front-field-row .front-remove-btn:hover{background:rgba(239,68,68,.3)}
+.front-transition{animation:frontSlide .4s cubic-bezier(.4,0,.2,1)}
+@keyframes frontSlide{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.front-counter{position:absolute;top:12px;right:16px;font-size:12px;color:var(--ink-dim);background:var(--surface-2);padding:2px 8px;border-radius:10px}
 .form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:15px;transition:all .25s ease;outline:none;backdrop-filter:blur(8px)}
 .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg),var(--glow-primary)}
 .form-group textarea{resize:vertical;min-height:80px}
@@ -768,7 +775,12 @@ input,textarea,select{font-family:inherit;font-size:inherit}
         </select>
       </div>
       <div id="basicFields">
-        <div class="form-group"><label>Front (question)</label><textarea id="cardFrontInput" placeholder="Enter question, vocabulary... (images: ![](url))" rows="3"></textarea></div>
+        <div class="form-group"><label>Front (question) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— multiple = dialogue mode</span></label>
+          <div id="frontFieldsWrap">
+            <div class="front-field-row"><textarea class="front-input" placeholder="Enter question, vocabulary..." rows="2"></textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove" style="display:none">✕</button></div>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addFrontField()" style="margin-top:6px">+ Add dialogue line</button>
+        </div>
         <div class="form-group"><label>Back (answer)</label><textarea id="cardBackInput" placeholder="Enter answer, meaning..." rows="3"></textarea></div>
       </div>
       <div id="clozeFields" style="display:none">
@@ -1061,7 +1073,7 @@ function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
 // ===== SM-2 =====
-function newCardData(){return{id:crypto.randomUUID(),front:'',back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+function newCardData(){return{id:crypto.randomUUID(),front:'',fronts:[],back:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
 
 function sm2(card,quality){
   const now=Date.now(),DAY=86400000; card.lastReview=now;
@@ -1297,6 +1309,40 @@ function deleteDeck(id){
 }
 
 // ===== CARD MODAL =====
+function addFrontField(value){
+  const wrap=document.getElementById('frontFieldsWrap');
+  const row=document.createElement('div');row.className='front-field-row';
+  row.innerHTML='<textarea class="front-input" placeholder="Next dialogue line..." rows="2">'+(value?esc(value):'')+'</textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove">✕</button>';
+  wrap.appendChild(row);
+  updateFrontRemoveButtons();
+  if(!value)row.querySelector('.front-input').focus();
+}
+function removeFrontField(btn){
+  btn.closest('.front-field-row').remove();
+  updateFrontRemoveButtons();
+}
+function updateFrontRemoveButtons(){
+  const rows=document.querySelectorAll('#frontFieldsWrap .front-field-row');
+  rows.forEach(r=>{
+    const btn=r.querySelector('.front-remove-btn');
+    if(btn)btn.style.display=rows.length>1?'block':'none';
+  });
+}
+function getFrontValues(){
+  return Array.from(document.querySelectorAll('#frontFieldsWrap .front-input')).map(t=>t.value.trim()).filter(Boolean);
+}
+function setFrontFields(fronts){
+  const wrap=document.getElementById('frontFieldsWrap');
+  wrap.innerHTML='';
+  if(!fronts||fronts.length===0)fronts=[''];
+  fronts.forEach((f,i)=>{
+    const row=document.createElement('div');row.className='front-field-row';
+    row.innerHTML='<textarea class="front-input" placeholder="'+(i===0?'Enter question, vocabulary...':'Next dialogue line...')+'" rows="2">'+esc(f)+'</textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove">✕</button>';
+    wrap.appendChild(row);
+  });
+  updateFrontRemoveButtons();
+}
+
 function onCardTypeChange(){
   const t=document.getElementById('cardTypeSelect').value;
   document.getElementById('basicFields').style.display=t==='cloze'?'none':'block';
@@ -1316,7 +1362,8 @@ function openCardModal(cardId){
       document.getElementById('clozeInput').value=card.clozeText||card.front;
     } else {
       document.getElementById('cardTypeSelect').value=card.type||'basic';
-      document.getElementById('cardFrontInput').value=card.front;
+      const fronts=card.fronts&&card.fronts.length>0?card.fronts:[card.front||''];
+      setFrontFields(fronts);
       document.getElementById('cardBackInput').value=card.back;
     }
     document.getElementById('cardTagsInput').value=(card.tags||[]).join(', ');
@@ -1329,7 +1376,7 @@ function openCardModal(cardId){
   } else {
     document.getElementById('cardModalTitle').textContent='Add New Card';
     document.getElementById('saveCardBtn').textContent='Save card';
-    document.getElementById('cardFrontInput').value='';document.getElementById('cardBackInput').value='';
+    setFrontFields(['']);document.getElementById('cardBackInput').value='';
     document.getElementById('cardReviewMode').value='flip';
     document.getElementById('cardDisplayMode').value='voice';
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
@@ -1337,7 +1384,7 @@ function openCardModal(cardId){
     document.getElementById('cardCakeUrl').value='';
   }
   document.getElementById('cardModal').classList.add('active');
-  setTimeout(()=>(document.getElementById('cardTypeSelect').value==='cloze'?document.getElementById('clozeInput'):document.getElementById('cardFrontInput')).focus(),100);
+  setTimeout(()=>(document.getElementById('cardTypeSelect').value==='cloze'?document.getElementById('clozeInput'):document.querySelector('#frontFieldsWrap .front-input')).focus(),100);
 }
 function closeCardModal(){destroyYtPlayer();document.getElementById('ytPreviewWrap').style.display='none';document.getElementById('cardModal').classList.remove('active');}
 
@@ -1371,15 +1418,16 @@ function saveCard(){
       toast('Added '+nums.size+' cloze cards!');
     }
   } else {
-    const front=document.getElementById('cardFrontInput').value.trim();
+    const fronts=getFrontValues();
     const back=document.getElementById('cardBackInput').value.trim();
-    if(!front||!back){toast('Enter both front and back');return;}
+    if(fronts.length===0||!back){toast('Enter both front and back');return;}
+    const front=fronts[0];
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;toast('Updated!');
+      card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;toast('Updated!');
     } else {
-      const card=newCardData();card.front=front;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;deck.cards.push(card);
-      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;card.cakeUrl=cakeUrl;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
+      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;deck.cards.push(card);
+      if(type==='reversed'){const rc=newCardData();rc.front=back;rc.fronts=[back];rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;rc.cakeUrl=cakeUrl;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
       else toast('Card added!');
     }
   }
@@ -1617,6 +1665,9 @@ function showCurrentCard(){
     updateReviewProgress();return;
   }
   const card=reviewQueue[reviewIndex];
+  const fronts=card.fronts&&card.fronts.length>1?card.fronts:[card.front];
+  window._cardFronts=fronts;
+  window._cardFrontIdx=0;
   document.getElementById('flashcard').style.display='block';
   document.getElementById('reviewDone').style.display='none';
   document.getElementById('flashcard').classList.remove('flipped');
@@ -1625,19 +1676,26 @@ function showCurrentCard(){
 
   // Render content — voice mode hides text and plays TTS
   const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
+  function renderFrontContent(text){
+    const el=document.getElementById('cardFront');
+    if(fronts.length>1){
+      el.innerHTML=(isVoice?'<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+esc(text).replace(/'/g,"\\'").replace(/\n/g,' ')+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button></div>':'')+'<div class="front-transition">'+renderContent(text)+'</div><div class="front-counter">'+(window._cardFrontIdx+1)+' / '+fronts.length+'</div>';
+    } else if(isVoice){
+      const safeText=esc(text).replace(/'/g,"\\'").replace(/\n/g,' ');
+      const modeHint=card.displayMode==='voice-repeat'?'🔁 Listen and repeat the sentence':card.displayMode==='voice-translate'?'🌐 Listen and translate the sentence':'🎧 Listen and answer the question';
+      el.innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">'+modeHint+'</div></div>';
+    } else {
+      el.innerHTML=renderContent(text);
+    }
+  }
+  renderFrontContent(fronts[0]);
+  document.getElementById('cardBack').innerHTML=renderContent(card.back);
   if(isVoice){
-    const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
-    const modeHint=card.displayMode==='voice-repeat'?'🔁 Listen and repeat the sentence':card.displayMode==='voice-translate'?'🌐 Listen and translate the sentence':'🎧 Listen and answer the question';
-    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">'+modeHint+'</div></div>';
-    document.getElementById('cardBack').innerHTML=renderContent(card.back);
     const backFace=document.querySelector('.flashcard-face.back');
     const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
     const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Replay';
     miniBtn.onclick=function(e){e.stopPropagation();speakText(card.front);};backFace.appendChild(miniBtn);
-    setTimeout(()=>speakText(card.front),300);
-  } else {
-    document.getElementById('cardFront').innerHTML=renderContent(card.front);
-    document.getElementById('cardBack').innerHTML=renderContent(card.back);
+    setTimeout(()=>speakText(fronts[0]),300);
   }
 
   // YouTube clip button on back
@@ -1716,7 +1774,7 @@ function showCurrentCard(){
     setTimeout(()=>typeInput.focus(),100);
   } else {
     document.getElementById('flashcard').onclick=flipCard;
-    if(hint)hint.style.display='';
+    if(hint){hint.style.display='';hint.textContent=fronts.length>1?'Tap to continue dialogue · Space':'Tap to see answer · Space';}
     typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
   }
   updateReviewProgress();
@@ -1904,6 +1962,25 @@ function flipCard(){
   if(currentAudio){currentAudio.pause();currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   const fc=document.getElementById('flashcard');
+  // Multi-front: advance to next front before flipping
+  const fronts=window._cardFronts||[];
+  if(fronts.length>1&&!fc.classList.contains('flipped')){
+    const idx=window._cardFrontIdx||0;
+    if(idx<fronts.length-1){
+      window._cardFrontIdx=idx+1;
+      const el=document.getElementById('cardFront');
+      const card=reviewQueue[reviewIndex];
+      const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
+      const text=fronts[window._cardFrontIdx];
+      if(isVoice){
+        el.innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+esc(text).replace(/'/g,"\\'").replace(/\n/g,' ')+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button></div><div class="front-transition">'+renderContent(text)+'</div><div class="front-counter">'+(window._cardFrontIdx+1)+' / '+fronts.length+'</div>';
+        speakText(text);
+      } else {
+        el.innerHTML='<div class="front-transition">'+renderContent(text)+'</div><div class="front-counter">'+(window._cardFrontIdx+1)+' / '+fronts.length+'</div>';
+      }
+      return;
+    }
+  }
   if(fc.classList.contains('flipped')){fc.classList.remove('flipped');document.getElementById('reviewActions').style.display='none';}
   else{fc.classList.add('flipped');document.getElementById('reviewActions').style.display='flex';}
 }
