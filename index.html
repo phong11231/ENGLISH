@@ -1841,12 +1841,12 @@ function showCurrentCard(){
   if(card.definition){
     const defWrap=document.createElement('div');defWrap.className='definition-wrap';defWrap.style.cssText='margin-top:10px;text-align:center;z-index:2;position:relative';
     defWrap.onclick=function(ev){ev.stopPropagation();};
-    const defBtn=document.createElement('button');defBtn.className='yt-video-btn';defBtn.innerHTML='📝 Xem định nghĩa';
+    const defBtn=document.createElement('button');defBtn.className='yt-video-btn';defBtn.innerHTML='📝 Definition';
     const defContent=document.createElement('div');defContent.style.cssText='display:none;margin-top:8px;padding:10px 14px;border-radius:var(--r-sm);background:var(--surface-2,rgba(255,255,255,0.08));color:var(--ink);font-size:14px;text-align:left;line-height:1.5;white-space:pre-wrap';
     defContent.innerHTML=renderContent(card.definition);
     defBtn.onclick=function(){
-      if(defContent.style.display==='none'){defContent.style.display='block';defBtn.innerHTML='📝 Ẩn định nghĩa';}
-      else{defContent.style.display='none';defBtn.innerHTML='📝 Xem định nghĩa';}
+      if(defContent.style.display==='none'){defContent.style.display='block';defBtn.innerHTML='📝 Hide';}
+      else{defContent.style.display='none';defBtn.innerHTML='📝 Definition';}
     };
     defWrap.appendChild(defBtn);defWrap.appendChild(defContent);
     backFaceEl.appendChild(defWrap);
