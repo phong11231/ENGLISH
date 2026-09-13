@@ -1741,10 +1741,10 @@ function playSleepVideo(){
     video.style.cssText='width:100%;height:100%;background:#000';
     video.setAttribute('playsinline','');
     video.autoplay=true;
-    video.onloadedmetadata=function(){
-      if(start!=null)video.currentTime=start;
-      video.playbackRate=sleepSpeed;
-    };
+    var seeked=false;
+    function seekAndSpeed(){if(!seeked&&video.readyState>=1){seeked=true;if(start!=null)video.currentTime=start;video.playbackRate=sleepSpeed;}}
+    video.onloadedmetadata=seekAndSpeed;
+    video.oncanplay=seekAndSpeed;
     video.ontimeupdate=function(){
       if(end!=null&&video.currentTime>=end){
         video.pause();
@@ -1866,7 +1866,12 @@ function buildDriveEmbed(driveId,start,end){
   video.style.cssText='width:100%;height:100%;display:block;border:none';
   video.setAttribute('playsinline','');
   video.autoplay=true;video.controls=true;
-  video.onloadedmetadata=function(){if(start!=null)video.currentTime=start;};
+  if(start!=null){
+    var seeked=false;
+    function seekToStart(){if(!seeked&&video.readyState>=1){seeked=true;video.currentTime=start;}}
+    video.onloadedmetadata=seekToStart;
+    video.oncanplay=seekToStart;
+  }
   if(end!=null)video.ontimeupdate=function(){if(video.currentTime>=end){video.pause();video.ontimeupdate=null;}};
   video.onerror=function(){
     wrap.innerHTML='';
