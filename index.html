@@ -363,6 +363,25 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 @keyframes voiceBtnGlow{0%,100%{box-shadow:0 4px 16px rgba(139,92,246,.5)}50%{box-shadow:0 4px 24px rgba(139,92,246,.8),0 0 40px rgba(6,182,212,.3)}}
 .voice-play-btn.speaking{animation:speakPulse 1s ease-in-out infinite}
 @keyframes speakPulse{0%,100%{box-shadow:0 4px 20px rgba(139,92,246,.4)}50%{box-shadow:0 4px 30px rgba(139,92,246,.7),0 0 60px rgba(139,92,246,.2)}}
+.quiz-options{display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;margin:12px auto 0}
+.quiz-option{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r-sm);background:rgba(139,92,246,.08);border:2px solid rgba(139,92,246,.2);cursor:pointer;transition:all .25s;position:relative}
+.quiz-option:hover{border-color:rgba(139,92,246,.5);background:rgba(139,92,246,.14)}
+.quiz-option-speaker{background:linear-gradient(135deg,var(--primary),var(--accent));border:none;border-radius:50%;width:42px;height:42px;min-width:42px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all .2s;box-shadow:0 2px 10px rgba(139,92,246,.3)}
+.quiz-option-speaker:hover{transform:scale(1.1)}
+.quiz-option-label{font-size:15px;font-weight:700;color:var(--accent);min-width:20px}
+.quiz-option-text{flex:1;font-size:14px;color:var(--ink);min-height:20px;cursor:pointer;user-select:none}
+.quiz-option-text.hidden-answer{color:transparent;background:rgba(139,92,246,.12);border-radius:4px;min-height:20px}
+.quiz-option-text.hidden-answer::after{content:'tap to reveal';color:var(--ink-dim);font-size:11px;font-style:italic}
+.quiz-option-tick{background:none;border:2px solid var(--ink-dim);border-radius:50%;width:28px;height:28px;min-width:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;color:transparent}
+.quiz-option-tick:hover{border-color:var(--accent)}
+.quiz-option-tick.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+.quiz-option.correct{border-color:#22c55e;background:rgba(34,197,94,.12)}
+.quiz-option.correct .quiz-option-tick{background:#22c55e;border-color:#22c55e;color:#fff}
+.quiz-option.wrong{border-color:#ef4444;background:rgba(239,68,68,.12)}
+.quiz-option.wrong .quiz-option-tick{background:#ef4444;border-color:#ef4444;color:#fff}
+.quiz-result{text-align:center;font-size:18px;font-weight:700;margin-top:10px;padding:8px 16px;border-radius:var(--r-sm)}
+.quiz-result.correct-result{color:#22c55e;background:rgba(34,197,94,.1)}
+.quiz-result.wrong-result{color:#ef4444;background:rgba(239,68,68,.1)}
 .streak-widget{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08));border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;transition:all .5s cubic-bezier(.34,1.56,.64,1);animation:fadeSlideUp .6s cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:.05s}
 .streak-widget:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(139,92,246,.2),0 0 30px rgba(245,158,11,.1);border-color:rgba(139,92,246,.4)}
 .streak-widget::before{content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(245,158,11,.1),transparent 70%);pointer-events:none}
@@ -805,11 +824,12 @@ input,textarea,select{font-family:inherit;font-size:inherit}
         </select>
       </div>
       <div class="form-group"><label>Question Type</label>
-        <select id="cardDisplayMode">
+        <select id="cardDisplayMode" onchange="onDisplayModeChange()">
           <option value="text">📝 Show text — Read the question</option>
           <option value="voice">🔊 Listen & Answer — AI reads, flip to check</option>
           <option value="voice-repeat">🔁 Listen & Repeat — AI reads, repeat the sentence</option>
           <option value="voice-translate">🌐 Listen & Translate — AI reads, translate it</option>
+          <option value="quiz">🎯 Quiz — Listen & pick the right answer</option>
         </select>
       </div>
       <div class="form-group"><label>Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span></label><input id="cardNameInput" placeholder="e.g. Greeting, At the store..." maxlength="60" style="width:100%;padding:8px 12px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--glass-border);color:var(--ink);font-size:14px"></div>
@@ -818,7 +838,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <div id="frontFieldsWrap">
             <div class="front-field-row"><textarea class="front-input" placeholder="Enter question, vocabulary..." rows="2"></textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove" style="display:none">✕</button></div>
           </div>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="addFrontField()" style="margin-top:6px">+ Add dialogue line</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addFrontField()" style="margin-top:6px" id="addFrontBtn">+ Add dialogue line</button>
         </div>
         <div class="form-group"><label>Back (answer)</label><textarea id="cardBackInput" placeholder="Enter answer, meaning..." rows="3"></textarea></div>
         <div class="form-group"><label>Definition <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional, show when you forget the meaning</span></label><textarea id="cardDefinitionInput" placeholder="e.g. nghĩa tiếng Việt, explanation..." rows="2"></textarea></div>
@@ -1398,8 +1418,9 @@ function updateFrontRemoveButtons(){
     const btn=r.querySelector('.front-remove-btn');
     if(btn)btn.style.display=rows.length>1?'block':'none';
   });
+  const isQuizMode=document.getElementById('cardDisplayMode')?.value==='quiz';
   const backGroup=document.getElementById('cardBackInput')?.closest('.form-group');
-  if(backGroup)backGroup.style.display=rows.length>1?'none':'block';
+  if(backGroup)backGroup.style.display=(rows.length>1&&!isQuizMode)?'none':'block';
 }
 function getFrontValues(){
   const rows=document.querySelectorAll('#frontFieldsWrap .front-field-row');
@@ -1430,6 +1451,23 @@ function onCardTypeChange(){
   document.getElementById('clozeFields').style.display=t==='cloze'?'block':'none';
 }
 
+function onDisplayModeChange(){
+  const mode=document.getElementById('cardDisplayMode').value;
+  const isQuiz=mode==='quiz';
+  const frontLabel=document.querySelector('#basicFields .form-group:first-child > label');
+  if(frontLabel){
+    frontLabel.innerHTML=isQuiz?'Answers (options) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— add multiple answer choices</span>':'Front (question) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— multiple = dialogue mode</span>';
+  }
+  var addBtn=document.getElementById('addFrontBtn');
+  if(addBtn)addBtn.textContent=isQuiz?'+ Add answer':'+ Add dialogue line';
+  var backLabel=document.querySelector('#basicFields > .form-group:nth-child(2) > label');
+  if(backLabel)backLabel.textContent=isQuiz?'Correct answer (must match one of the answers above)':'Back (answer)';
+  document.querySelectorAll('#frontFieldsWrap .front-speaker-wrap').forEach(function(el){el.style.display=isQuiz?'none':'';});
+  document.querySelectorAll('#frontFieldsWrap .front-input').forEach(function(el,i){el.placeholder=isQuiz?'Answer option '+(i+1):'Enter question, vocabulary...';});
+  var backGroup=document.getElementById('cardBackInput')?.closest('.form-group');
+  if(backGroup)backGroup.style.display='block';
+}
+
 function openCardModal(cardId){
   if(!requireAuth())return;
   editingCardId=cardId||null;
@@ -1450,6 +1488,7 @@ function openCardModal(cardId){
     document.getElementById('cardTagsInput').value=(card.tags||[]).join(', ');
     document.getElementById('cardReviewMode').value=card.reviewMode||'flip';
     document.getElementById('cardDisplayMode').value=card.displayMode||'voice';
+    onDisplayModeChange();
     document.getElementById('cardNameInput').value=card.cardName||'';
     document.getElementById('cardDefinitionInput').value=card.definition||'';
     document.getElementById('cardYoutubeUrl').value=card.youtubeUrl||'';
@@ -1465,6 +1504,7 @@ function openCardModal(cardId){
     setFrontFields(['']);document.getElementById('cardBackInput').value='';
     document.getElementById('cardReviewMode').value='flip';
     document.getElementById('cardDisplayMode').value='voice';
+    onDisplayModeChange();
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
     document.getElementById('cardYoutubeUrl').value='';document.getElementById('cardDriveUrl').value='';document.getElementById('cardYtStart').value='';document.getElementById('cardYtEnd').value='';
     document.getElementById('cardCakeUrl').value='';
@@ -1565,10 +1605,10 @@ function renderCardBrowser(){
       const dt=c.status==='new'?'—':formatDue(c.due);
       const tagHTML=(c.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
       const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
-      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':'';
+      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':c.displayMode==='quiz'?'🎯':'';
       const displayFront=c.cardName||c.front;
       return`<tr><td class="card-front-col">${esc(displayFront)}</td><td class="card-back-col">${esc(c.back)}</td>
-        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':''}">${modeLabel}${dispLabel}</td>
+        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':c.displayMode==='quiz'?' · Quiz':''}">${modeLabel}${dispLabel}</td>
         <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
         <td><span class="card-status ${sc}">${st}</span></td>
         <td style="font-size:13px;color:var(--ink-dim)">${dt}</td>
@@ -1950,8 +1990,36 @@ function showCurrentCard(){
   document.getElementById('undoBtn').style.display=undoStack.length>0?'block':'none';
 
   const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
+  const isQuiz=card.displayMode==='quiz';
 
-  if(isDialogue){
+  if(isQuiz&&fronts.length>1){
+    const el=document.getElementById('cardFront');
+    const questionText=card.front||card.cardName||'';
+    const safeQ=esc(questionText).replace(/'/g,"\\'").replace(/\n/g,' ');
+    const labels='ABCDEFGHIJ';
+    let optionsHtml='<div class="quiz-options" onclick="event.stopPropagation()">';
+    fronts.forEach(function(f,i){
+      const txt=typeof f==='object'?(f.text||''):f;
+      const safeTxt=esc(txt).replace(/'/g,"\\'").replace(/\n/g,' ');
+      optionsHtml+='<div class="quiz-option" data-answer="'+esc(txt)+'" data-idx="'+i+'">'
+        +'<button class="quiz-option-speaker" onclick="event.stopPropagation();speakText(\''+safeTxt+'\')" title="Listen">🔊</button>'
+        +'<span class="quiz-option-label">'+(labels[i]||String(i+1))+'</span>'
+        +'<span class="quiz-option-text hidden-answer" onclick="event.stopPropagation();if(this.classList.contains(\'hidden-answer\')){this.classList.remove(\'hidden-answer\');this.textContent=this.getAttribute(\'data-text\');}else{this.classList.add(\'hidden-answer\');this.textContent=\'\';}"></span>'
+        +'<button class="quiz-option-tick" onclick="event.stopPropagation();quizSelect(this)" title="Select">✓</button>'
+        +'</div>';
+    });
+    optionsHtml+='</div><div id="cardQuizResult"></div>';
+    el.innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeQ+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">🎯 Listen & pick the right answer</div></div>'+optionsHtml;
+    document.querySelectorAll('.quiz-option-text.hidden-answer').forEach(function(span,i){
+      var txt=typeof fronts[i]==='object'?(fronts[i].text||''):fronts[i];
+      span.setAttribute('data-text',txt);
+    });
+    document.getElementById('cardBack').innerHTML=renderContent(card.back);
+    const hint=document.querySelector('.flashcard-hint');
+    if(hint)hint.style.display='none';
+    window._quizAnswered=false;
+    setTimeout(function(){speakText(questionText);},300);
+  } else if(isDialogue){
     // Dialogue mode: auto-play all fronts sequentially, voice-only (hidden text)
     const el=document.getElementById('cardFront');
     const dlgDriveId=extractDriveId(card.driveUrl);
@@ -2344,6 +2412,8 @@ function replayDialogue(){
 }
 function flipCard(){
   if(reviewMode==='type')return;
+  var curCard=reviewQueue[reviewIndex];
+  if(curCard&&curCard.displayMode==='quiz'&&(curCard.fronts&&curCard.fronts.length>1))return;
   if(currentAudio){currentAudio.pause();currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
@@ -2592,6 +2662,30 @@ function showStreakMilestone(s){
 }
 
 function resetStreak(){streak=0;updateStreakUI();}
+
+function quizSelect(btn){
+  if(window._quizAnswered)return;
+  window._quizAnswered=true;
+  var option=btn.closest('.quiz-option');
+  var answer=(option.getAttribute('data-answer')||'').trim();
+  var card=reviewQueue[reviewIndex];
+  var correct=(card.back||'').trim();
+  var isCorrect=answer.toLowerCase()===correct.toLowerCase();
+  btn.classList.add('selected');
+  document.querySelectorAll('.quiz-option-text').forEach(function(s){s.classList.remove('hidden-answer');s.textContent=s.getAttribute('data-text');});
+  document.querySelectorAll('.quiz-option').forEach(function(opt){
+    var a=(opt.getAttribute('data-answer')||'').trim();
+    if(a.toLowerCase()===correct.toLowerCase())opt.classList.add('correct');
+    else if(opt===option&&!isCorrect)opt.classList.add('wrong');
+  });
+  var result=document.getElementById('cardQuizResult');
+  if(result){
+    result.className='quiz-result '+(isCorrect?'correct-result':'wrong-result');
+    result.textContent=isCorrect?'✓ Correct!':'✗ Wrong — answer: '+correct;
+  }
+  document.getElementById('reviewActions').style.display='flex';
+  if(isCorrect){speakTTS('Correct!',null);}
+}
 
 function answerCard(quality){
   const card=reviewQueue[reviewIndex];
