@@ -1132,7 +1132,7 @@ async function mergeAndLoadCloud(){
   await loadSharedDecks();
 }
 async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}await mergeAndLoadCloud();toggleUserMenu();}
-function saveDeckData(id,data){saveLocal();if(currentUser)decksCol().doc(id).set(data).catch(console.error);}
+function saveDeckData(id,data){saveLocal();if(currentUser){decksCol().doc(id).set(data).catch(console.error);if(data._shared&&isAdmin)firestore.collection('sharedDecks').doc(id).set(Object.assign({},data,{sharedBy:currentUser.uid,sharedAt:Date.now()})).catch(console.error);}}
 function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete().catch(console.error);}
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
