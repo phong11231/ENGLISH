@@ -834,7 +834,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
         </select>
       </div>
       <div class="form-group"><label>🎬 YouTube Video (optional)</label><input type="text" id="cardYoutubeUrl" placeholder="e.g. https://youtube.com/watch?v=..."></div>
-      <div class="form-group"><label>📁 Google Drive Video (optional, prioritized over YouTube)</label><input type="text" id="cardDriveUrl" placeholder="e.g. https://drive.google.com/file/d/.../view"></div>
+      <div class="form-group"><label>📁 Audio/Video URL (optional, prioritized over YouTube)</label><div style="display:flex;gap:6px"><input type="text" id="cardDriveUrl" placeholder="e.g. R2 or Drive URL" style="flex:1"><button type="button" id="btnUploadAudio" class="btn btn-ghost" onclick="uploadAudioFile()" style="display:none;white-space:nowrap;padding:8px 12px">🎵 Upload MP3</button></div></div>
       <div style="display:flex;gap:8px">
         <div class="form-group" style="flex:1"><label>Start (seconds)</label><input type="number" id="cardYtStart" placeholder="e.g. 85" min="0" step="0.1"></div>
         <div class="form-group" style="flex:1"><label>End (seconds)</label><input type="number" id="cardYtEnd" placeholder="e.g. 92" min="0" step="0.1"></div>
@@ -3065,7 +3065,27 @@ function showQuizResult(){
 
 // ===== ADMIN =====
 let isAdmin=localStorage.getItem('flashmind_admin')==='true';
-function updateAdminUI(){document.getElementById('adminPushBtn').style.display=isAdmin?'block':'none';}
+function updateAdminUI(){document.getElementById('adminPushBtn').style.display=isAdmin?'block':'none';var ub=document.getElementById('btnUploadAudio');if(ub)ub.style.display=isAdmin?'inline-block':'none';}
+
+var AUDIO_WORKER='https://flashmind-audio.yosua-4131.workers.dev';
+function getAdminKey(){var k=localStorage.getItem('flashmind_admin_key');if(!k){k=prompt('Enter admin key for audio upload:');if(k)localStorage.setItem('flashmind_admin_key',k);}return k;}
+async function uploadAudioFile(){
+  var key=getAdminKey();if(!key){toast('Admin key required');return;}
+  var input=document.createElement('input');input.type='file';input.accept='audio/*,.mp3,.m4a,.wav,.ogg';
+  input.onchange=async function(){
+    var file=input.files[0];if(!file)return;
+    var name=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    toast('Uploading '+name+'...');
+    try{
+      var r=await fetch(AUDIO_WORKER+'/'+encodeURIComponent(name),{method:'PUT',headers:{'Content-Type':file.type||'audio/mpeg','X-Admin-Key':key},body:file});
+      if(!r.ok){if(r.status===401){localStorage.removeItem('flashmind_admin_key');toast('Wrong admin key');}else toast('Upload failed: '+r.status);return;}
+      var d=await r.json();
+      document.getElementById('cardDriveUrl').value=d.url;
+      toast('Uploaded! URL set.');
+    }catch(e){toast('Upload error: '+e.message);}
+  };
+  input.click();
+}
 function openAdminModal(){
   if(!requireAuth())return;
   toggleUserMenu();
