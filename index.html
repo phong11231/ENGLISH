@@ -1702,7 +1702,7 @@ function startReview(deckId){
 }
 
 // ===== SLEEP LISTEN =====
-let sleepPlaylist=[],sleepIndex=0,sleepTimer=null,sleepSpeed=1.5;
+let sleepPlaylist=[],sleepIndex=0,sleepTimer=null,sleepSpeed=1.5,sleepLoadedAt=0;
 function startSleepListen(deckId,includeAll){
   const allCards=includeAll?getAllCardsIncludingSubs(deckId):getDeckCards(deckId);
   const ytCards=allCards.filter(c=>extractYtId(c.youtubeUrl));
@@ -1741,6 +1741,7 @@ function playSleepVideo(){
   iframe.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
   iframe.id='sleepYtFrame';
   wrap.appendChild(iframe);
+  sleepLoadedAt=Date.now();
   // Set playback speed after iframe loads
   iframe.onload=function(){setTimeout(()=>applySleepSpeed(),1000);};
   const displayName=card.cardName||card.front||(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0])||'';
@@ -1767,7 +1768,7 @@ window.addEventListener('message',function(e){
   if(!e.data||typeof e.data!=='string')return;
   try{
     const d=JSON.parse(e.data);
-    if(d.event==='onStateChange'&&d.info===0&&document.getElementById('sleepListenOverlay').style.display==='flex'){
+    if(d.event==='onStateChange'&&d.info===0&&document.getElementById('sleepListenOverlay').style.display==='flex'&&(Date.now()-sleepLoadedAt)>3000){
       sleepListenNext();
     }
   }catch(ex){}
