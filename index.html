@@ -835,7 +835,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
           <option value="quiz">🎯 Quiz — Listen & pick the right answer</option>
         </select>
       </div>
-      <div class="form-group"><label>Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span></label><input id="cardNameInput" placeholder="e.g. Greeting, At the store..." maxlength="60" style="width:100%;padding:8px 12px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--glass-border);color:var(--ink);font-size:14px"></div>
+      <div class="form-group" id="cardNameGroup"><label id="cardNameLabel">Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span></label><input id="cardNameInput" placeholder="e.g. Greeting, At the store..." maxlength="60" style="width:100%;padding:8px 12px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--glass-border);color:var(--ink);font-size:14px"></div>
       <div id="basicFields">
         <div class="form-group"><label>Front (question) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— multiple = dialogue mode</span></label>
           <div id="frontFieldsWrap">
@@ -1470,6 +1470,10 @@ function onDisplayModeChange(){
   }
   var addBtn=document.getElementById('addFrontBtn');
   if(addBtn)addBtn.textContent=isQuiz?'+ Add answer':'+ Add dialogue line';
+  var nameLabel=document.getElementById('cardNameLabel');
+  if(nameLabel)nameLabel.innerHTML=isQuiz?'Question <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— the question AI will read</span>':'Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span>';
+  var nameInput=document.getElementById('cardNameInput');
+  if(nameInput)nameInput.placeholder=isQuiz?'e.g. What does hello mean?':'e.g. Greeting, At the store...';
   document.querySelectorAll('#frontFieldsWrap .front-speaker-wrap').forEach(function(el){el.style.display=isQuiz?'none':'';});
   document.querySelectorAll('#frontFieldsWrap .front-input').forEach(function(el,i){el.placeholder=isQuiz?'Answer option '+(i+1):'Enter question, vocabulary...';});
   document.querySelectorAll('#frontFieldsWrap .front-field-row').forEach(function(row){
@@ -1583,7 +1587,11 @@ function saveCard(){
   } else {
     const fronts=getFrontValues();
     const back=document.getElementById('cardBackInput').value.trim();
-    if(fronts.length===0||(fronts.length===1&&!back)){toast('Enter both front and back');return;}
+    if(cardDisplayMode==='quiz'){
+      if(!cardName){toast('Quiz needs a question in Card name');return;}
+      if(fronts.length<2){toast('Quiz needs at least 2 answer options');return;}
+      if(!back){toast('Please tick the correct answer');return;}
+    } else if(fronts.length===0||(fronts.length===1&&!back)){toast('Enter both front and back');return;}
     const front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
@@ -2009,7 +2017,7 @@ function showCurrentCard(){
   cleanupDialogueLayout();
   const card=reviewQueue[reviewIndex];
   const fronts=card.fronts&&card.fronts.length>1?card.fronts:[card.front];
-  const isDialogue=fronts.length>1;
+  const isDialogue=fronts.length>1&&card.displayMode!=='quiz';
   window._cardFronts=fronts;
   window._cardFrontIdx=0;
   window._dialogueShown=false;
@@ -2028,7 +2036,7 @@ function showCurrentCard(){
 
   if(isQuiz&&fronts.length>1){
     const el=document.getElementById('cardFront');
-    const questionText=card.front||card.cardName||'';
+    const questionText=card.cardName||card.front||'';
     const safeQ=esc(questionText).replace(/'/g,"\\'").replace(/\n/g,' ');
     const labels='ABCDEFGHIJ';
     let optionsHtml='<div class="quiz-options" onclick="event.stopPropagation()">';
