@@ -1742,7 +1742,7 @@ function playSleepVideo(){
     video.setAttribute('playsinline','');
     video.autoplay=true;
     video.onloadedmetadata=function(){
-      if(start)video.currentTime=start;
+      if(start!=null)video.currentTime=start;
       video.playbackRate=sleepSpeed;
     };
     video.ontimeupdate=function(){
@@ -1850,21 +1850,34 @@ function cleanupDialogueLayout(){
 // ===== YOUTUBE CLIP =====
 function extractYtId(url){if(!url)return null;const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
 function extractDriveId(url){if(!url)return null;const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/)||url.match(/id=([a-zA-Z0-9_-]+)/);return m?m[1]:null;}
-function getDriveStreamUrl(driveId){return 'https://drive.google.com/uc?export=download&id='+driveId;}
+function getDriveStreamUrl(driveId){return 'https://drive.usercontent.google.com/download?id='+driveId+'&export=download&confirm=t';}
+function getDriveEmbedUrl(driveId){return 'https://drive.google.com/file/d/'+driveId+'/preview';}
 
 function destroyYtPlayer(){
   document.querySelectorAll('.yt-card-wrap iframe, .dialogue-yt-wrap iframe, .dialogue-yt-wrap video, #ytPreviewPlayer iframe').forEach(f=>f.remove());
 }
 
 function buildDriveEmbed(driveId,start,end){
+  const wrap=document.createElement('div');
+  wrap.style.cssText='width:100%;height:100%;position:relative;background:#000;border-radius:var(--r-md);overflow:hidden';
   const video=document.createElement('video');
   video.src=getDriveStreamUrl(driveId);
-  video.style.cssText='width:100%;height:100%;display:block;border:none;border-radius:var(--r-md);background:#000';
+  video.crossOrigin='anonymous';
+  video.style.cssText='width:100%;height:100%;display:block;border:none';
   video.setAttribute('playsinline','');
   video.autoplay=true;video.controls=true;
-  video.onloadedmetadata=function(){if(start)video.currentTime=start;};
-  if(end!=null)video.ontimeupdate=function(){if(video.currentTime>=end)video.pause();};
-  return video;
+  video.onloadedmetadata=function(){if(start!=null)video.currentTime=start;};
+  if(end!=null)video.ontimeupdate=function(){if(video.currentTime>=end){video.pause();video.ontimeupdate=null;}};
+  video.onerror=function(){
+    wrap.innerHTML='';
+    const iframe=document.createElement('iframe');
+    iframe.src=getDriveEmbedUrl(driveId);
+    iframe.style.cssText='width:100%;height:100%;border:none';
+    iframe.setAttribute('allow','autoplay');
+    wrap.appendChild(iframe);
+  };
+  wrap.appendChild(video);
+  return wrap;
 }
 function buildYtEmbed(videoId,start,end){
   const iframe=document.createElement('iframe');
