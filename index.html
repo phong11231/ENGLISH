@@ -979,6 +979,10 @@ input,textarea,select{font-family:inherit;font-size:inherit}
     <button class="btn btn-ghost btn-sm" onclick="sleepListenPrev()" style="color:#fff;font-size:18px">⏮</button>
     <button class="btn btn-ghost btn-sm" onclick="sleepListenReplay()" style="color:#fff;font-size:18px">🔄</button>
     <button class="btn btn-ghost btn-sm" onclick="sleepListenNext()" style="color:#fff;font-size:18px">⏭</button>
+    <span style="width:1px;height:20px;background:rgba(255,255,255,0.2)"></span>
+    <button class="btn btn-ghost btn-sm" onclick="sleepChangeSpeed(-0.25)" style="color:#fff;font-size:14px">−</button>
+    <span style="color:#fff;font-size:14px;font-weight:700;min-width:40px;text-align:center" id="sleepSpeedLabel">1.5x</span>
+    <button class="btn btn-ghost btn-sm" onclick="sleepChangeSpeed(0.25)" style="color:#fff;font-size:14px">+</button>
   </div>
   <div style="padding:8px 16px;text-align:center">
     <span style="color:rgba(255,255,255,0.4);font-size:12px" id="sleepListenCardName"></span>
@@ -1698,7 +1702,7 @@ function startReview(deckId){
 }
 
 // ===== SLEEP LISTEN =====
-let sleepPlaylist=[],sleepIndex=0,sleepTimer=null;
+let sleepPlaylist=[],sleepIndex=0,sleepTimer=null,sleepSpeed=1.5;
 function startSleepListen(deckId,includeAll){
   const allCards=includeAll?getAllCardsIncludingSubs(deckId):getDeckCards(deckId);
   const ytCards=allCards.filter(c=>extractYtId(c.youtubeUrl));
@@ -1737,12 +1741,15 @@ function playSleepVideo(){
   iframe.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
   iframe.id='sleepYtFrame';
   wrap.appendChild(iframe);
+  // Set playback speed after iframe loads
+  iframe.onload=function(){setTimeout(()=>applySleepSpeed(),1000);};
   const displayName=card.cardName||card.front||(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0])||'';
   document.getElementById('sleepListenCardName').textContent=displayName;
   document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
+  document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
   // Auto-advance: use duration if end is set, otherwise poll
   if(end&&start!=null){
-    const duration=(end-start)*1000+1500;
+    const duration=(end-start)/sleepSpeed*1000+1500;
     sleepTimer=setTimeout(()=>sleepListenNext(),duration);
   } else {
     sleepPollEnd();
@@ -1784,6 +1791,16 @@ function stopSleepListen(){
   document.getElementById('sleepListenPlayer').innerHTML='';
   document.getElementById('sleepListenOverlay').style.display='none';
   sleepPlaylist=[];sleepIndex=0;
+}
+function applySleepSpeed(){
+  const iframe=document.getElementById('sleepYtFrame');
+  if(!iframe||!iframe.contentWindow)return;
+  iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:'setPlaybackRate',args:[sleepSpeed]}),'*');
+}
+function sleepChangeSpeed(delta){
+  sleepSpeed=Math.round(Math.max(0.25,Math.min(3,sleepSpeed+delta))*100)/100;
+  document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
+  applySleepSpeed();
 }
 
 function exitReview(){destroyYtPlayer();cleanupDialogueLayout();reviewQueue=[];showView('decks');}
