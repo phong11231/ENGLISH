@@ -1008,7 +1008,11 @@ input,textarea,select{font-family:inherit;font-size:inherit}
     <span style="color:#fff;font-size:14px;font-weight:700;min-width:40px;text-align:center" id="sleepSpeedLabel">1.5x</span>
     <button class="btn btn-ghost btn-sm" onclick="sleepChangeSpeed(0.25)" style="color:#fff;font-size:14px">+</button>
   </div>
-  <div style="padding:8px 16px;text-align:center">
+  <div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:4px 16px">
+    <button class="btn btn-ghost btn-sm" id="sleepDrillBtn" onclick="toggleSleepDrill()" style="color:rgba(255,255,255,0.5);font-size:12px;border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:4px 12px">🔄 Speed Drill: OFF</button>
+    <span style="color:rgba(255,255,255,0.3);font-size:11px" id="sleepDrillInfo"></span>
+  </div>
+  <div style="padding:4px 16px 8px;text-align:center">
     <span style="color:rgba(255,255,255,0.4);font-size:12px" id="sleepListenCardName"></span>
   </div>
 </div>
@@ -1788,13 +1792,15 @@ function startReview(deckId){
 
 // ===== SLEEP LISTEN =====
 let sleepPlaylist=[],sleepIndex=0,sleepTimer=null,sleepSpeed=1.5,sleepLoadedAt=0,sleepAudioEl=null;
+let sleepDrillOn=false,sleepDrillIdx=0;
+var DRILL_SPEEDS=[0.5,1,1.5,2];
 function startSleepListen(deckId,includeAll){
   const allCards=includeAll?getAllCardsIncludingSubs(deckId):getDeckCards(deckId);
   const ytCards=allCards.filter(c=>c.driveUrl&&c.driveUrl.trim());
   if(ytCards.length===0){toast('No cards with audio/video URL');return;}
   sleepPlaylist=ytCards.slice();
   for(let i=sleepPlaylist.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sleepPlaylist[i],sleepPlaylist[j]]=[sleepPlaylist[j],sleepPlaylist[i]];}
-  sleepIndex=0;
+  sleepIndex=0;sleepDrillIdx=0;
   if(!sleepAudioEl){
     sleepAudioEl=document.createElement('audio');
     sleepAudioEl.id='sleepDriveVideo';
@@ -1835,14 +1841,17 @@ function playSleepVideo(){
   const displayName=card.cardName||card.front||(typeof card.fronts==='object'&&card.fronts&&card.fronts[0]?(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0]):'')||'';
   document.getElementById('sleepListenCardName').textContent=displayName;
   document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
-  document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
+  var activeSpeed=sleepDrillOn?DRILL_SPEEDS[sleepDrillIdx]:sleepSpeed;
+  document.getElementById('sleepSpeedLabel').textContent=activeSpeed+'x';
+  updateDrillInfo();
   if(!audioUrl){sleepListenNext();return;}
-  speakTTS(displayName,function(){
+  var shouldTTS=!sleepDrillOn||sleepDrillIdx===0;
+  function playAudioNow(){
     var el=sleepAudioEl;
     el.pause();
     el.ontimeupdate=null;el.onended=null;el.onerror=null;
     el.src=audioUrl;
-    el.onloadedmetadata=function(){if(start!=null)el.currentTime=start;el.playbackRate=sleepSpeed;};
+    el.onloadedmetadata=function(){if(start!=null)el.currentTime=start;el.playbackRate=activeSpeed;};
     var advanced=false;
     function advanceOnce(){if(advanced)return;advanced=true;el.pause();el.ontimeupdate=null;el.onended=null;sleepListenNext();}
     el.ontimeupdate=function(){if(end!=null&&el.currentTime>=end)advanceOnce();};
@@ -1850,7 +1859,8 @@ function playSleepVideo(){
     el.onerror=function(){sleepListenNext();};
     if(!el.parentNode)wrap.appendChild(el);
     el.play().catch(function(){});
-  });
+  }
+  if(shouldTTS){speakTTS(displayName,playAudioNow);}else{playAudioNow();}
 }
 function playSleepYouTube(ytId,start,end){
   const wrap=document.getElementById('sleepListenPlayer');
@@ -1882,16 +1892,43 @@ window.addEventListener('message',function(e){
 });
 function sleepListenNext(){
   if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
+  if(sleepDrillOn){
+    sleepDrillIdx++;
+    if(sleepDrillIdx<DRILL_SPEEDS.length){
+      playSleepVideo();
+      return;
+    }
+    sleepDrillIdx=0;
+  }
   sleepIndex=(sleepIndex+1)%sleepPlaylist.length;
   playSleepVideo();
 }
+function toggleSleepDrill(){
+  sleepDrillOn=!sleepDrillOn;
+  sleepDrillIdx=0;
+  var btn=document.getElementById('sleepDrillBtn');
+  if(btn){
+    btn.textContent=sleepDrillOn?'🔄 Speed Drill: ON':'🔄 Speed Drill: OFF';
+    btn.style.color=sleepDrillOn?'#22c55e':'rgba(255,255,255,0.5)';
+    btn.style.borderColor=sleepDrillOn?'#22c55e':'rgba(255,255,255,0.15)';
+  }
+  updateDrillInfo();
+}
+function updateDrillInfo(){
+  var info=document.getElementById('sleepDrillInfo');
+  if(!info)return;
+  if(!sleepDrillOn){info.textContent='';return;}
+  info.textContent='Round '+(sleepDrillIdx+1)+'/'+DRILL_SPEEDS.length+' — '+DRILL_SPEEDS[sleepDrillIdx]+'x';
+}
 function sleepListenPrev(){
   if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
+  sleepDrillIdx=0;
   sleepIndex=(sleepIndex-1+sleepPlaylist.length)%sleepPlaylist.length;
   playSleepVideo();
 }
 function sleepListenReplay(){
   if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
+  sleepDrillIdx=0;
   playSleepVideo();
 }
 function stopSleepListen(){
