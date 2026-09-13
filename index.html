@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1852,7 +1852,7 @@ function cleanupDialogueLayout(){
 // ===== YOUTUBE CLIP =====
 function extractYtId(url){if(!url)return null;const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
 function extractDriveId(url){if(!url)return null;const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/)||url.match(/id=([a-zA-Z0-9_-]+)/);return m?m[1]:null;}
-function getDriveStreamUrl(driveId){return 'https://drive.usercontent.google.com/download?id='+driveId+'&export=download&confirm=t';}
+function getDriveStreamUrl(driveId){return 'https://valleystudy.com/api/drive/stream?fileId='+driveId;}
 function getDriveEmbedUrl(driveId){return 'https://drive.google.com/file/d/'+driveId+'/preview';}
 
 function destroyYtPlayer(){
@@ -3150,3 +3150,4 @@ document.addEventListener('mouseleave',function(){
 </script>
 </body>
 </html>
+
