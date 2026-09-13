@@ -1725,15 +1725,15 @@ function playSleepVideo(){
   if(sleepPlaylist.length===0)return;
   const card=sleepPlaylist[sleepIndex];
   const ytId=extractYtId(card.youtubeUrl);
-  const start=card.ytStart||0;
-  const end=card.ytEnd||null;
+  const start=card.ytStart!=null?card.ytStart:0;
+  const end=card.ytEnd!=null?card.ytEnd:null;
   const wrap=document.getElementById('sleepListenPlayer');
   wrap.innerHTML='';
   const iframe=document.createElement('iframe');
-  let src='https://www.youtube.com/embed/'+ytId+'?playsinline=1&rel=0&modestbranding=1&autoplay=1&playlist='+ytId;
-  if(start)src+='&start='+Math.floor(start);
-  if(end)src+='&end='+Math.floor(end);
-  src+='&enablejsapi=1';
+  let src='https://www.youtube.com/embed/'+ytId+'?playsinline=1&rel=0&modestbranding=1&autoplay=1';
+  if(start!=null)src+='&start='+Math.floor(start);
+  if(end!=null)src+='&end='+Math.floor(end);
+  src+='&enablejsapi=1&origin='+encodeURIComponent(location.origin);
   iframe.src=src;
   iframe.width='100%';iframe.height='100%';
   iframe.style.border='none';
@@ -1742,27 +1742,14 @@ function playSleepVideo(){
   iframe.id='sleepYtFrame';
   wrap.appendChild(iframe);
   sleepLoadedAt=Date.now();
-  // Set playback speed after iframe loads
-  iframe.onload=function(){setTimeout(()=>applySleepSpeed(),1000);};
-  const displayName=card.cardName||card.front||(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0])||'';
+  iframe.onload=function(){
+    setTimeout(()=>applySleepSpeed(),1000);
+    setTimeout(()=>applySleepSpeed(),3000);
+  };
+  const displayName=card.cardName||card.front||(typeof card.fronts==='object'&&card.fronts&&card.fronts[0]?(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0]):'')||'';
   document.getElementById('sleepListenCardName').textContent=displayName;
   document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
   document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
-  // Auto-advance: use duration if end is set, otherwise poll
-  if(end&&start!=null){
-    const duration=(end-start)/sleepSpeed*1000+1500;
-    sleepTimer=setTimeout(()=>sleepListenNext(),duration);
-  } else {
-    sleepPollEnd();
-  }
-}
-function sleepPollEnd(){
-  const iframe=document.getElementById('sleepYtFrame');
-  if(!iframe){return;}
-  try{
-    iframe.contentWindow.postMessage('{"event":"command","func":"getPlayerState","args":""}','*');
-  }catch(e){}
-  sleepTimer=setTimeout(()=>{sleepPollEnd();},3000);
 }
 window.addEventListener('message',function(e){
   if(!e.data||typeof e.data!=='string')return;
