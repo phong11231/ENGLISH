@@ -1705,15 +1705,23 @@ function startReview(deckId){
 }
 
 // ===== SLEEP LISTEN =====
-let sleepPlaylist=[],sleepIndex=0,sleepTimer=null,sleepSpeed=1.5,sleepLoadedAt=0;
+let sleepPlaylist=[],sleepIndex=0,sleepTimer=null,sleepSpeed=1.5,sleepLoadedAt=0,sleepAudioEl=null;
 function startSleepListen(deckId,includeAll){
   const allCards=includeAll?getAllCardsIncludingSubs(deckId):getDeckCards(deckId);
   const ytCards=allCards.filter(c=>c.driveUrl&&c.driveUrl.trim());
   if(ytCards.length===0){toast('No cards with audio/video URL');return;}
-  // Shuffle
   sleepPlaylist=ytCards.slice();
   for(let i=sleepPlaylist.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sleepPlaylist[i],sleepPlaylist[j]]=[sleepPlaylist[j],sleepPlaylist[i]];}
   sleepIndex=0;
+  if(!sleepAudioEl){
+    sleepAudioEl=document.createElement('audio');
+    sleepAudioEl.id='sleepDriveVideo';
+    sleepAudioEl.setAttribute('playsinline','');
+    sleepAudioEl.controls=true;
+    sleepAudioEl.style.cssText='width:100%;height:48px';
+  }
+  sleepAudioEl.src='';
+  sleepAudioEl.play().catch(function(){});
   document.getElementById('sleepListenOverlay').style.display='flex';
   document.getElementById('sleepListenTitle').textContent='🌙 Sleep Listen — '+(db.decks[deckId]?.name||'');
   playSleepVideo();
@@ -1748,20 +1756,18 @@ function playSleepVideo(){
   document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
   if(!audioUrl){sleepListenNext();return;}
   speakTTS(displayName,function(){
-    const isAudio=/\.(mp3|m4a|wav|ogg|aac|flac)(\?|$)/i.test(audioUrl);
-    const el=document.createElement(isAudio?'audio':'video');
-    el.id='sleepDriveVideo';
+    var el=sleepAudioEl;
+    el.pause();
+    el.ontimeupdate=null;el.onended=null;el.onerror=null;
     el.src=audioUrl;
-    el.style.cssText=isAudio?'width:100%;height:48px':'width:100%;height:100%;background:#000';
-    el.setAttribute('playsinline','');
-    el.autoplay=true;el.controls=true;
     el.onloadedmetadata=function(){if(start!=null)el.currentTime=start;el.playbackRate=sleepSpeed;};
     var advanced=false;
     function advanceOnce(){if(advanced)return;advanced=true;el.pause();el.ontimeupdate=null;el.onended=null;sleepListenNext();}
     el.ontimeupdate=function(){if(end!=null&&el.currentTime>=end)advanceOnce();};
     el.onended=function(){if(Date.now()-sleepLoadedAt>2000)advanceOnce();};
     el.onerror=function(){sleepListenNext();};
-    wrap.appendChild(el);
+    if(!el.parentNode)wrap.appendChild(el);
+    el.play().catch(function(){});
   });
 }
 function playSleepYouTube(ytId,start,end){
