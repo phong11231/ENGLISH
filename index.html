@@ -1742,15 +1742,10 @@ function playSleepVideo(){
     el.setAttribute('playsinline','');
     el.autoplay=true;el.controls=true;
     el.onloadedmetadata=function(){if(start!=null)el.currentTime=start;el.playbackRate=sleepSpeed;};
-    el.ontimeupdate=function(){
-      if(end!=null&&el.currentTime>=end){
-        el.pause();
-        sleepListenNext();
-      }
-    };
-    el.onended=function(){
-      if(Date.now()-sleepLoadedAt>2000)sleepListenNext();
-    };
+    var advanced=false;
+    function advanceOnce(){if(advanced)return;advanced=true;el.pause();el.ontimeupdate=null;el.onended=null;sleepListenNext();}
+    el.ontimeupdate=function(){if(end!=null&&el.currentTime>=end)advanceOnce();};
+    el.onended=function(){if(Date.now()-sleepLoadedAt>2000)advanceOnce();};
     el.onerror=function(){sleepListenNext();};
     wrap.appendChild(el);
   } else {
