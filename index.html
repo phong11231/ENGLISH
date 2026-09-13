@@ -1708,8 +1708,8 @@ function startReview(deckId){
 let sleepPlaylist=[],sleepIndex=0,sleepTimer=null,sleepSpeed=1.5,sleepLoadedAt=0;
 function startSleepListen(deckId,includeAll){
   const allCards=includeAll?getAllCardsIncludingSubs(deckId):getDeckCards(deckId);
-  const ytCards=allCards.filter(c=>extractDriveId(c.driveUrl)||extractYtId(c.youtubeUrl));
-  if(ytCards.length===0){toast('No cards with videos');return;}
+  const ytCards=allCards.filter(c=>c.driveUrl&&c.driveUrl.trim());
+  if(ytCards.length===0){toast('No cards with audio/video URL');return;}
   // Shuffle
   sleepPlaylist=ytCards.slice();
   for(let i=sleepPlaylist.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sleepPlaylist[i],sleepPlaylist[j]]=[sleepPlaylist[j],sleepPlaylist[i]];}
@@ -1727,42 +1727,32 @@ function playSleepVideo(){
   if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
   if(sleepPlaylist.length===0)return;
   const card=sleepPlaylist[sleepIndex];
-  const driveId=extractDriveId(card.driveUrl);
-  const ytId=extractYtId(card.youtubeUrl);
+  const audioUrl=card.driveUrl?card.driveUrl.trim():'';
   const start=card.ytStart!=null?card.ytStart:0;
   const end=card.ytEnd!=null?card.ytEnd:null;
   const wrap=document.getElementById('sleepListenPlayer');
   wrap.innerHTML='';
   sleepLoadedAt=Date.now();
-  if(driveId){
-    const video=document.createElement('video');
-    video.id='sleepDriveVideo';
-    var sleepSrcUrl=getDriveStreamUrl(driveId);
-    if(start!=null||end!=null){
-      sleepSrcUrl+='#t='+(start!=null?start:'');
-      if(end!=null)sleepSrcUrl+=','+end;
-    }
-    video.src=sleepSrcUrl;
-    video.style.cssText='width:100%;height:100%;background:#000';
-    video.setAttribute('playsinline','');
-    video.autoplay=true;
-    video.onloadedmetadata=function(){if(start!=null)video.currentTime=start;video.playbackRate=sleepSpeed;};
-    video.ontimeupdate=function(){
-      if(end!=null&&video.currentTime>=end){
-        video.pause();
+  if(audioUrl){
+    const isAudio=/\.(mp3|m4a|wav|ogg|aac|flac)(\?|$)/i.test(audioUrl);
+    const el=document.createElement(isAudio?'audio':'video');
+    el.id='sleepDriveVideo';
+    el.src=audioUrl;
+    el.style.cssText=isAudio?'width:100%;height:48px':'width:100%;height:100%;background:#000';
+    el.setAttribute('playsinline','');
+    el.autoplay=true;el.controls=true;
+    el.onloadedmetadata=function(){if(start!=null)el.currentTime=start;el.playbackRate=sleepSpeed;};
+    el.ontimeupdate=function(){
+      if(end!=null&&el.currentTime>=end){
+        el.pause();
         sleepListenNext();
       }
     };
-    video.onended=function(){
+    el.onended=function(){
       if(Date.now()-sleepLoadedAt>2000)sleepListenNext();
     };
-    video.onerror=function(){
-      if(ytId)playSleepYouTube(ytId,start,end);
-      else sleepListenNext();
-    };
-    wrap.appendChild(video);
-  } else if(ytId){
-    playSleepYouTube(ytId,start,end);
+    el.onerror=function(){sleepListenNext();};
+    wrap.appendChild(el);
   } else {
     sleepListenNext();return;
   }
@@ -1770,10 +1760,6 @@ function playSleepVideo(){
   document.getElementById('sleepListenCardName').textContent=displayName;
   document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
   document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
-  if(end!=null&&start!=null&&!driveId){
-    const duration=(end-start)/sleepSpeed*1000+5000;
-    sleepTimer=setTimeout(()=>sleepListenNext(),duration);
-  }
 }
 function playSleepYouTube(ytId,start,end){
   const wrap=document.getElementById('sleepListenPlayer');
