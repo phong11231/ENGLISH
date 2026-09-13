@@ -3031,7 +3031,6 @@ async function pushDecksToAll(){
 async function loadSharedDecks(){
   try{
     const snap=await firestore.collection('sharedDecks').get();
-    console.log('[SharedDecks] loaded:',snap.size,'docs, auth:',!!currentUser);
     if(snap.empty)return;
     // Remove old shared decks from user
     const sharedIds=new Set();
