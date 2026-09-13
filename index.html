@@ -966,6 +966,25 @@ input,textarea,select{font-family:inherit;font-size:inherit}
   </div>
 </div>
 
+<div id="sleepListenOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:#000;flex-direction:column">
+  <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.05)">
+    <button class="btn btn-ghost btn-sm" onclick="stopSleepListen()" style="color:#fff">✕ Exit</button>
+    <span style="flex:1;color:#fff;font-size:14px;font-weight:600" id="sleepListenTitle">🌙 Sleep Listen</span>
+    <span style="color:rgba(255,255,255,0.5);font-size:13px" id="sleepListenCounter">0 / 0</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:16px">
+    <div id="sleepListenPlayer" style="width:100%;max-width:900px;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#111"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 16px;background:rgba(255,255,255,0.05)">
+    <button class="btn btn-ghost btn-sm" onclick="sleepListenPrev()" style="color:#fff;font-size:18px">⏮</button>
+    <button class="btn btn-ghost btn-sm" onclick="sleepListenReplay()" style="color:#fff;font-size:18px">🔄</button>
+    <button class="btn btn-ghost btn-sm" onclick="sleepListenNext()" style="color:#fff;font-size:18px">⏭</button>
+  </div>
+  <div style="padding:8px 16px;text-align:center">
+    <span style="color:rgba(255,255,255,0.4);font-size:12px" id="sleepListenCardName"></span>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Firebase SDK -->
@@ -1242,6 +1261,7 @@ function renderDecks(){
           <button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Study (${parentCards.length} cards)</button>
           <button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 View / Edit</button>
           <button class="btn btn-ghost" onclick="openDeckModal()">📂 + Sub-deck</button>
+          <button class="btn btn-ghost" onclick="startSleepListen('${viewingParentId}',true)">🌙 Sleep Listen</button>
         </div>
       </div>`;
       return;
@@ -1266,6 +1286,7 @@ function renderDecks(){
         ${subCount?'<button class="deck-action-btn" onclick="startReviewAll(\''+id+'\')" title="Study all">📚</button>':''}
         <button class="deck-action-btn" onclick="openBrowser('${id}')" title="View cards">📋</button>
         <button class="deck-action-btn" onclick="openCustomStudyForDeck('${id}')" title="Custom study">🎯</button>
+        <button class="deck-action-btn" onclick="startSleepListen('${id}',true)" title="Sleep Listen">🌙</button>
         <button class="deck-action-btn" onclick="openEditDeck('${id}')" title="Edit">✏️</button>
         <button class="deck-action-btn delete" onclick="deleteDeck('${id}')" title="Delete">🗑️</button>
       </div>
@@ -1674,6 +1695,95 @@ function startReview(deckId){
   document.getElementById('undoBtn').style.display='none';
   updateStreakUI();
   showCurrentCard();
+}
+
+// ===== SLEEP LISTEN =====
+let sleepPlaylist=[],sleepIndex=0,sleepTimer=null;
+function startSleepListen(deckId,includeAll){
+  const allCards=includeAll?getAllCardsIncludingSubs(deckId):getDeckCards(deckId);
+  const ytCards=allCards.filter(c=>extractYtId(c.youtubeUrl));
+  if(ytCards.length===0){toast('No cards with YouTube videos');return;}
+  // Shuffle
+  sleepPlaylist=ytCards.slice();
+  for(let i=sleepPlaylist.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sleepPlaylist[i],sleepPlaylist[j]]=[sleepPlaylist[j],sleepPlaylist[i]];}
+  sleepIndex=0;
+  document.getElementById('sleepListenOverlay').style.display='flex';
+  document.getElementById('sleepListenTitle').textContent='🌙 Sleep Listen — '+(db.decks[deckId]?.name||'');
+  playSleepVideo();
+}
+function getAllCardsIncludingSubs(deckId){
+  let cards=getDeckCards(deckId).slice();
+  Object.keys(db.decks).forEach(id=>{if(db.decks[id].parent===deckId)cards=cards.concat(getAllCardsIncludingSubs(id));});
+  return cards;
+}
+function playSleepVideo(){
+  if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
+  if(sleepPlaylist.length===0)return;
+  const card=sleepPlaylist[sleepIndex];
+  const ytId=extractYtId(card.youtubeUrl);
+  const start=card.ytStart||0;
+  const end=card.ytEnd||null;
+  const wrap=document.getElementById('sleepListenPlayer');
+  wrap.innerHTML='';
+  const iframe=document.createElement('iframe');
+  let src='https://www.youtube.com/embed/'+ytId+'?playsinline=1&rel=0&modestbranding=1&autoplay=1&playlist='+ytId;
+  if(start)src+='&start='+Math.floor(start);
+  if(end)src+='&end='+Math.floor(end);
+  src+='&enablejsapi=1';
+  iframe.src=src;
+  iframe.width='100%';iframe.height='100%';
+  iframe.style.border='none';
+  iframe.setAttribute('allowfullscreen','');
+  iframe.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+  iframe.id='sleepYtFrame';
+  wrap.appendChild(iframe);
+  const displayName=card.cardName||card.front||(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0])||'';
+  document.getElementById('sleepListenCardName').textContent=displayName;
+  document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
+  // Auto-advance: use duration if end is set, otherwise poll
+  if(end&&start!=null){
+    const duration=(end-start)*1000+1500;
+    sleepTimer=setTimeout(()=>sleepListenNext(),duration);
+  } else {
+    sleepPollEnd();
+  }
+}
+function sleepPollEnd(){
+  const iframe=document.getElementById('sleepYtFrame');
+  if(!iframe){return;}
+  try{
+    iframe.contentWindow.postMessage('{"event":"command","func":"getPlayerState","args":""}','*');
+  }catch(e){}
+  sleepTimer=setTimeout(()=>{sleepPollEnd();},3000);
+}
+window.addEventListener('message',function(e){
+  if(!e.data||typeof e.data!=='string')return;
+  try{
+    const d=JSON.parse(e.data);
+    if(d.event==='onStateChange'&&d.info===0&&document.getElementById('sleepListenOverlay').style.display==='flex'){
+      sleepListenNext();
+    }
+  }catch(ex){}
+});
+function sleepListenNext(){
+  if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
+  sleepIndex=(sleepIndex+1)%sleepPlaylist.length;
+  playSleepVideo();
+}
+function sleepListenPrev(){
+  if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
+  sleepIndex=(sleepIndex-1+sleepPlaylist.length)%sleepPlaylist.length;
+  playSleepVideo();
+}
+function sleepListenReplay(){
+  if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
+  playSleepVideo();
+}
+function stopSleepListen(){
+  if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
+  document.getElementById('sleepListenPlayer').innerHTML='';
+  document.getElementById('sleepListenOverlay').style.display='none';
+  sleepPlaylist=[];sleepIndex=0;
 }
 
 function exitReview(){destroyYtPlayer();cleanupDialogueLayout();reviewQueue=[];showView('decks');}
