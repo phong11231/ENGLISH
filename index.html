@@ -1723,6 +1723,15 @@ function getAllCardsIncludingSubs(deckId){
   Object.keys(db.decks).forEach(id=>{if(db.decks[id].parent===deckId)cards=cards.concat(getAllCardsIncludingSubs(id));});
   return cards;
 }
+function speakTTS(text,cb){
+  if(!window.speechSynthesis||!text){if(cb)cb();return;}
+  window.speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';u.rate=1;u.volume=1;
+  u.onend=function(){if(cb)cb();};
+  u.onerror=function(){if(cb)cb();};
+  window.speechSynthesis.speak(u);
+}
 function playSleepVideo(){
   if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
   if(sleepPlaylist.length===0)return;
@@ -1733,7 +1742,12 @@ function playSleepVideo(){
   const wrap=document.getElementById('sleepListenPlayer');
   wrap.innerHTML='';
   sleepLoadedAt=Date.now();
-  if(audioUrl){
+  const displayName=card.cardName||card.front||(typeof card.fronts==='object'&&card.fronts&&card.fronts[0]?(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0]):'')||'';
+  document.getElementById('sleepListenCardName').textContent=displayName;
+  document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
+  document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
+  if(!audioUrl){sleepListenNext();return;}
+  speakTTS(displayName,function(){
     const isAudio=/\.(mp3|m4a|wav|ogg|aac|flac)(\?|$)/i.test(audioUrl);
     const el=document.createElement(isAudio?'audio':'video');
     el.id='sleepDriveVideo';
@@ -1748,13 +1762,7 @@ function playSleepVideo(){
     el.onended=function(){if(Date.now()-sleepLoadedAt>2000)advanceOnce();};
     el.onerror=function(){sleepListenNext();};
     wrap.appendChild(el);
-  } else {
-    sleepListenNext();return;
-  }
-  const displayName=card.cardName||card.front||(typeof card.fronts==='object'&&card.fronts&&card.fronts[0]?(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0]):'')||'';
-  document.getElementById('sleepListenCardName').textContent=displayName;
-  document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
-  document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
+  });
 }
 function playSleepYouTube(ytId,start,end){
   const wrap=document.getElementById('sleepListenPlayer');
