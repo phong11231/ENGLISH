@@ -1750,6 +1750,10 @@ function playSleepVideo(){
   document.getElementById('sleepListenCardName').textContent=displayName;
   document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
   document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
+  if(end!=null&&start!=null){
+    const duration=(end-start)/sleepSpeed*1000+5000;
+    sleepTimer=setTimeout(()=>sleepListenNext(),duration);
+  }
 }
 window.addEventListener('message',function(e){
   if(!e.data||typeof e.data!=='string')return;
