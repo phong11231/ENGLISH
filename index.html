@@ -1778,7 +1778,7 @@ function playSleepVideo(){
 function playSleepYouTube(ytId,start,end){
   const wrap=document.getElementById('sleepListenPlayer');
   const iframe=document.createElement('iframe');
-  let src='https://www.youtube.com/embed/'+ytId+'?playsinline=1&rel=0&modestbranding=1&autoplay=1';
+  let src='https://www.youtube.com/embed/'+ytId+'?playsinline=1&rel=0&modestbranding=1&autoplay=1&vq=small';
   if(start!=null)src+='&start='+Math.floor(start);
   if(end!=null)src+='&end='+Math.floor(end);
   src+='&enablejsapi=1&origin='+encodeURIComponent(location.origin);
@@ -1891,7 +1891,7 @@ function buildDriveEmbed(driveId,start,end){
 }
 function buildYtEmbed(videoId,start,end){
   const iframe=document.createElement('iframe');
-  let src='https://www.youtube.com/embed/'+videoId+'?playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&cc_load_policy=0&autoplay=1';
+  let src='https://www.youtube.com/embed/'+videoId+'?playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&cc_load_policy=0&autoplay=1&vq=small';
   if(start!=null)src+='&start='+Math.floor(start);
   if(end!=null)src+='&end='+Math.floor(end);
   iframe.src=src;
