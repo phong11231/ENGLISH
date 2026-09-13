@@ -834,6 +834,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
         </select>
       </div>
       <div class="form-group"><label>🎬 YouTube Video (optional)</label><input type="text" id="cardYoutubeUrl" placeholder="e.g. https://youtube.com/watch?v=..."></div>
+      <div class="form-group"><label>📁 Google Drive Video (optional, prioritized over YouTube)</label><input type="text" id="cardDriveUrl" placeholder="e.g. https://drive.google.com/file/d/.../view"></div>
       <div style="display:flex;gap:8px">
         <div class="form-group" style="flex:1"><label>Start (seconds)</label><input type="number" id="cardYtStart" placeholder="e.g. 85" min="0" step="0.1"></div>
         <div class="form-group" style="flex:1"><label>End (seconds)</label><input type="number" id="cardYtEnd" placeholder="e.g. 92" min="0" step="0.1"></div>
@@ -1136,7 +1137,7 @@ function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
 
 // ===== SM-2 =====
-function newCardData(){return{id:crypto.randomUUID(),cardName:'',front:'',fronts:[],back:'',definition:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+function newCardData(){return{id:crypto.randomUUID(),cardName:'',front:'',fronts:[],back:'',definition:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,driveUrl:'',cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
 
 function sm2(card,quality){
   const now=Date.now(),DAY=86400000; card.lastReview=now;
@@ -1452,6 +1453,7 @@ function openCardModal(cardId){
     document.getElementById('cardNameInput').value=card.cardName||'';
     document.getElementById('cardDefinitionInput').value=card.definition||'';
     document.getElementById('cardYoutubeUrl').value=card.youtubeUrl||'';
+    document.getElementById('cardDriveUrl').value=card.driveUrl||'';
     document.getElementById('cardYtStart').value=card.ytStart!=null?card.ytStart:'';
     document.getElementById('cardYtEnd').value=card.ytEnd!=null?card.ytEnd:'';
     document.getElementById('cardCakeUrl').value=card.cakeUrl||'';
@@ -1464,7 +1466,7 @@ function openCardModal(cardId){
     document.getElementById('cardReviewMode').value='flip';
     document.getElementById('cardDisplayMode').value='voice';
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
-    document.getElementById('cardYoutubeUrl').value='';document.getElementById('cardYtStart').value='';document.getElementById('cardYtEnd').value='';
+    document.getElementById('cardYoutubeUrl').value='';document.getElementById('cardDriveUrl').value='';document.getElementById('cardYtStart').value='';document.getElementById('cardYtEnd').value='';
     document.getElementById('cardCakeUrl').value='';
   }
   document.getElementById('cardModal').classList.add('active');
@@ -1485,6 +1487,7 @@ function saveCard(){
   const ytUrl=document.getElementById('cardYoutubeUrl').value.trim();
   const ytStart=document.getElementById('cardYtStart').value?parseFloat(document.getElementById('cardYtStart').value):null;
   const ytEnd=document.getElementById('cardYtEnd').value?parseFloat(document.getElementById('cardYtEnd').value):null;
+  const driveUrl=document.getElementById('cardDriveUrl').value.trim();
   const cakeUrl=document.getElementById('cardCakeUrl').value.trim();
   const cardName=document.getElementById('cardNameInput').value.trim();
   const definition=document.getElementById('cardDefinitionInput').value.trim();
@@ -1494,11 +1497,11 @@ function saveCard(){
     const nums=new Set();text.replace(/\{\{c(\d+)::/g,(_,n)=>nums.add(parseInt(n)));
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;
+      card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,1);card.back=clozeToBack(text,1);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;
       toast('Updated!');
     } else {
       nums.forEach(n=>{
-        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;
+        const card=newCardData();card.type='cloze';card.clozeText=text;card.front=clozeToFront(text,n);card.back=clozeToBack(text,n);card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;
         deck.cards.push(card);
       });
       toast('Added '+nums.size+' cloze cards!');
@@ -1510,9 +1513,9 @@ function saveCard(){
     const front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;toast('Updated!');
+      card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;toast('Updated!');
     } else {
-      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;deck.cards.push(card);
+      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;deck.cards.push(card);
       if(type==='reversed'){const rc=newCardData();rc.front=back;rc.fronts=[back];rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;rc.cakeUrl=cakeUrl;rc.cardName=cardName;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
       else toast('Card added!');
     }
@@ -1705,8 +1708,8 @@ function startReview(deckId){
 let sleepPlaylist=[],sleepIndex=0,sleepTimer=null,sleepSpeed=1.5,sleepLoadedAt=0;
 function startSleepListen(deckId,includeAll){
   const allCards=includeAll?getAllCardsIncludingSubs(deckId):getDeckCards(deckId);
-  const ytCards=allCards.filter(c=>extractYtId(c.youtubeUrl));
-  if(ytCards.length===0){toast('No cards with YouTube videos');return;}
+  const ytCards=allCards.filter(c=>extractDriveId(c.driveUrl)||extractYtId(c.youtubeUrl));
+  if(ytCards.length===0){toast('No cards with videos');return;}
   // Shuffle
   sleepPlaylist=ytCards.slice();
   for(let i=sleepPlaylist.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[sleepPlaylist[i],sleepPlaylist[j]]=[sleepPlaylist[j],sleepPlaylist[i]];}
@@ -1724,11 +1727,54 @@ function playSleepVideo(){
   if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
   if(sleepPlaylist.length===0)return;
   const card=sleepPlaylist[sleepIndex];
+  const driveId=extractDriveId(card.driveUrl);
   const ytId=extractYtId(card.youtubeUrl);
   const start=card.ytStart!=null?card.ytStart:0;
   const end=card.ytEnd!=null?card.ytEnd:null;
   const wrap=document.getElementById('sleepListenPlayer');
   wrap.innerHTML='';
+  sleepLoadedAt=Date.now();
+  if(driveId){
+    const video=document.createElement('video');
+    video.id='sleepDriveVideo';
+    video.src=getDriveStreamUrl(driveId);
+    video.style.cssText='width:100%;height:100%;background:#000';
+    video.setAttribute('playsinline','');
+    video.autoplay=true;
+    video.onloadedmetadata=function(){
+      if(start)video.currentTime=start;
+      video.playbackRate=sleepSpeed;
+    };
+    video.ontimeupdate=function(){
+      if(end!=null&&video.currentTime>=end){
+        video.pause();
+        sleepListenNext();
+      }
+    };
+    video.onended=function(){
+      if(Date.now()-sleepLoadedAt>2000)sleepListenNext();
+    };
+    video.onerror=function(){
+      if(ytId)playSleepYouTube(ytId,start,end);
+      else sleepListenNext();
+    };
+    wrap.appendChild(video);
+  } else if(ytId){
+    playSleepYouTube(ytId,start,end);
+  } else {
+    sleepListenNext();return;
+  }
+  const displayName=card.cardName||card.front||(typeof card.fronts==='object'&&card.fronts&&card.fronts[0]?(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0]):'')||'';
+  document.getElementById('sleepListenCardName').textContent=displayName;
+  document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
+  document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
+  if(end!=null&&start!=null&&!driveId){
+    const duration=(end-start)/sleepSpeed*1000+5000;
+    sleepTimer=setTimeout(()=>sleepListenNext(),duration);
+  }
+}
+function playSleepYouTube(ytId,start,end){
+  const wrap=document.getElementById('sleepListenPlayer');
   const iframe=document.createElement('iframe');
   let src='https://www.youtube.com/embed/'+ytId+'?playsinline=1&rel=0&modestbranding=1&autoplay=1';
   if(start!=null)src+='&start='+Math.floor(start);
@@ -1741,19 +1787,10 @@ function playSleepVideo(){
   iframe.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
   iframe.id='sleepYtFrame';
   wrap.appendChild(iframe);
-  sleepLoadedAt=Date.now();
   iframe.onload=function(){
     setTimeout(()=>applySleepSpeed(),1000);
     setTimeout(()=>applySleepSpeed(),3000);
   };
-  const displayName=card.cardName||card.front||(typeof card.fronts==='object'&&card.fronts&&card.fronts[0]?(typeof card.fronts[0]==='object'?card.fronts[0].text:card.fronts[0]):'')||'';
-  document.getElementById('sleepListenCardName').textContent=displayName;
-  document.getElementById('sleepListenCounter').textContent=(sleepIndex+1)+' / '+sleepPlaylist.length;
-  document.getElementById('sleepSpeedLabel').textContent=sleepSpeed+'x';
-  if(end!=null&&start!=null){
-    const duration=(end-start)/sleepSpeed*1000+5000;
-    sleepTimer=setTimeout(()=>sleepListenNext(),duration);
-  }
 }
 window.addEventListener('message',function(e){
   if(!e.data||typeof e.data!=='string')return;
@@ -1785,6 +1822,8 @@ function stopSleepListen(){
   sleepPlaylist=[];sleepIndex=0;
 }
 function applySleepSpeed(){
+  const driveVideo=document.getElementById('sleepDriveVideo');
+  if(driveVideo){driveVideo.playbackRate=sleepSpeed;return;}
   const iframe=document.getElementById('sleepYtFrame');
   if(!iframe||!iframe.contentWindow)return;
   iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:'setPlaybackRate',args:[sleepSpeed]}),'*');
@@ -1810,14 +1849,26 @@ function cleanupDialogueLayout(){
 
 // ===== YOUTUBE CLIP =====
 function extractYtId(url){if(!url)return null;const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
+function extractDriveId(url){if(!url)return null;const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/)||url.match(/id=([a-zA-Z0-9_-]+)/);return m?m[1]:null;}
+function getDriveStreamUrl(driveId){return 'https://drive.google.com/uc?export=download&id='+driveId;}
 
 function destroyYtPlayer(){
-  document.querySelectorAll('.yt-card-wrap iframe, .dialogue-yt-wrap iframe, #ytPreviewPlayer iframe').forEach(f=>f.remove());
+  document.querySelectorAll('.yt-card-wrap iframe, .dialogue-yt-wrap iframe, .dialogue-yt-wrap video, #ytPreviewPlayer iframe').forEach(f=>f.remove());
 }
 
+function buildDriveEmbed(driveId,start,end){
+  const video=document.createElement('video');
+  video.src=getDriveStreamUrl(driveId);
+  video.style.cssText='width:100%;height:100%;display:block;border:none;border-radius:var(--r-md);background:#000';
+  video.setAttribute('playsinline','');
+  video.autoplay=true;video.controls=true;
+  video.onloadedmetadata=function(){if(start)video.currentTime=start;};
+  if(end!=null)video.ontimeupdate=function(){if(video.currentTime>=end)video.pause();};
+  return video;
+}
 function buildYtEmbed(videoId,start,end){
   const iframe=document.createElement('iframe');
-  let src='https://www.youtube.com/embed/'+videoId+'?playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&cc_load_policy=0&autoplay=1&playlist='+videoId;
+  let src='https://www.youtube.com/embed/'+videoId+'?playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&cc_load_policy=0&autoplay=1';
   if(start!=null)src+='&start='+Math.floor(start);
   if(end!=null)src+='&end='+Math.floor(end);
   iframe.src=src;
@@ -1826,6 +1877,13 @@ function buildYtEmbed(videoId,start,end){
   iframe.setAttribute('allowfullscreen','');
   iframe.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
   return iframe;
+}
+function buildVideoEmbed(card){
+  const driveId=extractDriveId(card.driveUrl);
+  if(driveId)return buildDriveEmbed(driveId,card.ytStart,card.ytEnd);
+  const ytId=extractYtId(card.youtubeUrl);
+  if(ytId)return buildYtEmbed(ytId,card.ytStart,card.ytEnd);
+  return null;
 }
 
 function previewYtClip(){
@@ -1878,8 +1936,10 @@ function showCurrentCard(){
   if(isDialogue){
     // Dialogue mode: auto-play all fronts sequentially, voice-only (hidden text)
     const el=document.getElementById('cardFront');
+    const dlgDriveId=extractDriveId(card.driveUrl);
     const dlgYtId=extractYtId(card.youtubeUrl);
-    let ytBtnHtml=dlgYtId?'<button class="yt-video-btn dialogue-yt-toggle" onclick="event.stopPropagation();toggleDialogueVideo()" style="margin-top:8px">🎬 Watch video</button>':'';
+    const hasVideo=dlgDriveId||dlgYtId;
+    let ytBtnHtml=hasVideo?'<button class="yt-video-btn dialogue-yt-toggle" onclick="event.stopPropagation();toggleDialogueVideo()" style="margin-top:8px">🎬 Watch video</button>':'';
     el.innerHTML='<div class="voice-card"><button class="voice-play-btn dialogue-main-speaker" onclick="event.stopPropagation();replayDialogue()"><span class="voice-icon">🔊</span><span class="voice-label">Playing...</span></button><div class="voice-hint">🎧 Listen to the dialogue</div>'+ytBtnHtml+'</div><div class="front-counter">1 / '+fronts.length+'</div>';
     document.getElementById('cardBack').innerHTML='';
     window._dialoguePlaying=true;
@@ -1938,11 +1998,11 @@ function showCurrentCard(){
   backFaceEl.classList.remove('has-video');
   const oldYtBtn=backFaceEl.querySelector('.yt-video-btn');if(oldYtBtn)oldYtBtn.remove();
   const oldYtWrap=backFaceEl.querySelector('.yt-card-wrap');if(oldYtWrap)oldYtWrap.remove();
-  const ytId=extractYtId(card.youtubeUrl);
+  const hasCardVideo=extractDriveId(card.driveUrl)||extractYtId(card.youtubeUrl);
 
   // Dictionary & Cake buttons (only when no video)
   const oldLinkBtns=backFaceEl.querySelector('.card-link-btns');if(oldLinkBtns)oldLinkBtns.remove();
-  if(!ytId){
+  if(!hasCardVideo){
     const frontText=(card.front||'').replace(/<[^>]*>/g,'').trim();
     if(frontText||card.cakeUrl){
       const linkWrap=document.createElement('div');linkWrap.className='card-link-btns';linkWrap.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;z-index:2;position:relative;justify-content:center';
@@ -2238,8 +2298,8 @@ function replayDialogue(){
   const card=reviewQueue[reviewIndex];
   const ytWrap=document.querySelector('.dialogue-yt-wrap');
   if(ytWrap&&card){
-    const ytId=extractYtId(card.youtubeUrl);
-    if(ytId){ytWrap.innerHTML='';ytWrap.appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));}
+    const ve=buildVideoEmbed(card);
+    if(ve){ytWrap.innerHTML='';ytWrap.appendChild(ve);}
   }
   function playLine(idx){
     if(idx>=fronts.length){
@@ -2278,7 +2338,9 @@ function flipCard(){
       window._dialogueShown=true;
       const el=document.getElementById('cardFront');
       const card=reviewQueue[reviewIndex];
+      const driveId2=extractDriveId(card.driveUrl);
       const ytId=extractYtId(card.youtubeUrl);
+      const hasVid=driveId2||ytId;
       let transcriptHtml='<div class="dialogue-list front-transition">';
       const vMap=window._dialogueVoiceMap||{};
       fronts.forEach(function(f,i){
@@ -2304,9 +2366,9 @@ function flipCard(){
       const actBar=document.createElement('div');actBar.className='dialogue-action-bar';
       actBar.style.cssText='display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;justify-content:center';
       actBar.onclick=function(e){e.stopPropagation();};
-      actBar.innerHTML='<button class="btn btn-ghost btn-sm" onclick="var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';w.appendChild(buildYtEmbed(\''+ytId+'\','+(card.ytStart!=null?card.ytStart:'null')+','+(card.ytEnd!=null?card.ytEnd:'null')+'));}">🔄 Replay</button><button class="btn btn-ghost btn-sm" onclick="toggleAllDialogueText()">Show / Hide all</button><button class="btn btn-ghost btn-sm" onclick="flipCard()">↩ Flip back</button>';
+      actBar.innerHTML='<button class="btn btn-ghost btn-sm" onclick="var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';var e=buildVideoEmbed(reviewQueue[reviewIndex]);if(e)w.appendChild(e);}">🔄 Replay</button><button class="btn btn-ghost btn-sm" onclick="toggleAllDialogueText()">Show / Hide all</button><button class="btn btn-ghost btn-sm" onclick="flipCard()">↩ Flip back</button>';
       fc.parentNode.insertBefore(actBar,fc);
-      if(ytId){
+      if(hasVid){
         const wrapper=document.createElement('div');
         wrapper.className='dialogue-outer-layout';
         actBar.parentNode.insertBefore(wrapper,actBar);
@@ -2314,7 +2376,7 @@ function flipCard(){
         ytDiv.className='dialogue-yt-outer';
         ytDiv.innerHTML='<div class="dialogue-yt-wrap"></div>';
         ytDiv.onclick=function(e){e.stopPropagation();};
-        ytDiv.querySelector('.dialogue-yt-wrap').appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
+        ytDiv.querySelector('.dialogue-yt-wrap').appendChild(buildVideoEmbed(card));
         wrapper.appendChild(ytDiv);
         const rightCol=document.createElement('div');
         rightCol.className='dialogue-right-col';
@@ -2331,8 +2393,8 @@ function flipCard(){
     window._dialogueShown=false;
     const el2=document.getElementById('cardFront');
     const cardFlip=reviewQueue[reviewIndex];
-    const dlgYtId2=extractYtId(cardFlip.youtubeUrl);
-    let ytBtn2=dlgYtId2?'<button class="yt-video-btn dialogue-yt-toggle" onclick="event.stopPropagation();toggleDialogueVideo()" style="margin-top:8px">🎬 Watch video</button>':'';
+    const hasVid2=extractDriveId(cardFlip.driveUrl)||extractYtId(cardFlip.youtubeUrl);
+    let ytBtn2=hasVid2?'<button class="yt-video-btn dialogue-yt-toggle" onclick="event.stopPropagation();toggleDialogueVideo()" style="margin-top:8px">🎬 Watch video</button>':'';
     el2.innerHTML='<div class="voice-card"><button class="voice-play-btn dialogue-main-speaker" onclick="event.stopPropagation();replayDialogue()"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">🎧 Listen to the dialogue</div>'+ytBtn2+'</div><div class="front-counter">'+fronts.length+' / '+fronts.length+'</div>';
     cleanupDialogueLayout();
     document.getElementById('reviewActions').style.display='none';
@@ -2349,8 +2411,8 @@ function flipCard(){
     fc.classList.add('flipped');
     document.getElementById('reviewActions').style.display='flex';
     const card=reviewQueue[reviewIndex];
-    const ytId=extractYtId(card.youtubeUrl);
-    if(ytId){
+    const vidEmbed=buildVideoEmbed(card);
+    if(vidEmbed){
       fc.classList.add('dialogue-mode');
       const backFaceEl=fc.querySelector('.flashcard-face.back');
       const oldBtn=backFaceEl.querySelector('.yt-video-btn');if(oldBtn)oldBtn.remove();
@@ -2364,12 +2426,12 @@ function flipCard(){
       ytDiv.className='dialogue-yt-outer';
       ytDiv.innerHTML='<div class="dialogue-yt-wrap"></div>';
       ytDiv.onclick=function(e){e.stopPropagation();};
-      ytDiv.querySelector('.dialogue-yt-wrap').appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
+      ytDiv.querySelector('.dialogue-yt-wrap').appendChild(vidEmbed);
       wrapper.appendChild(ytDiv);
       wrapper.appendChild(fc);
       const ft=(card.front||'').replace(/<[^>]*>/g,'').trim();
       let extraBtns='<div class="card-link-btns-outer" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center" onclick="event.stopPropagation()">';
-      extraBtns+='<button class="yt-video-btn" onclick="event.stopPropagation();var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';w.appendChild(buildYtEmbed(\''+ytId+'\','+(card.ytStart!=null?card.ytStart:'null')+','+(card.ytEnd!=null?card.ytEnd:'null')+'));}">🔄 Replay</button>';
+      extraBtns+='<button class="yt-video-btn" onclick="event.stopPropagation();var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';var e=buildVideoEmbed(reviewQueue[reviewIndex]);if(e)w.appendChild(e);}">🔄 Replay</button>';
       if(ft)extraBtns+='<button class="yt-video-btn" onclick="window.open(\'https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(ft.toLowerCase())+'\',\'_blank\')">📖 Dictionary</button>';
       if(card.cakeUrl)extraBtns+='<button class="yt-video-btn" onclick="window.open(\''+card.cakeUrl+'\',\'_blank\')">🍰 Cake</button>';
       extraBtns+='</div>';
@@ -2389,8 +2451,8 @@ function toggleAllDialogueText(){
 function toggleDialogueVideo(){
   const fc=document.getElementById('flashcard');
   const card=reviewQueue[reviewIndex];
-  const ytId=extractYtId(card.youtubeUrl);
-  if(!ytId)return;
+  const embed=buildVideoEmbed(card);
+  if(!embed)return;
   const existing=document.querySelector('.dialogue-outer-layout');
   if(existing){
     const ytOuter=existing.querySelector('.dialogue-yt-outer');
@@ -2409,7 +2471,7 @@ function toggleDialogueVideo(){
   ytDiv.className='dialogue-yt-outer';
   ytDiv.innerHTML='<div class="dialogue-yt-wrap"></div>';
   ytDiv.onclick=function(e){e.stopPropagation();};
-  ytDiv.querySelector('.dialogue-yt-wrap').appendChild(buildYtEmbed(ytId,card.ytStart,card.ytEnd));
+  ytDiv.querySelector('.dialogue-yt-wrap').appendChild(embed);
   wrapper.appendChild(ytDiv);
   wrapper.appendChild(fc);
   const btn=fc.querySelector('.dialogue-yt-toggle');
