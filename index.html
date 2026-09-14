@@ -2307,9 +2307,9 @@ function showCurrentCard(){
   const oldYtWrap=backFaceEl.querySelector('.yt-card-wrap');if(oldYtWrap)oldYtWrap.remove();
   const hasCardVideo=extractDriveId(card.driveUrl)||extractYtId(card.youtubeUrl);
 
-  // Dictionary & Cake buttons (only when no video)
+  // Dictionary & Cake buttons
   const oldLinkBtns=backFaceEl.querySelector('.card-link-btns');if(oldLinkBtns)oldLinkBtns.remove();
-  if(!hasCardVideo){
+  {
     const frontText=(card.front||'').replace(/<[^>]*>/g,'').trim();
     if(frontText||card.cakeUrl){
       const linkWrap=document.createElement('div');linkWrap.className='card-link-btns';linkWrap.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;z-index:2;position:relative;justify-content:center';
