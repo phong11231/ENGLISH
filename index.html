@@ -2001,39 +2001,44 @@ async function sendToTelegram(){
   var adminKey=document.getElementById('teleAdminKey').value.trim();
   if(!chatId||!botUrl||!adminKey){toast('Fill all fields');return;}
   try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId:chatId,botUrl:botUrl,adminKey:adminKey}));}catch(e){}
-  var items=[];
+  var urlTracks=[],trimTracks=[];
   for(var i=0;i<sleepPlaylist.length;i++){
     var c=sleepPlaylist[i];
     var url=(c.driveUrl||'').trim();
     if(!url)continue;
     var name=c.cardName||c.front||(typeof c.fronts==='object'&&c.fronts&&c.fronts[0]?(typeof c.fronts[0]==='object'?c.fronts[0].text:c.fronts[0]):'')||'Track '+(i+1);
-    items.push({audioUrl:url,title:name,start:c.ytStart,end:c.ytEnd});
+    var needTrim=(c.ytStart!=null&&c.ytStart>0)||(c.ytEnd!=null&&c.ytEnd>0);
+    if(needTrim){trimTracks.push({audioUrl:url,title:name,start:c.ytStart,end:c.ytEnd});}
+    else{urlTracks.push({audioUrl:url,title:name});}
   }
-  if(items.length===0){toast('No audio tracks found');return;}
+  var total=urlTracks.length+trimTracks.length;
+  if(total===0){toast('No audio tracks found');return;}
   var status=document.getElementById('teleSendStatus');
   var btn=document.getElementById('teleSendBtn');
   btn.disabled=true;
-  var sent=0,total=items.length;
-  for(var i=0;i<items.length;i++){
-    var t=items[i];
-    status.textContent='Sending '+(i+1)+'/'+total+': '+t.title+'...';
-    var needTrim=(t.start!=null&&t.start>0)||(t.end!=null&&t.end>0);
+  var sent=0;
+  // Gui tat ca track khong can trim 1 lan (worker se nhom sendMediaGroup)
+  if(urlTracks.length>0){
+    status.textContent='Sending '+urlTracks.length+' tracks as playlist...';
     try{
-      if(needTrim){
-        status.textContent='Trimming '+(i+1)+'/'+total+': '+t.title+'...';
-        var wavBuf=await trimAudioBlob(t.audioUrl,t.start,t.end);
-        if(wavBuf){
-          var r=await fetch(botUrl+'/send-audio-file?chatId='+encodeURIComponent(chatId)+'&title='+encodeURIComponent(t.title)+'&performer='+encodeURIComponent(t.performer),{method:'POST',headers:{'X-Admin-Key':adminKey,'Content-Type':'audio/wav'},body:wavBuf});
-          var d=await r.json();if(d.ok)sent++;
-        }else{
-          var r=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:[{audioUrl:t.audioUrl,title:t.title,performer:t.performer}]})});
-          var d=await r.json();if(d.sent>0)sent++;
-        }
+      var r=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:urlTracks})});
+      var d=await r.json();if(r.ok)sent+=d.sent||0;
+    }catch(e){console.error('Send playlist error:',e);}
+  }
+  // Gui tung track can trim
+  for(var i=0;i<trimTracks.length;i++){
+    var t=trimTracks[i];
+    status.textContent='Trimming '+(i+1)+'/'+trimTracks.length+': '+t.title+'...';
+    try{
+      var wavBuf=await trimAudioBlob(t.audioUrl,t.start,t.end);
+      if(wavBuf){
+        var r=await fetch(botUrl+'/send-audio-file?chatId='+encodeURIComponent(chatId)+'&title='+encodeURIComponent(t.title),{method:'POST',headers:{'X-Admin-Key':adminKey,'Content-Type':'audio/wav'},body:wavBuf});
+        var d=await r.json();if(d.ok)sent++;
       }else{
-        var r=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:[{audioUrl:t.audioUrl,title:t.title,performer:t.performer}]})});
-        var d=await r.json();if(d.sent>0)sent++;
+        var r=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:[{audioUrl:t.audioUrl,title:t.title}]})});
+        var d=await r.json();if(r.ok)sent+=d.sent||0;
       }
-    }catch(e){console.error('Send track error:',e);}
+    }catch(e){console.error('Trim send error:',e);}
   }
   status.textContent='✅ Sent '+sent+'/'+total+' tracks!';
   toast('Sent '+sent+' tracks to Telegram!');
