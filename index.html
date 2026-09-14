@@ -866,6 +866,10 @@ input,textarea,select{font-family:inherit;font-size:inherit}
       <div id="ytPreviewWrap" style="display:none;margin-bottom:12px;border-radius:var(--r-md);overflow:hidden"><div id="ytPreviewPlayer"></div></div>
       <div class="form-group"><label>🍰 Cake Link (optional)</label><input type="text" id="cardCakeUrl" placeholder="e.g. https://cake.me/..."></div>
       <div class="form-group"><label>Tags (comma separated)</label><input type="text" id="cardTagsInput" placeholder="e.g. week-1, grammar, hard"></div>
+      <div class="form-group" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;margin-top:4px">
+        <button type="button" class="btn btn-ghost" onclick="sendCardToTelegram()" style="width:100%;padding:10px;border:1px solid rgba(0,136,204,0.3);color:#0088cc;border-radius:8px">📻 Send this card to Telegram</button>
+        <span id="cardTeleStatus" style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;display:block;text-align:center"></span>
+      </div>
       <div class="form-actions"><button class="btn btn-ghost" onclick="closeCardModal()">Cancel</button><button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Save card</button></div>
     </div>
   </div>
@@ -2047,6 +2051,33 @@ async function sendToTelegram(){
   status.textContent='✅ Sent '+sent+'/'+total+' tracks!';
   toast('Sent '+sent+' tracks to Telegram!');
   btn.disabled=false;
+}
+async function sendCardToTelegram(){
+  var audioUrl=document.getElementById('cardDriveUrl').value.trim();
+  if(!audioUrl){toast('No audio URL');return;}
+  var saved=localStorage.getItem('flashmind_tele');
+  var chatId='',adminKey='';
+  if(saved){try{var s=JSON.parse(saved);chatId=s.chatId||'';adminKey=s.adminKey||'';}catch(e){}}
+  if(!chatId||!adminKey){toast('Open Sleep Listen > Telegram first to set Chat ID & Admin Key');return;}
+  var botUrl=document.getElementById('teleBotUrl')?document.getElementById('teleBotUrl').value:'https://flashmind-tele-bot.yosua-4131.workers.dev';
+  var cardName=document.getElementById('cardNameInput').value.trim();
+  var cakeUrl=document.getElementById('cardCakeUrl').value.trim();
+  var cakeId='';if(cakeUrl){var m=cakeUrl.match(/\/(\d+)\/?$/);if(m)cakeId=m[1];}
+  var title=cakeId?(cakeId+' - '+cardName):cardName||'Audio';
+  var ytStart=document.getElementById('cardYtStart').value?parseFloat(document.getElementById('cardYtStart').value):0;
+  var ytEnd=document.getElementById('cardYtEnd').value?parseFloat(document.getElementById('cardYtEnd').value):0;
+  var st=document.getElementById('cardTeleStatus');
+  st.textContent='Trimming...';
+  try{
+    var wavBuf=await trimAudioBlob(audioUrl,ytStart,ytEnd);
+    if(wavBuf){
+      st.textContent='Sending...';
+      var r=await fetch(botUrl+'/send-audio-file?chatId='+encodeURIComponent(chatId)+'&title='+encodeURIComponent(title),{method:'POST',headers:{'X-Admin-Key':adminKey,'Content-Type':'audio/wav'},body:wavBuf});
+      var d=await r.json();
+      st.textContent=d.ok?'✅ Sent!':'❌ Failed';
+      if(d.ok)toast('Sent to Telegram!');
+    }else{st.textContent='❌ Trim failed';}
+  }catch(e){st.textContent='❌ Error: '+e.message;}
 }
 function applySleepSpeed(){
   const driveVideo=document.getElementById('sleepDriveVideo');
