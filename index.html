@@ -2675,7 +2675,11 @@ function flipCard(){
       const actBar=document.createElement('div');actBar.className='dialogue-action-bar';
       actBar.style.cssText='display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;justify-content:center';
       actBar.onclick=function(e){e.stopPropagation();};
-      actBar.innerHTML='<button class="btn btn-ghost btn-sm" onclick="var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';var e=buildVideoEmbed(reviewQueue[reviewIndex]);if(e)w.appendChild(e);}">🔄 Replay</button><button class="btn btn-ghost btn-sm" onclick="toggleAllDialogueText()">Show / Hide all</button><button class="btn btn-ghost btn-sm" onclick="flipCard()">↩ Flip back</button>';
+      var _actHtml='<button class="btn btn-ghost btn-sm" onclick="var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';var e=buildVideoEmbed(reviewQueue[reviewIndex]);if(e)w.appendChild(e);}">🔄 Replay</button><button class="btn btn-ghost btn-sm" onclick="toggleAllDialogueText()">Show / Hide all</button><button class="btn btn-ghost btn-sm" onclick="flipCard()">↩ Flip back</button>';
+      var _ft=(card.front||'').replace(/<[^>]*>/g,'').trim();
+      if(_ft)_actHtml+='<button class="btn btn-ghost btn-sm" onclick="window.open(\'https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(_ft.toLowerCase())+'\',\'_blank\')">📖 Dictionary</button>';
+      if(card.cakeUrl)_actHtml+='<button class="btn btn-ghost btn-sm" onclick="window.open(\''+card.cakeUrl.replace(/'/g,"\\'")+'\',\'_blank\')">🍰 Cake</button>';
+      actBar.innerHTML=_actHtml;
       fc.parentNode.insertBefore(actBar,fc);
       if(hasVid){
         const wrapper=document.createElement('div');
