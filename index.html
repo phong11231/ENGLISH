@@ -2007,9 +2007,11 @@ async function sendToTelegram(){
     var url=(c.driveUrl||'').trim();
     if(!url)continue;
     var name=c.cardName||c.front||(typeof c.fronts==='object'&&c.fronts&&c.fronts[0]?(typeof c.fronts[0]==='object'?c.fronts[0].text:c.fronts[0]):'')||'Track '+(i+1);
+    var cakeId='';if(c.cakeUrl){var m=c.cakeUrl.match(/\/(\d+)\/?$/);if(m)cakeId=m[1];}
+    var title=cakeId?(cakeId+' - '+name):name;
     var s=c.ytStart!=null?c.ytStart:0;
     var e=c.ytEnd!=null?c.ytEnd:0;
-    items.push({audioUrl:url,title:name,start:s,end:e});
+    items.push({audioUrl:url,title:title,start:s,end:e});
   }
   if(items.length===0){toast('No audio tracks found');return;}
   var status=document.getElementById('teleSendStatus');
