@@ -1973,7 +1973,7 @@ async function trimAudioBlob(audioUrl,start,end){
   var s=start||0;
   var e=(end!=null&&end>s)?end:decoded.duration;
   var dur=e-s;
-  if(dur<=0||dur>=decoded.duration)return null;
+  if(dur<=0)return null;
   var offCtx=new OfflineAudioContext(decoded.numberOfChannels,Math.ceil(dur*decoded.sampleRate),decoded.sampleRate);
   var src=offCtx.createBufferSource();
   src.buffer=decoded;
@@ -2001,44 +2001,46 @@ async function sendToTelegram(){
   var adminKey=document.getElementById('teleAdminKey').value.trim();
   if(!chatId||!botUrl||!adminKey){toast('Fill all fields');return;}
   try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId:chatId,botUrl:botUrl,adminKey:adminKey}));}catch(e){}
-  var urlTracks=[],trimTracks=[];
+  var items=[];
   for(var i=0;i<sleepPlaylist.length;i++){
     var c=sleepPlaylist[i];
     var url=(c.driveUrl||'').trim();
     if(!url)continue;
     var name=c.cardName||c.front||(typeof c.fronts==='object'&&c.fronts&&c.fronts[0]?(typeof c.fronts[0]==='object'?c.fronts[0].text:c.fronts[0]):'')||'Track '+(i+1);
-    var needTrim=(c.ytStart!=null&&c.ytStart>0)||(c.ytEnd!=null&&c.ytEnd>0);
-    if(needTrim){trimTracks.push({audioUrl:url,title:name,start:c.ytStart,end:c.ytEnd});}
-    else{urlTracks.push({audioUrl:url,title:name});}
+    var s=c.ytStart!=null?c.ytStart:0;
+    var e=c.ytEnd!=null?c.ytEnd:0;
+    items.push({audioUrl:url,title:name,start:s,end:e});
   }
-  var total=urlTracks.length+trimTracks.length;
-  if(total===0){toast('No audio tracks found');return;}
+  if(items.length===0){toast('No audio tracks found');return;}
   var status=document.getElementById('teleSendStatus');
   var btn=document.getElementById('teleSendBtn');
   btn.disabled=true;
-  var sent=0;
-  // Gui tat ca track khong can trim 1 lan (worker se nhom sendMediaGroup)
-  if(urlTracks.length>0){
-    status.textContent='Sending '+urlTracks.length+' tracks as playlist...';
-    try{
-      var r=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:urlTracks})});
-      var d=await r.json();if(r.ok)sent+=d.sent||0;
-    }catch(e){console.error('Send playlist error:',e);}
-  }
-  // Gui tung track can trim
-  for(var i=0;i<trimTracks.length;i++){
-    var t=trimTracks[i];
-    status.textContent='Trimming '+(i+1)+'/'+trimTracks.length+': '+t.title+'...';
+  var sent=0,total=items.length;
+  // Trim tat ca track tu start->end, roi gui 1 lan qua sendMediaGroup
+  status.textContent='Trimming '+total+' tracks...';
+  var trimmedBlobs=[];
+  for(var i=0;i<items.length;i++){
+    var t=items[i];
+    status.textContent='Trimming '+(i+1)+'/'+total+': '+t.title+'...';
     try{
       var wavBuf=await trimAudioBlob(t.audioUrl,t.start,t.end);
-      if(wavBuf){
-        var r=await fetch(botUrl+'/send-audio-file?chatId='+encodeURIComponent(chatId)+'&title='+encodeURIComponent(t.title),{method:'POST',headers:{'X-Admin-Key':adminKey,'Content-Type':'audio/wav'},body:wavBuf});
+      trimmedBlobs.push({buf:wavBuf,title:t.title,audioUrl:t.audioUrl});
+    }catch(e){console.error('Trim error:',t.title,e);trimmedBlobs.push({buf:null,title:t.title,audioUrl:t.audioUrl});}
+  }
+  // Upload tat ca trimmed blobs len worker roi gui mediaGroup
+  status.textContent='Sending '+total+' trimmed tracks...';
+  for(var i=0;i<trimmedBlobs.length;i++){
+    var tb=trimmedBlobs[i];
+    status.textContent='Sending '+(i+1)+'/'+total+': '+tb.title+'...';
+    try{
+      if(tb.buf){
+        var r=await fetch(botUrl+'/send-audio-file?chatId='+encodeURIComponent(chatId)+'&title='+encodeURIComponent(tb.title),{method:'POST',headers:{'X-Admin-Key':adminKey,'Content-Type':'audio/wav'},body:tb.buf});
         var d=await r.json();if(d.ok)sent++;
       }else{
-        var r=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:[{audioUrl:t.audioUrl,title:t.title}]})});
+        var r=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:[{audioUrl:tb.audioUrl,title:tb.title}]})});
         var d=await r.json();if(r.ok)sent+=d.sent||0;
       }
-    }catch(e){console.error('Trim send error:',e);}
+    }catch(e){console.error('Send error:',e);}
   }
   status.textContent='✅ Sent '+sent+'/'+total+' tracks!';
   toast('Sent '+sent+' tracks to Telegram!');
