@@ -1966,31 +1966,78 @@ function openTelegramSend(){
   document.getElementById('teleSendBtn').disabled=false;
 }
 function closeTelegramModal(){document.getElementById('telegramModal').style.display='none';}
+async function trimAudioBlob(audioUrl,start,end){
+  var resp=await fetch(audioUrl);
+  var buf=await resp.arrayBuffer();
+  var ctx=new OfflineAudioContext(1,44100*60,44100);
+  var decoded=await ctx.decodeAudioData(buf);
+  var s=start||0;
+  var e=(end!=null&&end>s)?end:decoded.duration;
+  var dur=e-s;
+  if(dur<=0||dur>=decoded.duration)return null;
+  var offCtx=new OfflineAudioContext(decoded.numberOfChannels,Math.ceil(dur*decoded.sampleRate),decoded.sampleRate);
+  var src=offCtx.createBufferSource();
+  src.buffer=decoded;
+  src.connect(offCtx.destination);
+  src.start(0,s,dur);
+  var rendered=await offCtx.startRendering();
+  var numCh=rendered.numberOfChannels;
+  var len=rendered.length;
+  var sr=rendered.sampleRate;
+  var dataSize=len*numCh*2;
+  var abuf=new ArrayBuffer(44+dataSize);
+  var v=new DataView(abuf);
+  function ws(o,s){for(var i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}
+  ws(0,'RIFF');v.setUint32(4,36+dataSize,true);ws(8,'WAVE');
+  ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,numCh,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*numCh*2,true);v.setUint16(32,numCh*2,true);v.setUint16(34,16,true);
+  ws(36,'data');v.setUint32(40,dataSize,true);
+  var off=44;
+  for(var i=0;i<len;i++){for(var ch=0;ch<numCh;ch++){var sample=Math.max(-1,Math.min(1,rendered.getChannelData(ch)[i]));v.setInt16(off,sample<0?sample*0x8000:sample*0x7FFF,true);off+=2;}}
+  return abuf;
+}
 async function sendToTelegram(){
   var chatId=document.getElementById('teleChatId').value.trim();
   var botUrl=document.getElementById('teleBotUrl').value.trim().replace(/\/$/,'');
   var adminKey=document.getElementById('teleAdminKey').value.trim();
   if(!chatId||!botUrl||!adminKey){toast('Fill all fields');return;}
   try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId:chatId,botUrl:botUrl,adminKey:adminKey}));}catch(e){}
-  var tracks=[];
+  var items=[];
   for(var i=0;i<sleepPlaylist.length;i++){
     var c=sleepPlaylist[i];
     var url=(c.driveUrl||'').trim();
     if(!url)continue;
     var name=c.cardName||c.front||(typeof c.fronts==='object'&&c.fronts&&c.fronts[0]?(typeof c.fronts[0]==='object'?c.fronts[0].text:c.fronts[0]):'')||'Track '+(i+1);
-    tracks.push({audioUrl:url,title:name,performer:'FlashMind'});
+    items.push({audioUrl:url,title:name,performer:'FlashMind',start:c.ytStart,end:c.ytEnd});
   }
-  if(tracks.length===0){toast('No audio tracks found');return;}
+  if(items.length===0){toast('No audio tracks found');return;}
   var status=document.getElementById('teleSendStatus');
   var btn=document.getElementById('teleSendBtn');
   btn.disabled=true;
-  status.textContent='Sending '+tracks.length+' tracks...';
-  try{
-    var res=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:tracks})});
-    var data=await res.json();
-    if(res.ok){status.textContent='✅ Sent '+data.sent+'/'+data.total+' tracks!';toast('Sent '+data.sent+' tracks to Telegram!');}
-    else{status.textContent='❌ Error: '+(data.error||'Unknown');toast(data.error||'Send failed');}
-  }catch(e){status.textContent='❌ Network error';toast('Network error: '+e.message);}
+  var sent=0,total=items.length;
+  for(var i=0;i<items.length;i++){
+    var t=items[i];
+    status.textContent='Sending '+(i+1)+'/'+total+': '+t.title+'...';
+    var needTrim=(t.start!=null&&t.start>0)||(t.end!=null&&t.end>0);
+    try{
+      if(needTrim){
+        status.textContent='Trimming '+(i+1)+'/'+total+': '+t.title+'...';
+        var wavBuf=await trimAudioBlob(t.audioUrl,t.start,t.end);
+        if(wavBuf){
+          var r=await fetch(botUrl+'/send-audio-file?chatId='+encodeURIComponent(chatId)+'&title='+encodeURIComponent(t.title)+'&performer='+encodeURIComponent(t.performer),{method:'POST',headers:{'X-Admin-Key':adminKey,'Content-Type':'audio/wav'},body:wavBuf});
+          var d=await r.json();if(d.ok)sent++;
+        }else{
+          var r=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:[{audioUrl:t.audioUrl,title:t.title,performer:t.performer}]})});
+          var d=await r.json();if(d.sent>0)sent++;
+        }
+      }else{
+        var r=await fetch(botUrl+'/send-playlist',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},body:JSON.stringify({chatId:chatId,tracks:[{audioUrl:t.audioUrl,title:t.title,performer:t.performer}]})});
+        var d=await r.json();if(d.sent>0)sent++;
+      }
+    }catch(e){console.error('Send track error:',e);}
+  }
+  status.textContent='✅ Sent '+sent+'/'+total+' tracks!';
+  toast('Sent '+sent+' tracks to Telegram!');
   btn.disabled=false;
 }
 function applySleepSpeed(){
