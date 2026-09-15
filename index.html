@@ -266,6 +266,18 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .dialogue-text.hidden-text{color:transparent;background:var(--surface);border-radius:4px;user-select:none;position:relative}
 .dialogue-text.hidden-text::after{content:'tap to reveal';position:absolute;left:0;top:50%;transform:translateY(-50%);color:var(--ink-dim);font-size:11px;font-style:italic}
 .dialogue-eye-btn{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1px solid var(--glass-border);background:transparent;color:var(--ink-dim);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.dictation-wrap{display:flex;flex-direction:column;gap:12px;width:100%;max-width:600px;margin:0 auto;padding:16px}
+.dictation-line{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--glass-border)}
+.dictation-top{display:flex;align-items:center;gap:10px}
+.dictation-input{flex:1;padding:8px 12px;border-radius:var(--r-sm);border:1px solid var(--glass-border);background:var(--surface);color:var(--ink);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.dictation-input:focus{border-color:var(--primary)}
+.dictation-input.correct{border-color:#22c55e;background:rgba(34,197,94,.08)}
+.dictation-input.wrong{border-color:#ef4444;background:rgba(239,68,68,.08)}
+.dictation-answer{font-size:13px;color:var(--ink-dim);padding:4px 8px;border-radius:4px;background:var(--surface);display:none;line-height:1.5}
+.dictation-answer.show{display:block}
+.dictation-check-btn{flex-shrink:0;padding:6px 12px;border-radius:var(--r-sm);border:none;background:var(--primary);color:#fff;font-size:13px;cursor:pointer;transition:opacity .2s}
+.dictation-check-btn:hover{opacity:.85}
+.dictation-score{text-align:center;font-size:15px;font-weight:600;color:var(--primary);padding:8px}
 .dialogue-eye-btn:hover{background:var(--surface-2);color:var(--ink)}
 .dialogue-answer-btn{margin-top:12px;width:100%;padding:12px;font-size:15px;border-radius:var(--r-md)}
 .dialogue-yt-wrap{border-radius:var(--r-md);overflow:hidden;aspect-ratio:16/9;background:#000;width:100%}
@@ -2679,6 +2691,7 @@ function flipCard(){
       var _ft=(card.front||'').replace(/<[^>]*>/g,'').trim();
       if(_ft)_actHtml+='<button class="btn btn-ghost btn-sm" onclick="window.open(\'https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(_ft.toLowerCase())+'\',\'_blank\')">📖 Dictionary</button>';
       if(card.cakeUrl)_actHtml+='<button class="btn btn-ghost btn-sm" onclick="window.open(\''+card.cakeUrl.replace(/'/g,"\\'")+'\',\'_blank\')">🍰 Cake</button>';
+      _actHtml+='<button class="btn btn-ghost btn-sm" onclick="startDictation()">✍️ Dictation</button>';
       actBar.innerHTML=_actHtml;
       fc.parentNode.insertBefore(actBar,fc);
       if(hasVid){
@@ -2760,6 +2773,71 @@ function toggleAllDialogueText(){
   const texts=document.querySelectorAll('.dialogue-text');
   const anyHidden=Array.from(texts).some(t=>t.classList.contains('hidden-text'));
   texts.forEach(t=>{if(anyHidden)t.classList.remove('hidden-text');else t.classList.add('hidden-text');});
+}
+function startDictation(){
+  var card=reviewQueue[reviewIndex];
+  var fronts=window._cardFronts||[];
+  if(fronts.length<2)return;
+  var vMap=window._dialogueVoiceMap||{};
+  var fc=document.getElementById('flashcard');
+  var el=document.getElementById('cardFront');
+  var html='<div class="dictation-wrap" onclick="event.stopPropagation()">';
+  html+='<div style="text-align:center;font-size:16px;font-weight:600;color:var(--primary);margin-bottom:4px">✍️ Dictation Mode</div>';
+  fronts.forEach(function(f,i){
+    var txt=getDialogueText(f);
+    var spk=getDialogueSpeaker(f);
+    var safe=esc(txt).replace(/'/g,"\\'").replace(/\n/g,' ');
+    var vid=spk&&vMap[spk]?vMap[spk]:'';
+    var speakFn=vid?'speakTextAs(\''+safe+'\',\''+vid+'\')':'speakText(\''+safe+'\')';
+    var spkLabel=spk?'<span class="dialogue-speaker">'+esc(spk)+'</span>':'';
+    html+='<div class="dictation-line" data-answer="'+esc(txt).replace(/"/g,'&quot;')+'">';
+    html+='<div class="dictation-top">'+spkLabel;
+    html+='<button class="dialogue-speak-btn" onclick="event.stopPropagation();'+speakFn+'" title="Play">🔊</button>';
+    html+='<input class="dictation-input" placeholder="Type what you hear..." data-idx="'+i+'" autocomplete="off" spellcheck="false">';
+    html+='<button class="dictation-check-btn" onclick="event.stopPropagation();checkDictationLine(this)">Check</button>';
+    html+='</div>';
+    html+='<div class="dictation-answer" id="dictAns'+i+'">'+renderContent(txt)+'</div>';
+    html+='</div>';
+  });
+  html+='<div class="dictation-score" id="dictationScore"></div>';
+  html+='<div style="display:flex;gap:8px;justify-content:center"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();checkAllDictation()">Check All</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showAllDictation()">Show All</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();exitDictation()">Exit</button></div>';
+  html+='</div>';
+  el.innerHTML=html;
+  setTimeout(function(){var first=el.querySelector('.dictation-input');if(first)first.focus();},100);
+}
+function normDictation(s){return s.replace(/[^\w\s]/g,'').replace(/\s+/g,' ').trim().toLowerCase();}
+function checkDictationLine(btn){
+  var line=btn.closest('.dictation-line');
+  var input=line.querySelector('.dictation-input');
+  var ans=line.getAttribute('data-answer');
+  var ansEl=line.querySelector('.dictation-answer');
+  var userVal=normDictation(input.value);
+  var correct=normDictation(ans);
+  if(userVal===correct){input.className='dictation-input correct';ansEl.className='dictation-answer show';}
+  else{input.className='dictation-input wrong';ansEl.className='dictation-answer show';}
+}
+function checkAllDictation(){
+  var lines=document.querySelectorAll('.dictation-line');
+  var total=lines.length,right=0;
+  lines.forEach(function(line){
+    var input=line.querySelector('.dictation-input');
+    var ans=line.getAttribute('data-answer');
+    var ansEl=line.querySelector('.dictation-answer');
+    var userVal=normDictation(input.value);
+    var correct=normDictation(ans);
+    if(userVal===correct){input.className='dictation-input correct';right++;}
+    else{input.className='dictation-input wrong';}
+    ansEl.className='dictation-answer show';
+  });
+  var scoreEl=document.getElementById('dictationScore');
+  if(scoreEl)scoreEl.textContent=right+' / '+total+' correct';
+}
+function showAllDictation(){
+  document.querySelectorAll('.dictation-answer').forEach(function(el){el.className='dictation-answer show';});
+}
+function exitDictation(){
+  window._dialogueShown=false;
+  flipCard();flipCard();
 }
 function toggleDialogueVideo(){
   const fc=document.getElementById('flashcard');
