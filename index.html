@@ -3222,7 +3222,7 @@ function openChatAddModal(){
 }
 function closeChatAdd(){document.getElementById('chatAddModal').classList.remove('active');}
 function parseChatLines(text){
-  var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+  var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0&&!l.startsWith('(');});
   return lines.map(function(line){
     var m=line.match(/^([A-Za-z0-9_]+)\s*[:：]\s*(.+)$/);
     if(m)return{speaker:m[1],text:m[2].trim()};
