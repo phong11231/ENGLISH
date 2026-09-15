@@ -3247,7 +3247,7 @@ function saveChatCard(){
   var deck=db.decks[currentDeckId];
   if(!deck){toast('No deck selected');return;}
   deck.cards.push(card);
-  saveLocal();syncDeck(currentDeckId);
+  saveDeckData(currentDeckId,deck);
   closeChatAdd();renderBrowser();
   toast('Chat card added ('+parsed.length+' lines)');
 }
