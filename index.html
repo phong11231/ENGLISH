@@ -3168,7 +3168,7 @@ function saveSettings(){
 // ===== AI PRACTICE =====
 function collectAllVocab(){
   var words=[],sentences=[],idioms=[];
-  db.decks.forEach(function(deck){
+  Object.values(db.decks).forEach(function(deck){
     (deck.cards||[]).forEach(function(card){
       var front=(card.front||'').replace(/<[^>]*>/g,'').trim();
       var back=(card.back||'').replace(/<[^>]*>/g,'').trim();
