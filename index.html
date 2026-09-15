@@ -2853,17 +2853,19 @@ function toggleDialogueVideo(){
     if(ytOuter){destroyYtPlayer();ytOuter.remove();}
     existing.replaceWith(fc);
     fc.classList.remove('dialogue-mode');
+    fc.style.maxWidth='';
     const btn=fc.querySelector('.dialogue-yt-toggle');
     if(btn)btn.textContent='🎬 Watch video';
     return;
   }
   fc.classList.add('dialogue-mode');
+  fc.style.maxWidth='400px';
   const wrapper=document.createElement('div');
   wrapper.className='dialogue-outer-layout';
   fc.parentNode.insertBefore(wrapper,fc);
   const ytDiv=document.createElement('div');
   ytDiv.className='dialogue-yt-outer';
-  ytDiv.innerHTML='<div class="dialogue-yt-wrap"></div>';
+  ytDiv.innerHTML='<div class="dialogue-yt-wrap" style="width:100%;aspect-ratio:16/9;background:#000;border-radius:var(--r-xl);overflow:hidden"></div>';
   ytDiv.onclick=function(e){e.stopPropagation();};
   ytDiv.querySelector('.dialogue-yt-wrap').appendChild(embed);
   wrapper.appendChild(ytDiv);
