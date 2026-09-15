@@ -2709,6 +2709,8 @@ function flipCard(){
         rightCol.appendChild(actBar);
         rightCol.appendChild(fc);
         wrapper.appendChild(rightCol);
+        var ra=document.getElementById('reviewActions');
+        if(ra)wrapper.parentNode.insertBefore(ra,wrapper.nextSibling);
       }
       const hint=document.querySelector('.flashcard-hint');
       if(hint)hint.style.display='none';
@@ -2755,6 +2757,8 @@ function flipCard(){
       ytDiv.querySelector('.dialogue-yt-wrap').appendChild(vidEmbed);
       wrapper.appendChild(ytDiv);
       wrapper.appendChild(fc);
+      var ra2=document.getElementById('reviewActions');
+      if(ra2)wrapper.parentNode.insertBefore(ra2,wrapper.nextSibling);
       const ft=(card.front||'').replace(/<[^>]*>/g,'').trim();
       let extraBtns='<div class="card-link-btns-outer" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;justify-content:center" onclick="event.stopPropagation()">';
       extraBtns+='<button class="yt-video-btn" onclick="event.stopPropagation();var w=document.querySelector(\'.dialogue-yt-wrap\');if(w){w.innerHTML=\'\';var e=buildVideoEmbed(reviewQueue[reviewIndex]);if(e)w.appendChild(e);}">🔄 Replay</button>';
