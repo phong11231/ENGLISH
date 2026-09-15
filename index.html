@@ -739,6 +739,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
     <button class="btn btn-ghost btn-sm" onclick="exitBrowser()">← Back</button>
     <h2 style="font-size:18px;font-weight:700;flex:1" id="browserDeckName"></h2>
     <button class="btn btn-ghost btn-sm" onclick="openBulkAddModal()">📋 Bulk add</button>
+    <button class="btn btn-ghost btn-sm" onclick="openChatAddModal()">💬 Add Chat</button>
     <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📥 Import</button>
     <button class="btn btn-ghost btn-sm" onclick="exportDeck()">📤 Export</button>
     <button class="btn btn-primary btn-sm" onclick="openCardModal()">+ Add card</button>
@@ -1047,6 +1048,39 @@ input,textarea,select{font-family:inherit;font-size:inherit}
     <div style="display:flex;gap:10px">
       <button onclick="closeTelegramModal()" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#fff;cursor:pointer;font-size:14px">Cancel</button>
       <button id="teleSendBtn" onclick="sendToTelegram()" style="flex:1;padding:10px;border-radius:8px;border:none;background:#0088cc;color:#fff;cursor:pointer;font-size:14px;font-weight:600">Send 📨</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="chatAddModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header"><h2>💬 Add Chat Dialogue</h2><button class="modal-close" onclick="closeChatAdd()">✕</button></div>
+    <div class="modal-body">
+      <p style="color:var(--ink-dim);font-size:13px;margin-bottom:8px">Paste a conversation. Each line = one dialogue line. Format: <code>Speaker: Text</code> or just <code>Text</code></p>
+      <textarea id="chatInput" placeholder="A: Hey, how are you?
+B: I'm doing great, thanks!
+A: What are you up to?
+B: Just studying English." style="width:100%;min-height:200px;padding:12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px;font-family:inherit;resize:vertical;line-height:1.6"></textarea>
+      <div class="form-group" style="margin-top:12px">
+        <label>Card Name</label>
+        <input id="chatCardName" placeholder="e.g. Daily greeting" style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px">
+      </div>
+      <div class="form-group" style="margin-top:8px">
+        <label>YouTube URL (optional)</label>
+        <input id="chatYtUrl" placeholder="https://youtube.com/watch?v=..." style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <div class="form-group" style="flex:1"><label>Start (s)</label><input id="chatYtStart" type="number" placeholder="0" style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px"></div>
+        <div class="form-group" style="flex:1"><label>End (s)</label><input id="chatYtEnd" type="number" placeholder="" style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px"></div>
+      </div>
+      <div class="form-group" style="margin-top:8px">
+        <label>Tags (comma separated)</label>
+        <input id="chatTags" placeholder="greeting, daily" style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeChatAdd()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveChatCard()">💬 Add Chat Card</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2784,6 +2818,8 @@ function flipCard(){
       extraBtns+='<button class="yt-video-btn" style="background:var(--green);color:#fff;font-weight:700" onclick="answerCard(2)">Next ▶</button>';
       extraBtns+='</div>';
       backFaceEl.insertAdjacentHTML('afterbegin',extraBtns);
+    } else {
+      document.getElementById('reviewActions').style.display='flex';
     }
   }
 }
@@ -3163,6 +3199,57 @@ function saveSettings(){
   db.settings.voiceId=document.getElementById('voiceIdSelect').value;
   db.settings.randomVoice=document.getElementById('randomVoiceToggle').checked;
   saveLocal();closeSettings();renderDecks();toast('Settings saved');
+}
+
+// ===== ADD CHAT =====
+function openChatAddModal(){
+  if(!requireAuth())return;
+  document.getElementById('chatInput').value='';
+  document.getElementById('chatCardName').value='';
+  document.getElementById('chatYtUrl').value='';
+  document.getElementById('chatYtStart').value='';
+  document.getElementById('chatYtEnd').value='';
+  document.getElementById('chatTags').value='';
+  document.getElementById('chatAddModal').classList.add('active');
+}
+function closeChatAdd(){document.getElementById('chatAddModal').classList.remove('active');}
+function parseChatLines(text){
+  var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+  return lines.map(function(line){
+    var m=line.match(/^([A-Za-z0-9_]+)\s*[:：]\s*(.+)$/);
+    if(m)return{speaker:m[1],text:m[2].trim()};
+    return{speaker:'',text:line};
+  });
+}
+function saveChatCard(){
+  var text=document.getElementById('chatInput').value.trim();
+  if(!text){toast('Paste a conversation first');return;}
+  var parsed=parseChatLines(text);
+  if(parsed.length<2){toast('Need at least 2 lines');return;}
+  var cardName=document.getElementById('chatCardName').value.trim()||'Chat';
+  var ytUrl=document.getElementById('chatYtUrl').value.trim();
+  var ytStart=parseFloat(document.getElementById('chatYtStart').value)||null;
+  var ytEnd=parseFloat(document.getElementById('chatYtEnd').value)||null;
+  var tags=document.getElementById('chatTags').value.split(',').map(function(t){return t.trim();}).filter(function(t){return t;});
+  var fronts=parsed.map(function(p){return{speaker:p.speaker,text:p.text};});
+  var card=newCardData();
+  card.cardName=cardName;
+  card.front=fronts[0].text;
+  card.fronts=fronts;
+  card.back='';
+  card.type='basic';
+  card.reviewMode='flip';
+  card.displayMode='voice';
+  card.youtubeUrl=ytUrl;
+  card.ytStart=ytStart;
+  card.ytEnd=ytEnd;
+  card.tags=tags;
+  var deck=db.decks[currentDeckId];
+  if(!deck){toast('No deck selected');return;}
+  deck.cards.push(card);
+  saveLocal();syncDeck(currentDeckId);
+  closeChatAdd();renderBrowser();
+  toast('Chat card added ('+parsed.length+' lines)');
 }
 
 // ===== AI PRACTICE =====
