@@ -2793,7 +2793,7 @@ function startDictation(){
     html+='<div class="dictation-line" data-answer="'+esc(txt).replace(/"/g,'&quot;')+'">';
     html+='<div class="dictation-top">'+spkLabel;
     html+='<button class="dialogue-speak-btn" onclick="event.stopPropagation();'+speakFn+'" title="Play">🔊</button>';
-    html+='<input class="dictation-input" placeholder="Type what you hear..." data-idx="'+i+'" autocomplete="off" spellcheck="false">';
+    html+='<input class="dictation-input" placeholder="Type what you hear..." data-idx="'+i+'" autocomplete="off" spellcheck="false" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();checkDictationLine(this);var nxt=this.closest(\'.dictation-line\').nextElementSibling;if(nxt){var ni=nxt.querySelector(\'.dictation-input\');if(ni)ni.focus();}}">';
     html+='<button class="dictation-check-btn" onclick="event.stopPropagation();checkDictationLine(this)">Check</button>';
     html+='</div>';
     html+='<div class="dictation-answer" id="dictAns'+i+'">'+renderContent(txt)+'</div>';
