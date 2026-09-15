@@ -2028,6 +2028,8 @@ function sleepListenReplay(){
 }
 function stopSleepListen(){
   if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
   document.getElementById('sleepListenPlayer').innerHTML='';
   document.getElementById('sleepListenOverlay').style.display='none';
   sleepPlaylist=[];sleepIndex=0;
@@ -2165,7 +2167,14 @@ function sleepChangeSpeed(delta){
   applySleepSpeed();
 }
 
-function exitReview(){destroyYtPlayer();cleanupDialogueLayout();reviewQueue=[];showView('decks');}
+function stopAllAudio(){
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+  if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
+  window._dialoguePlaying=false;
+  destroyYtPlayer();
+}
+function exitReview(){stopAllAudio();cleanupDialogueLayout();reviewQueue=[];showView('decks');}
 function cleanupDialogueLayout(){
   const outer=document.querySelector('.dialogue-outer-layout');
   if(outer){
@@ -2252,6 +2261,7 @@ function previewYtClip(){
 
 
 function showCurrentCard(){
+  stopAllAudio();cleanupDialogueLayout();
   if(reviewIndex>=reviewQueue.length){
     document.getElementById('flashcard').style.display='none';
     document.getElementById('reviewActions').style.display='none';
@@ -2902,6 +2912,8 @@ function showAllDictation(){
   document.querySelectorAll('.dictation-answer').forEach(function(el){el.className='dictation-answer show';});
 }
 function exitDictation(){
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
   window._dialogueShown=false;
   flipCard();flipCard();
 }
@@ -3059,6 +3071,7 @@ function quizSelect(btn){
 }
 
 function answerCard(quality){
+  stopAllAudio();
   const card=reviewQueue[reviewIndex];
   const deck=db.decks[currentDeckId];
   const realCard=deck.cards.find(c=>c.id===card.id);
