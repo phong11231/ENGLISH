@@ -78,7 +78,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 #bgCanvas,.bg-orb,.aurora,.grid-overlay,.cursor-glow{display:none!important}
 
 /* AURORA OVERLAY */
-.app{position:relative;z-index:1}
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 
 /* NAV */
 .nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);border-bottom:1px solid rgba(124,58,237,.08);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between}
@@ -99,7 +99,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .user-menu-name{padding:10px 14px;font-size:13px;color:var(--ink-dim);border-bottom:1px solid var(--line);margin-bottom:4px}
 
 /* MAIN */
-.main{flex:1;max-width:1400px;width:100%;margin:0 auto;padding:24px 40px 20px}
+.main{flex:1;max-width:1400px;width:100%;margin:0 auto;padding:24px 40px 20px;overflow-y:auto;min-height:0}
 .view{display:none}
 .view.active{display:block}
 .page-header{margin-bottom:16px;position:relative}
@@ -123,7 +123,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 /* DECKS LAYOUT */
 .decks-layout{display:flex;gap:20px;align-items:flex-start}
 .decks-main{flex:7;min-width:0}
-.decks-sidebar{flex:3;min-width:0;background:#fff;border-radius:var(--r-lg);border:1px solid rgba(124,58,237,.08);box-shadow:var(--shadow-sm);position:sticky;top:84px;height:calc(100vh - 120px);max-height:calc(100vh - 120px);display:flex;flex-direction:column;overflow:hidden}
+.decks-sidebar{flex:3;min-width:0;background:#fff;border-radius:var(--r-lg);border:1px solid rgba(124,58,237,.08);box-shadow:var(--shadow-sm);height:calc(100vh - 120px);max-height:calc(100vh - 120px);display:flex;flex-direction:column;overflow:hidden}
 .decks-sidebar-header{padding:16px 18px 12px;font-weight:800;font-size:16px;font-family:var(--font-display);color:var(--ink);border-bottom:1px solid rgba(124,58,237,.06);flex-shrink:0}
 .decks-sidebar-scroll{flex:1;overflow-y:auto;padding:10px}
 .decks-sidebar-scroll::-webkit-scrollbar{width:4px}
@@ -668,12 +668,11 @@ input,textarea,select{font-family:inherit;font-size:inherit}
   </div>
 </div>
 </main>
-</div>
-
 <footer class="app-footer">
   <img src="avata.jpg" class="footer-avatar" alt="">
   <span>Created by <strong>Phong Nguyen</strong></span>
 </footer>
+</div>
 <button class="fab" onclick="openDeckModal()" title="New deck" id="fabBtn">+</button>
 
 <!-- DECK MODAL -->
