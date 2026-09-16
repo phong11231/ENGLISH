@@ -3469,7 +3469,7 @@ async function loadSharedDecks(){
       saveDeckData(id,data);
       count++;
     }
-    if(count>0){saveLocal();renderCurrentView();toast(count+' shared deck(s) synced!');}
+    if(count>0){saveLocal();renderCurrentView();}
   }catch(e){console.error('[SharedDecks] error:',e.code,e.message);}
 }
 updateAdminUI();
