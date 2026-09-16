@@ -121,11 +121,12 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .breadcrumb .sep{color:var(--ink-dim);opacity:.5}
 
 /* DECK LIST */
-.deck-list{display:flex;flex-direction:column;gap:12px}
-.deck-item{background:#fff;border-radius:var(--r-lg);padding:18px 22px;border:1px solid rgba(124,58,237,.08);box-shadow:var(--shadow-sm);cursor:pointer;display:flex;align-items:center;gap:16px;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.deck-list{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.deck-item{background:#fff;border-radius:var(--r-lg);padding:20px;border:1px solid rgba(124,58,237,.08);box-shadow:var(--shadow-sm);cursor:pointer;display:flex;flex-direction:column;gap:14px;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
 .deck-item:hover{box-shadow:var(--shadow-md);border-color:rgba(124,58,237,.2);transform:translateY(-3px)}
 .deck-item:active{transform:translateY(-1px);transition-duration:.1s}
-.deck-item .deck-color{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.08)}
+.deck-item-top{display:flex;align-items:center;gap:14px}
+.deck-item .deck-color{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.08)}
 .deck-item:hover .deck-color{transform:scale(1.05)}
 .deck-item .deck-info{flex:1;min-width:0;position:relative;z-index:1}
 .deck-item .deck-name{font-weight:700;font-size:16px;margin-bottom:3px;font-family:var(--font-display)}
@@ -137,8 +138,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .badge-learn{background:var(--orange-bg);color:var(--orange);border:1px solid rgba(245,158,11,.2)}
 .badge-due{background:var(--green-bg);color:var(--green);border:1px solid rgba(16,185,129,.2)}
 .badge-sub{background:var(--primary-bg);color:var(--primary-light);border:1px solid rgba(139,92,246,.2)}
-.deck-actions{display:flex;gap:4px;position:relative;z-index:1}
-.deck-action-btn{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:16px;transition:all .2s ease}
+.deck-actions{display:flex;gap:4px;position:relative;z-index:1;border-top:1px solid rgba(124,58,237,.06);padding-top:12px;margin-top:auto}
+.deck-action-btn{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:15px;transition:all .2s ease}
 .deck-action-btn:hover{background:var(--primary-bg);color:var(--primary-light);transform:scale(1.15)}
 .deck-action-btn.delete:hover{background:var(--red-bg);color:var(--red)}
 
@@ -405,7 +406,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .leech-badge{background:var(--red-bg);color:var(--red);font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;border:1px solid rgba(239,68,68,.15)}
 
 /* EMPTY / LOADING */
-.empty-state{text-align:center;padding:80px 20px}
+.empty-state{text-align:center;padding:80px 20px;grid-column:1/-1}
 .empty-state .empty-icon{font-size:90px;margin-bottom:20px}
 .empty-state h3{font-size:22px;font-weight:800;margin-bottom:8px;font-family:var(--font-display);color:var(--ink)}
 .empty-state p{color:var(--ink-soft);margin-bottom:24px;font-size:15px}
@@ -474,7 +475,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
   .nav{padding:0 16px;height:56px}.nav-brand{font-size:17px}
   .main{padding:16px 14px 100px}.page-header h1{font-size:24px}
   .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}.stat-card{padding:12px 14px}.stat-card .stat-value{font-size:22px}
-  .deck-item{padding:14px 16px;gap:12px}.deck-item .deck-color{width:44px;height:44px;font-size:22px}
+  .deck-list{grid-template-columns:1fr}.deck-item{padding:16px}.deck-item .deck-color{width:44px;height:44px;font-size:22px}
   .flashcard-content{font-size:18px}.review-actions{flex-wrap:wrap}.review-btn{min-width:calc(50% - 5px)}
   .modal{border-radius:var(--r-lg)}.fab{bottom:16px;right:16px;width:52px;height:52px;border-radius:16px;font-size:24px}
   .daily-goal-actions{gap:10px}.action-card-icon{width:40px;height:40px;font-size:18px}.action-card-title{font-size:13px}.action-card-sub{font-size:11px}.action-card-arrow{display:none}
@@ -1264,12 +1265,12 @@ function renderDecks(){
     const subCount=getSubDecks(id).length;
     const cardCount=cards.length;
     return`<div class="deck-item" onclick="onDeckClick('${id}')">
-      <div class="deck-color">${d.emoji||'📖'}</div>
+      <div class="deck-item-top"><div class="deck-color">${d.emoji||'📖'}</div>
       <div class="deck-info"><div class="deck-name">${esc(d.name)}</div>
         <div class="deck-meta"><span>📇 ${cardCount} cards</span>${subCount?'<span>📂 '+subCount+' sub-decks</span>':''}${d.desc?'<span>'+esc(d.desc)+'</span>':''}</div></div>
       <div class="deck-badges">
         ${subCount?'<span class="badge badge-sub">'+subCount+' con</span>':''}
-      </div>
+      </div></div>
       <div class="deck-actions" onclick="event.stopPropagation()">
         ${subCount?'<button class="deck-action-btn" onclick="startReviewAll(\''+id+'\')" title="Study all">📚</button>':''}
         <button class="deck-action-btn" onclick="openBrowser('${id}')" title="View cards">📋</button>
