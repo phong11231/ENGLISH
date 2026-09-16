@@ -99,7 +99,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .user-menu-name{padding:10px 14px;font-size:13px;color:var(--ink-dim);border-bottom:1px solid var(--line);margin-bottom:4px}
 
 /* MAIN */
-.main{flex:1;max-width:900px;width:100%;margin:0 auto;padding:24px 20px 100px}
+.main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:24px 20px 100px}
 .view{display:none}
 .view.active{display:block}
 .page-header{margin-bottom:28px;position:relative}
@@ -120,17 +120,26 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .breadcrumb a:hover{color:var(--accent);text-decoration:none}
 .breadcrumb .sep{color:var(--ink-dim);opacity:.5}
 
+/* DECKS LAYOUT */
+.decks-layout{display:flex;gap:20px;align-items:flex-start}
+.decks-main{flex:7;min-width:0}
+.decks-sidebar{flex:3;min-width:0;background:#fff;border-radius:var(--r-lg);border:1px solid rgba(124,58,237,.08);box-shadow:var(--shadow-sm);position:sticky;top:80px;max-height:calc(100vh - 100px);display:flex;flex-direction:column;overflow:hidden}
+.decks-sidebar-header{padding:16px 18px 12px;font-weight:800;font-size:16px;font-family:var(--font-display);color:var(--ink);border-bottom:1px solid rgba(124,58,237,.06);flex-shrink:0}
+.decks-sidebar-scroll{flex:1;overflow-y:auto;padding:10px}
+.decks-sidebar-scroll::-webkit-scrollbar{width:4px}
+.decks-sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(124,58,237,.15);border-radius:2px}
+
 /* DECK LIST */
-.deck-list{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-.deck-item{background:#fff;border-radius:var(--r-lg);padding:20px;border:1px solid rgba(124,58,237,.08);box-shadow:var(--shadow-sm);cursor:pointer;display:flex;flex-direction:column;gap:14px;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
-.deck-item:hover{box-shadow:var(--shadow-md);border-color:rgba(124,58,237,.2);transform:translateY(-3px)}
-.deck-item:active{transform:translateY(-1px);transition-duration:.1s}
-.deck-item-top{display:flex;align-items:center;gap:14px}
-.deck-item .deck-color{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.08)}
+.deck-list{display:flex;flex-direction:column;gap:8px}
+.deck-item{background:var(--surface-2);border-radius:var(--r-md);padding:12px 14px;border:1px solid transparent;cursor:pointer;display:flex;flex-direction:column;gap:10px;transition:all .2s ease}
+.deck-item:hover{background:rgba(124,58,237,.06);border-color:rgba(124,58,237,.12)}
+.deck-item:active{transform:scale(.98);transition-duration:.1s}
+.deck-item-top{display:flex;align-items:center;gap:10px}
+.deck-item .deck-color{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.08)}
 .deck-item:hover .deck-color{transform:scale(1.05)}
 .deck-item .deck-info{flex:1;min-width:0;position:relative;z-index:1}
-.deck-item .deck-name{font-weight:700;font-size:16px;margin-bottom:3px;font-family:var(--font-display)}
-.deck-item .deck-meta{font-size:13px;color:var(--ink-dim);display:flex;gap:12px;flex-wrap:wrap}
+.deck-item .deck-name{font-weight:700;font-size:14px;margin-bottom:2px;font-family:var(--font-display)}
+.deck-item .deck-meta{font-size:12px;color:var(--ink-dim);display:flex;gap:8px;flex-wrap:wrap}
 .deck-item .deck-meta span{display:flex;align-items:center;gap:4px}
 .deck-badges{display:flex;gap:6px;align-items:center;flex-shrink:0;position:relative;z-index:1}
 .badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px}
@@ -138,8 +147,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .badge-learn{background:var(--orange-bg);color:var(--orange);border:1px solid rgba(245,158,11,.2)}
 .badge-due{background:var(--green-bg);color:var(--green);border:1px solid rgba(16,185,129,.2)}
 .badge-sub{background:var(--primary-bg);color:var(--primary-light);border:1px solid rgba(139,92,246,.2)}
-.deck-actions{display:flex;gap:4px;position:relative;z-index:1;border-top:1px solid rgba(124,58,237,.06);padding-top:12px;margin-top:auto}
-.deck-action-btn{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:15px;transition:all .2s ease}
+.deck-actions{display:flex;gap:2px;position:relative;z-index:1;border-top:1px solid rgba(124,58,237,.06);padding-top:8px;margin-top:auto}
+.deck-action-btn{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:14px;transition:all .2s ease}
 .deck-action-btn:hover{background:var(--primary-bg);color:var(--primary-light);transform:scale(1.15)}
 .deck-action-btn.delete:hover{background:var(--red-bg);color:var(--red)}
 
@@ -475,7 +484,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
   .nav{padding:0 16px;height:56px}.nav-brand{font-size:17px}
   .main{padding:16px 14px 100px}.page-header h1{font-size:24px}
   .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}.stat-card{padding:12px 14px}.stat-card .stat-value{font-size:22px}
-  .deck-list{grid-template-columns:1fr}.deck-item{padding:16px}.deck-item .deck-color{width:44px;height:44px;font-size:22px}
+  .decks-layout{flex-direction:column}.decks-sidebar{position:static;max-height:none}.deck-item .deck-color{width:36px;height:36px;font-size:18px}
   .flashcard-content{font-size:18px}.review-actions{flex-wrap:wrap}.review-btn{min-width:calc(50% - 5px)}
   .modal{border-radius:var(--r-lg)}.fab{bottom:16px;right:16px;width:52px;height:52px;border-radius:16px;font-size:24px}
   .daily-goal-actions{gap:10px}.action-card-icon{width:40px;height:40px;font-size:18px}.action-card-title{font-size:13px}.action-card-sub{font-size:11px}.action-card-arrow{display:none}
@@ -524,11 +533,18 @@ input,textarea,select{font-family:inherit;font-size:inherit}
     <h1>Your Decks</h1>
     <p>Choose a deck to start studying</p>
   </div>
-  <div id="streakWidget"></div>
-  <div id="dailyGoalWrap"></div>
-  <div class="stats-row" id="globalStats"></div>
-  <div id="breadcrumbWrap"></div>
-  <div id="deckListWrap"></div>
+  <div class="decks-layout">
+    <div class="decks-main">
+      <div id="streakWidget"></div>
+      <div id="dailyGoalWrap"></div>
+      <div class="stats-row" id="globalStats"></div>
+    </div>
+    <div class="decks-sidebar">
+      <div class="decks-sidebar-header">📚 Decks</div>
+      <div id="breadcrumbWrap"></div>
+      <div class="decks-sidebar-scroll" id="deckListWrap"></div>
+    </div>
+  </div>
 </div>
 
 <!-- REVIEW VIEW -->
