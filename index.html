@@ -3282,50 +3282,44 @@ function buildAIPrompt(){
   for(var i=all.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=all[i];all[i]=all[j];all[j]=t;}
   var pick=all.slice(0,50);
   var p='You are an English conversation partner. Create a LONG, DETAILED natural daily conversation between 2 people (A and B) using ALL the vocabulary below.\n\n';
-  p+='RULES:\n- Use EVERY word/phrase below at least once naturally in the conversation\n- At least 25-30 exchanges (long conversation)\n- Topics: daily life, work, school, hobbies, travel, food, relationships\n- Vietnamese translation for each line in parentheses\n- At the end, list any words NOT used\n- Intermediate English level\n\n';
+  p+='RULES:\n- IGNORE any Vietnamese words in the list below, only use ENGLISH words/phrases\n- Use EVERY English word/phrase at least once naturally in the conversation\n- At least 25-30 exchanges (long conversation)\n- Topics: daily life, work, school, hobbies, travel, food, relationships\n- Vietnamese translation for each line in parentheses\n- At the end, list any words NOT used\n- Intermediate English level\n\n';
   p+='VOCABULARY ('+pick.length+' random from '+all.length+' total):\n'+pick.join(', ')+'\n\n';
   p+='Generate a long, detailed conversation now.';
   return p;
 }
-async function streamGemini(key,prompt,onChunk){
-  var models=['gemini-1.5-flash-latest','gemini-2.0-flash-lite','gemini-pro'];
+async function callGemini(key,prompt){
+  var models=['gemini-2.5-flash','gemini-3.6-flash'];
   var body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9,maxOutputTokens:8192}});
+  var lastErr='';
   for(var m of models){
     try{
-      var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':streamGenerateContent?alt=sse&key='+key,{
+      var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+key,{
         method:'POST',headers:{'Content-Type':'application/json'},body:body
       });
-      if(!resp.ok){try{var err=await resp.json();var msg=err.error?.message||'HTTP '+resp.status;}catch(e){var msg='HTTP '+resp.status;}if(models.indexOf(m)<models.length-1)continue;throw new Error(m+': '+msg);}
-      var reader=resp.body.getReader();var decoder=new TextDecoder();var buf='';
-      while(true){
-        var chunk=await reader.read();if(chunk.done)break;
-        buf+=decoder.decode(chunk.value,{stream:true});
-        var lines=buf.split('\n');buf=lines.pop();
-        for(var line of lines){
-          if(!line.startsWith('data: '))continue;
-          try{var j=JSON.parse(line.slice(6));var t=j.candidates?.[0]?.content?.parts?.[0]?.text;if(t)onChunk(t);}catch(e){}
-        }
-      }
-      return;
-    }catch(e){if(models.indexOf(m)===models.length-1)throw e;}
+      var data=await resp.json();
+      if(resp.ok&&data.candidates?.[0]?.content?.parts?.[0]?.text)return data.candidates[0].content.parts[0].text;
+      lastErr=m+': '+(data.error?.message||'HTTP '+resp.status);
+    }catch(e){lastErr=m+': '+e.message;}
   }
-  throw new Error('All models failed');
+  throw new Error(lastErr||'All models failed');
 }
 async function generateAIConversation(){
   var key=await fetchGeminiConfig();
   if(!key){toast('Admin has not set up AI key yet. Go to Settings to add Gemini API key.');return;}
   var btn=document.getElementById('aiGenBtn');
   btn.disabled=true;btn.textContent='Generating...';
-  var resultEl=document.getElementById('aiResult');
-  resultEl.textContent='';resultEl.style.display='block';
-  document.getElementById('aiLoading').style.display='none';
+  document.getElementById('aiLoading').style.display='block';
+  document.getElementById('aiResult').style.display='none';
   document.getElementById('aiError').style.display='none';
   try{
-    await streamGemini(key,buildAIPrompt(),function(chunk){resultEl.textContent+=chunk;resultEl.scrollTop=resultEl.scrollHeight;});
+    var text=await callGemini(key,buildAIPrompt());
+    document.getElementById('aiResult').textContent=text;
+    document.getElementById('aiResult').style.display='block';
   }catch(e){
     document.getElementById('aiError').textContent='Error: '+e.message;
     document.getElementById('aiError').style.display='block';
   }
+  document.getElementById('aiLoading').style.display='none';
   btn.disabled=false;btn.textContent='✨ Generate';
 }
 function openAIPrompt(){
