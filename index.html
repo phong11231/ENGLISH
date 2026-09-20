@@ -305,6 +305,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .dialogue-outer-layout .dialogue-right-col{flex:0 0 auto;width:400px;max-width:400px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
 .dialogue-outer-layout .flashcard.dialogue-mode{flex:0 0 auto;width:100%;max-width:100%}
 .main:has(.dialogue-outer-layout){max-width:100%;padding-left:30px;padding-right:30px}
+.review-container:has(.dialogue-mode){overflow-y:auto}
 .review-container:has(.dialogue-outer-layout){display:flex;flex-direction:column;overflow:hidden;height:calc(100vh - 68px)}
 @media(max-width:800px){
   .dialogue-outer-layout{flex-direction:column;align-items:center}
@@ -2572,7 +2573,7 @@ async function assignDialogueVoices(fronts){
   return map;
 }
 
-function getDialogueText(f){return typeof f==='object'?f.text:f;}
+function getDialogueText(f){var t=typeof f==='object'?f.text:f;if(t){t=t.replace(/^[A-Z]\s*(?:\([^)]*\))?\s*[:：]\s*/,'');}return t;}
 function getDialogueSpeaker(f){return typeof f==='object'?(f.speaker||''):'';}
 
 function testVoice(){
@@ -2716,6 +2717,7 @@ function flipCard(){
       });
       transcriptHtml+='</div>';
       el.innerHTML=transcriptHtml;
+      fc.classList.add('dialogue-mode');
       // YouTube outside the card
       const oldOuter=document.querySelector('.dialogue-outer-layout');
       if(oldOuter){
@@ -2760,6 +2762,7 @@ function flipCard(){
     }
     // Already shown transcript — toggle back to voice question
     window._dialogueShown=false;
+    fc.classList.remove('dialogue-mode');
     const el2=document.getElementById('cardFront');
     const cardFlip=reviewQueue[reviewIndex];
     const hasVid2=extractDriveId(cardFlip.driveUrl)||extractYtId(cardFlip.youtubeUrl);
@@ -3210,7 +3213,7 @@ function closeChatAdd(){document.getElementById('chatAddModal').classList.remove
 function parseChatLines(text){
   var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0&&!l.startsWith('(');});
   return lines.map(function(line){
-    var m=line.match(/^([A-Za-z0-9_]+)\s*[:：]\s*(.+)$/);
+    var m=line.match(/^([A-Za-z0-9_]+)\s*(?:\([^)]*\))?\s*[:：]\s*(.+)$/);
     if(m)return{speaker:m[1],text:m[2].trim()};
     return{speaker:'',text:line};
   });
@@ -3282,7 +3285,7 @@ function buildAIPrompt(){
   for(var i=all.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=all[i];all[i]=all[j];all[j]=t;}
   var pick=all.slice(0,50);
   var p='You are an English conversation partner. Create a LONG, DETAILED natural daily conversation between 2 people (A and B) using ALL the vocabulary below.\n\n';
-  p+='RULES:\n- IGNORE any Vietnamese words in the list below, only use ENGLISH words/phrases\n- Use EVERY English word/phrase at least once naturally in the conversation\n- At least 25-30 exchanges (long conversation)\n- Topics: daily life, work, school, hobbies, travel, food, relationships\n- Vietnamese translation for each line in parentheses\n- At the end, list any words NOT used\n- Intermediate English level\n\n';
+  p+='RULES:\n- IGNORE any Vietnamese words in the list below, only use ENGLISH words/phrases\n- Use EVERY English word/phrase at least once naturally in the conversation\n- At least 25-30 exchanges (long conversation)\n- Topics: daily life, work, school, hobbies, travel, food, relationships\n- Vietnamese translation for each line in parentheses\n- At the end, list any words NOT used\n- Intermediate English level\n- FORMAT each line as "A: text" or "B: text" — use ONLY the letters A and B as speaker labels, do NOT add names like "A (Jake)" or "B (Gina)"\n\n';
   p+='VOCABULARY ('+pick.length+' random from '+all.length+' total):\n'+pick.join(', ')+'\n\n';
   p+='Generate a long, detailed conversation now.';
   return p;
