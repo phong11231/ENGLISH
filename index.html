@@ -2911,6 +2911,10 @@ function exitDictation(){
   flipCard();
 }
 function toggleDialogueVideo(){
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+  if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
+  window._dialoguePlaying=false;
   const fc=document.getElementById('flashcard');
   const card=reviewQueue[reviewIndex];
   const embed=buildVideoEmbed(card);
