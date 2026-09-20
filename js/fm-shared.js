@@ -1046,7 +1046,7 @@ function stopAllAudio(){
   window._dialoguePlaying=false;
   destroyYtPlayer();
 }
-function exitReview(){stopAllAudio();cleanupDialogueLayout();reviewQueue=[];location.href=_basePath;}
+function exitReview(){stopAllAudio();cleanupDialogueLayout();var did=currentDeckId;reviewQueue=[];currentDeckId=null;if(did)location.href=_basePath+did;else location.href=_basePath;}
 function cleanupDialogueLayout(){
   const outer=document.querySelector('.dialogue-outer-layout');
   if(outer){

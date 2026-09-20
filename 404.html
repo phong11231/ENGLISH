@@ -14,7 +14,18 @@ var _routePath = location.pathname.replace(_basePath, '');
 var _routeParts = _routePath.split('/').filter(Boolean);
 var _routeId = _routeParts[0] || null;
 var _routeAction = _routeParts[1] || null;
-var _isDeckRoute = _routeId && !_routeAction;
+// Backward compat: old .html URLs
+if (_routeId && _routeId.indexOf('.html') >= 0) {
+  var _p = new URLSearchParams(location.search);
+  if (_routeId === 'review.html') {
+    var _d = _p.get('deck'); if (_d) { var _q = ''; _p.delete('deck'); _p.forEach(function(v,k){_q+=(_q?'&':'?')+k+'='+v;}); location.replace(_basePath+_d+'/review'+_q); } else location.replace(_basePath+'review/');
+  } else if (_routeId === 'deck.html') {
+    var _d = _p.get('id'); location.replace(_d ? _basePath+_d : _basePath);
+  } else if (_routeId === 'quiz.html') { location.replace(_basePath+'quiz/');
+  } else if (_routeId === 'stats.html') { location.replace(_basePath+'stats/');
+  } else { location.replace(_basePath); }
+}
+var _isDeckRoute = _routeId && !_routeAction && _routeId.indexOf('.html') < 0;
 var _isReviewRoute = _routeId && _routeAction === 'review';
 if (!_routeId) location.replace(_basePath);
 </script>
