@@ -928,6 +928,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
         </div>
         <div id="voiceTestStatus" style="font-size:12px;opacity:.7;margin-top:4px"></div>
       </div>
+      <div class="form-group" id="aiKeyGroup" style="display:none"><label>🔑 Gemini API Key (admin only)</label><input type="password" id="geminiKeyInput" placeholder="Paste Gemini API key here..." style="width:100%"><p style="font-size:11px;color:var(--ink-dim);margin-top:4px">Free from <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary)">aistudio.google.com</a> — all users will use this key for AI Practice</p></div>
       <div class="form-actions"><button class="btn btn-ghost" onclick="closeSettings()">Cancel</button><button class="btn btn-primary" onclick="saveSettings()">Save</button></div>
     </div>
   </div>
@@ -1042,14 +1043,21 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
 </div>
 
 <div class="modal-overlay" id="aiPromptModal">
-  <div class="modal" style="max-width:700px">
-    <div class="modal-header"><h2>🤖 AI Practice Prompt</h2><button class="modal-close" onclick="closeAIPrompt()">✕</button></div>
+  <div class="modal" style="max-width:750px">
+    <div class="modal-header"><h2>🤖 AI Conversation Generator</h2><button class="modal-close" onclick="closeAIPrompt()">✕</button></div>
     <div class="modal-body">
-      <p style="color:var(--ink-dim);font-size:13px;margin-bottom:12px">Copy prompt below and paste into ChatGPT / Gemini / Claude to generate a daily conversation for practice.</p>
-      <textarea id="aiPromptText" readonly style="width:100%;min-height:300px;padding:12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:13px;font-family:monospace;resize:vertical;line-height:1.6"></textarea>
-      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <div id="aiResultWrap">
+        <div id="aiLoading" style="display:none;text-align:center;padding:40px 0">
+          <div style="font-size:32px;margin-bottom:12px;animation:pulse 1.5s infinite">🤖</div>
+          <p style="color:var(--ink-soft);font-size:14px">Generating conversation...</p>
+        </div>
+        <div id="aiResult" style="display:none;max-height:60vh;overflow-y:auto;padding:16px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--glass-border);font-size:14px;line-height:1.8;white-space:pre-wrap"></div>
+        <div id="aiError" style="display:none;padding:16px;border-radius:var(--r-md);background:var(--red-bg);color:var(--red);font-size:13px"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap">
         <button class="btn btn-ghost" onclick="closeAIPrompt()">Close</button>
-        <button class="btn btn-primary" onclick="copyAIPrompt()">📋 Copy Prompt</button>
+        <button class="btn btn-ghost" onclick="copyAIResult()">📋 Copy</button>
+        <button class="btn btn-primary" id="aiGenBtn" onclick="generateAIConversation()">✨ Generate</button>
       </div>
     </div>
   </div>
@@ -3165,6 +3173,8 @@ function openSettings(){
   if(db.settings.voiceId)document.getElementById('voiceIdSelect').value=db.settings.voiceId;
   document.getElementById('randomVoiceToggle').checked=!!db.settings.randomVoice;
   document.getElementById('voiceTestStatus').textContent='';
+  if(isAdmin){document.getElementById('aiKeyGroup').style.display='block';fetchGeminiConfig().then(function(k){document.getElementById('geminiKeyInput').value=k;});}
+  else{document.getElementById('aiKeyGroup').style.display='none';}
   document.getElementById('settingsModal').classList.add('active');
 }
 function closeSettings(){document.getElementById('settingsModal').classList.remove('active');}
@@ -3175,6 +3185,7 @@ function saveSettings(){
   db.settings.voiceProvider=document.getElementById('voiceProviderSelect').value;
   db.settings.voiceId=document.getElementById('voiceIdSelect').value;
   db.settings.randomVoice=document.getElementById('randomVoiceToggle').checked;
+  if(isAdmin){var nk=document.getElementById('geminiKeyInput').value.trim();if(nk)saveGeminiConfig(nk).then(function(){toast('AI key saved');}).catch(function(e){toast('Error: '+e.message);});}
   saveLocal();closeSettings();renderDecks();toast('Settings saved');
 }
 
@@ -3253,29 +3264,54 @@ function collectAllVocab(){
   });
   return{words:[...new Set(words)],sentences:[...new Set(sentences)],idioms:[...new Set(idioms)]};
 }
-function openAIPrompt(){
+async function fetchGeminiConfig(){try{var doc=await firestore.collection('siteConfig').doc('ai').get();return doc.exists?doc.data().key||'':'';}catch(e){return '';}}
+function saveGeminiConfig(val){return firestore.collection('siteConfig').doc('ai').set({key:val});}
+function buildAIPrompt(){
   var v=collectAllVocab();
-  var totalItems=v.words.length+v.sentences.length+v.idioms.length;
   var prompt='You are an English conversation partner. Create a natural, casual daily conversation between 2 people (A and B) that incorporates as many of the following vocabulary items as possible.\n\n';
-  prompt+='RULES:\n';
-  prompt+='- The conversation should feel natural and realistic (daily life topics)\n';
-  prompt+='- Use each word/phrase/idiom at least once in context\n';
-  prompt+='- After the conversation, list which words/phrases were used and highlight any that were NOT used\n';
-  prompt+='- Keep it at intermediate English level\n';
-  prompt+='- Add Vietnamese translation for each line\n\n';
+  prompt+='RULES:\n- The conversation should feel natural and realistic (daily life topics)\n- Use each word/phrase/idiom at least once in context\n- After the conversation, list which words/phrases were used and highlight any that were NOT used\n- Keep it at intermediate English level\n- Add Vietnamese translation for each line\n\n';
   if(v.words.length>0)prompt+='WORDS ('+v.words.length+'):\n'+v.words.join(', ')+'\n\n';
   if(v.idioms.length>0)prompt+='IDIOMS & PHRASES ('+v.idioms.length+'):\n'+v.idioms.join(', ')+'\n\n';
   if(v.sentences.length>0)prompt+='SENTENCES & EXPRESSIONS ('+v.sentences.length+'):\n'+v.sentences.join('\n')+'\n\n';
-  prompt+='Total: '+totalItems+' items. Generate the conversation now.';
-  document.getElementById('aiPromptText').value=prompt;
+  prompt+='Total: '+(v.words.length+v.sentences.length+v.idioms.length)+' items. Generate the conversation now.';
+  return prompt;
+}
+async function generateAIConversation(){
+  var key=await fetchGeminiConfig();
+  if(!key){toast('Admin has not set up AI key yet. Go to Settings to add Gemini API key.');return;}
+  var btn=document.getElementById('aiGenBtn');
+  btn.disabled=true;btn.textContent='Generating...';
+  document.getElementById('aiLoading').style.display='block';
+  document.getElementById('aiResult').style.display='none';
+  document.getElementById('aiError').style.display='none';
+  try{
+    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:buildAIPrompt()}]}],generationConfig:{temperature:0.9,maxOutputTokens:4096}})
+    });
+    var data=await resp.json();
+    if(!resp.ok)throw new Error(data.error?.message||'API error '+resp.status);
+    var text=data.candidates?.[0]?.content?.parts?.[0]?.text||'No response';
+    document.getElementById('aiResult').textContent=text;
+    document.getElementById('aiResult').style.display='block';
+  }catch(e){
+    document.getElementById('aiError').textContent='Error: '+e.message;
+    document.getElementById('aiError').style.display='block';
+  }
+  document.getElementById('aiLoading').style.display='none';
+  btn.disabled=false;btn.textContent='✨ Generate';
+}
+function openAIPrompt(){
   document.getElementById('aiPromptModal').classList.add('active');
+  document.getElementById('aiResult').style.display='none';
+  document.getElementById('aiError').style.display='none';
+  document.getElementById('aiLoading').style.display='none';
 }
 function closeAIPrompt(){document.getElementById('aiPromptModal').classList.remove('active');}
-function copyAIPrompt(){
-  var text=document.getElementById('aiPromptText').value;
-  navigator.clipboard.writeText(text).then(function(){toast('Copied!');}).catch(function(){
-    var ta=document.getElementById('aiPromptText');ta.select();document.execCommand('copy');toast('Copied!');
-  });
+function copyAIResult(){
+  var text=document.getElementById('aiResult').textContent;
+  if(!text){toast('Nothing to copy');return;}
+  navigator.clipboard.writeText(text).then(function(){toast('Copied!');}).catch(function(){toast('Copy failed');});
 }
 
 // ===== STATS =====
