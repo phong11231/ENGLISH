@@ -1671,7 +1671,7 @@ function saveCard(){
       else toast('Card added!');
     }
   }
-  saveDeckData(currentDeckId,deck);closeCardModal();renderCardBrowser();
+  saveDeckData(currentDeckId,deck);closeCardModal();renderCardBrowser();renderDecks();
 }
 
 function clozeToFront(text,num){return text.replace(/\{\{c(\d+)::([^}]+)\}\}/g,(_,n,content)=>parseInt(n)===num?'[...]':content);}
@@ -3242,7 +3242,7 @@ function saveChatCard(){
   if(!deck){toast('No deck selected');return;}
   deck.cards.push(card);
   saveDeckData(currentDeckId,deck);
-  closeChatAdd();renderBrowser();
+  closeChatAdd();renderCardBrowser();renderDecks();
   toast('Chat card added ('+parsed.length+' lines)');
 }
 
