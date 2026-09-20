@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><body>
+<canvas id="c" width="512" height="512"></canvas>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+// Background gradient
+const bg=ctx.createLinearGradient(0,0,512,512);
+bg.addColorStop(0,'#7c3aed');
+bg.addColorStop(0.5,'#8b5cf6');
+bg.addColorStop(1,'#06b6d4');
+// Rounded rect
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+roundRect(0,0,512,512,108);
+ctx.fillStyle=bg;ctx.fill();
+// Glow
+const glow=ctx.createRadialGradient(256,200,0,256,200,256);
+glow.addColorStop(0,'rgba(0,255,170,0.2)');
+glow.addColorStop(1,'rgba(0,255,170,0)');
+roundRect(0,0,512,512,108);ctx.fillStyle=glow;ctx.fill();
+// Emoji
+ctx.font='260px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+ctx.fillText('🧠',256,230);
+// Text
+ctx.font='900 72px Arial,sans-serif';ctx.fillStyle='rgba(255,255,255,0.95)';
+ctx.letterSpacing='3px';ctx.fillText('FM',256,430);
+// Download
+setTimeout(()=>{
+  const a=document.createElement('a');a.download='icon-512.png';a.href=c.toDataURL('image/png');
+  document.body.appendChild(a);
+  // Also 180px for apple-touch-icon
+  const c2=document.createElement('canvas');c2.width=180;c2.height=180;
+  c2.getContext('2d').drawImage(c,0,0,180,180);
+  const a2=document.createElement('a');a2.download='apple-touch-icon.png';a2.href=c2.toDataURL('image/png');
+  document.body.appendChild(a2);
+  document.body.innerHTML+='<br><br><a href="'+a.href+'" download="icon-512.png">Download 512px</a> | <a href="'+a2.href+'" download="apple-touch-icon.png">Download 180px</a>';
+  document.body.innerHTML+='<br><br><img src="'+a.href+'" width=128> <img src="'+a2.href+'" width=64>';
+},500);
+</script>
+</body></html>
