@@ -3273,16 +3273,17 @@ async function fetchGeminiConfig(){try{var doc=await firestore.collection('siteC
 function saveGeminiConfig(val){return firestore.collection('siteConfig').doc('ai').set({key:val});}
 function buildAIPrompt(){
   var v=collectAllVocab();
-  var p='You are an English conversation partner. Create a VERY LONG natural daily conversation between 2 people (A and B) that uses ALL of the vocabulary below. Make as many exchanges as needed to cover every single word.\n\n';
-  p+='RULES:\n- You MUST use EVERY word/phrase/idiom at least once in the conversation\n- Make it natural (daily life, work, school, hobbies, travel, food)\n- Vietnamese translation for each line in parentheses\n- At the end, list ALL words that were NOT used (if any)\n- Intermediate English level\n- The conversation can be as long as needed\n\n';
-  if(v.words.length>0)p+='WORDS ('+v.words.length+'):\n'+v.words.join(', ')+'\n\n';
-  if(v.idioms.length>0)p+='IDIOMS & PHRASES ('+v.idioms.length+'):\n'+v.idioms.join(', ')+'\n\n';
-  if(v.sentences.length>0)p+='SENTENCES ('+v.sentences.length+'):\n'+v.sentences.join('\n')+'\n\n';
-  p+='Total: '+(v.words.length+v.sentences.length+v.idioms.length)+' items. Generate the conversation now — use ALL of them.';
+  var all=[].concat(v.words,v.idioms,v.sentences);
+  for(var i=all.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=all[i];all[i]=all[j];all[j]=t;}
+  var pick=all.slice(0,50);
+  var p='You are an English conversation partner. Create a LONG, DETAILED natural daily conversation between 2 people (A and B) using ALL the vocabulary below.\n\n';
+  p+='RULES:\n- Use EVERY word/phrase below at least once naturally in the conversation\n- At least 25-30 exchanges (long conversation)\n- Topics: daily life, work, school, hobbies, travel, food, relationships\n- Vietnamese translation for each line in parentheses\n- At the end, list any words NOT used\n- Intermediate English level\n\n';
+  p+='VOCABULARY ('+pick.length+' random from '+all.length+' total):\n'+pick.join(', ')+'\n\n';
+  p+='Generate a long, detailed conversation now.';
   return p;
 }
 async function streamGemini(key,prompt,onChunk){
-  var models=['gemini-2.5-flash','gemini-2.0-flash'];
+  var models=['gemini-1.5-flash','gemini-3.6-flash'];
   var body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9,maxOutputTokens:8192}});
   for(var m of models){
     try{
