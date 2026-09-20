@@ -3272,6 +3272,7 @@ function collectAllVocab(){
   var words=[],sentences=[],idioms=[];
   Object.values(db.decks).forEach(function(deck){
     (deck.cards||[]).forEach(function(card){
+      if(!card.reps&&!card.interval)return;
       var front=(card.front||'').replace(/<[^>]*>/g,'').trim();
       var back=(card.back||'').replace(/<[^>]*>/g,'').trim();
       var name=(card.cardName||'').trim();
