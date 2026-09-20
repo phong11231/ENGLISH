@@ -268,7 +268,10 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 @keyframes frontSlide{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .front-counter{position:absolute;top:12px;right:16px;font-size:12px;color:var(--ink-dim);background:var(--surface-2);padding:2px 8px;border-radius:10px}
 .dialogue-list{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;max-height:60vh;overflow-y:auto;padding-right:4px}
-.dialogue-trans{font-size:12px;color:var(--ink-dim);font-style:italic;margin-top:3px;line-height:1.4}
+.dialogue-trans{font-size:12px;color:var(--ink-dim);font-style:italic;margin-top:3px;line-height:1.4;display:none}
+.dialogue-trans.show{display:block}
+.dialogue-trans-btn{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1px solid var(--glass-border);background:transparent;color:var(--ink-dim);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.dialogue-trans-btn:hover{background:var(--surface-2);color:var(--ink)}
 .dialogue-line{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--glass-border);cursor:pointer;transition:background .2s}
 .dialogue-line:hover{background:var(--surface)}
 .dialogue-line.alt{opacity:.85}
@@ -2715,8 +2718,9 @@ function flipCard(){
         const vid=spk&&vMap[spk]?vMap[spk]:'';
         const speakFn=vid?'speakTextAs(\''+safe+'\',\''+vid+'\')':'speakText(\''+safe+'\')';
         const spkLabel=spk?'<span class="dialogue-speaker">'+esc(spk)+'</span>':'';
-        const transHtml=trans?'<div class="dialogue-trans">'+esc(trans)+'</div>':'';
-        transcriptHtml+='<div class="dialogue-line'+(i%2===1?' alt':'')+'" onclick="event.stopPropagation();toggleDialogueText(this)"><button class="dialogue-speak-btn" onclick="event.stopPropagation();'+speakFn+'" title="Play">🔊</button>'+spkLabel+'<div class="dialogue-text hidden-text">'+renderContent(txt)+transHtml+'</div><button class="dialogue-eye-btn" onclick="event.stopPropagation();toggleDialogueText(this.closest(\'.dialogue-line\'))" title="Show/Hide">👁</button></div>';
+        const transBtn=trans?'<button class="dialogue-trans-btn" onclick="event.stopPropagation();toggleDialogueTrans(this)" title="Dịch">🇻🇳</button>':'';
+        const transDiv=trans?'<div class="dialogue-trans">'+esc(trans)+'</div>':'';
+        transcriptHtml+='<div class="dialogue-line-wrap"><div class="dialogue-line'+(i%2===1?' alt':'')+'" onclick="event.stopPropagation();toggleDialogueText(this)"><button class="dialogue-speak-btn" onclick="event.stopPropagation();'+speakFn+'" title="Play">🔊</button>'+spkLabel+'<div class="dialogue-text hidden-text">'+renderContent(txt)+'</div>'+transBtn+'<button class="dialogue-eye-btn" onclick="event.stopPropagation();toggleDialogueText(this.closest(\'.dialogue-line\'))" title="Show/Hide">👁</button></div>'+transDiv+'</div>';
       });
       transcriptHtml+='</div>';
       el.innerHTML=transcriptHtml;
@@ -2820,6 +2824,12 @@ function flipCard(){
 function toggleDialogueText(lineEl){
   const txt=lineEl.querySelector('.dialogue-text');
   if(txt)txt.classList.toggle('hidden-text');
+}
+function toggleDialogueTrans(btn){
+  const wrap=btn.closest('.dialogue-line-wrap');
+  if(!wrap)return;
+  const trans=wrap.querySelector('.dialogue-trans');
+  if(trans)trans.classList.toggle('show');
 }
 function toggleAllDialogueText(){
   const texts=document.querySelectorAll('.dialogue-text');
