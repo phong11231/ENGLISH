@@ -1057,6 +1057,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
       <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap">
         <button class="btn btn-ghost" onclick="closeAIPrompt()">Close</button>
         <button class="btn btn-ghost" onclick="copyAIResult()">📋 Copy</button>
+        <button class="btn btn-ghost" onclick="copyAIPromptText()">📝 Copy Prompt</button>
         <button class="btn btn-primary" id="aiGenBtn" onclick="generateAIConversation()">✨ Generate</button>
       </div>
     </div>
@@ -3330,6 +3331,10 @@ function openAIPrompt(){
   document.getElementById('aiLoading').style.display='none';
 }
 function closeAIPrompt(){document.getElementById('aiPromptModal').classList.remove('active');}
+function copyAIPromptText(){
+  var p=buildAIPrompt();
+  navigator.clipboard.writeText(p).then(function(){toast('Prompt copied! Paste into ChatGPT / Claude');}).catch(function(){toast('Copy failed');});
+}
 function copyAIResult(){
   var text=document.getElementById('aiResult').textContent;
   if(!text){toast('Nothing to copy');return;}
