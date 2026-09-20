@@ -2577,7 +2577,7 @@ async function assignDialogueVoices(fronts){
   return map;
 }
 
-function getDialogueText(f){var t=typeof f==='object'?f.text:f;if(t){t=t.replace(/^[A-Z]\s*(?:\([^)]*\))?\s*[:：]\s*/,'');}return t;}
+function getDialogueText(f){var t=typeof f==='object'?f.text:f;if(t){t=t.replace(/^[A-Z]\s*(?:\([^)]*\))?\s*[:：]\s*/,'');var ex=extractTrans(t);t=ex.text;}return t;}
 function getDialogueSpeaker(f){return typeof f==='object'?(f.speaker||''):'';}
 
 function testVoice(){
@@ -2711,9 +2711,11 @@ function flipCard(){
       let transcriptHtml='<div class="dialogue-list front-transition">';
       const vMap=window._dialogueVoiceMap||{};
       fronts.forEach(function(f,i){
+        const rawTxt=typeof f==='object'?f.text:f;
+        const exRaw=extractTrans(rawTxt||'');
         const txt=getDialogueText(f);
         const spk=getDialogueSpeaker(f);
-        const trans=typeof f==='object'&&f.trans?f.trans:'';
+        const trans=(typeof f==='object'&&f.trans)?f.trans:exRaw.trans;
         const safe=esc(txt).replace(/'/g,"\\'").replace(/\n/g,' ');
         const vid=spk&&vMap[spk]?vMap[spk]:'';
         const speakFn=vid?'speakTextAs(\''+safe+'\',\''+vid+'\')':'speakText(\''+safe+'\')';
@@ -3223,6 +3225,11 @@ function openChatAddModal(){
   document.getElementById('chatAddModal').classList.add('active');
 }
 function closeChatAdd(){document.getElementById('chatAddModal').classList.remove('active');}
+function extractTrans(text){
+  var m=text.match(/\s*\(([^)]*[àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ][^)]*)\)\s*$/i);
+  if(m)return{text:text.slice(0,text.lastIndexOf('('+m[1]+')')).trim(),trans:'('+m[1]+')'};
+  return{text:text,trans:''};
+}
 function parseChatLines(text){
   var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
   var result=[];
@@ -3233,8 +3240,11 @@ function parseChatLines(text){
       continue;
     }
     var m=line.match(/^([A-Za-z0-9_]+)\s*(?:\([^)]*\))?\s*[:：]\s*(.+)$/);
-    if(m)result.push({speaker:m[1],text:m[2].trim(),trans:''});
-    else result.push({speaker:'',text:line,trans:''});
+    var parsed=m?{speaker:m[1],text:m[2].trim(),trans:''}:{speaker:'',text:line,trans:''};
+    var ex=extractTrans(parsed.text);
+    parsed.text=ex.text;
+    if(ex.trans)parsed.trans=ex.trans;
+    result.push(parsed);
   }
   return result;
 }
