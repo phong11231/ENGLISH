@@ -36,8 +36,9 @@ body{font-family:var(--font);background:#000;display:flex;align-items:center;jus
 .nav-btn.active{background:var(--primary-bg);color:var(--primary)}
 
 /* SLIDES */
-.slide{position:absolute;top:80px;left:0;right:0;bottom:0;padding:12px 16px;opacity:0;pointer-events:none;transition:opacity .5s;overflow-y:auto}
+.slide{position:absolute;top:80px;left:0;right:0;bottom:72px;padding:12px 16px;opacity:0;pointer-events:none;transition:opacity .5s;overflow-y:auto}
 .slide.active{opacity:1;pointer-events:auto}
+.slide.full-height{bottom:0}
 
 /* STEP INSTRUCTION */
 .step-bar{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:16px 20px;z-index:90;display:flex;align-items:center;gap:12px}
@@ -186,8 +187,8 @@ body{font-family:var(--font);background:#000;display:flex;align-items:center;jus
 .intro-logo{font-size:64px;margin-bottom:16px}
 .intro-title{font-family:var(--font-display);font-size:28px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#0891b2);-webkit-background-clip:text;background-clip:text;color:transparent}
 .intro-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;line-height:1.5}
-.intro-start{margin-top:24px;background:var(--primary);color:#fff;border:none;border-radius:var(--r-lg);padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.3);position:relative;z-index:95}
-.step-next{position:relative;z-index:95}
+.intro-start{margin-top:24px;background:var(--primary);color:#fff;border:none;border-radius:var(--r-lg);padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.3);position:relative;z-index:95;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,.1)}
+.step-next{position:relative;z-index:95;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,.1)}
 </style>
 </head>
 <body>
@@ -207,7 +208,7 @@ body{font-family:var(--font);background:#000;display:flex;align-items:center;jus
   </div>
 
   <!-- SLIDE 0: INTRO -->
-  <div class="slide active" id="s0">
+  <div class="slide active full-height" id="s0">
     <div class="intro-screen">
       <div class="intro-logo">🧠</div>
       <div class="intro-title">FlashMind</div>
@@ -413,7 +414,7 @@ body{font-family:var(--font);background:#000;display:flex;align-items:center;jus
   </div>
 
   <!-- SLIDE 8: COMPLETED -->
-  <div class="slide" id="s8">
+  <div class="slide full-height" id="s8">
     <div class="completed">
       <div class="completed-icon">🎉</div>
       <div class="completed-title">Hoàn thành!</div>
@@ -595,9 +596,14 @@ function startAuto(){
   },5000);
 }
 
-document.getElementById('btnStart').addEventListener('click',function(e){e.stopPropagation();goStep(1);});
-document.getElementById('btnRestart').addEventListener('click',function(e){e.stopPropagation();goStep(0);});
-document.getElementById('stepNext').addEventListener('click',function(e){e.stopPropagation();nextStep();});
+function bindBtn(id,fn){
+  var el=document.getElementById(id);
+  el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();fn();});
+  el.addEventListener('touchend',function(e){e.preventDefault();e.stopPropagation();fn();});
+}
+bindBtn('btnStart',function(){goStep(1)});
+bindBtn('btnRestart',function(){goStep(0)});
+bindBtn('stepNext',nextStep);
 
 goStep(0);
 </script>
