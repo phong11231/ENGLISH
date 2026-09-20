@@ -303,9 +303,10 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .flashcard.dialogue-mode:not(.flipped) .flashcard-face.back{display:none}
 .flashcard.dialogue-mode.flipped .flashcard-face.front{display:none}
 .flashcard.dialogue-mode.flipped .flashcard-face.back{position:relative;inset:auto;height:auto;min-height:0;padding:20px;backface-visibility:visible;transform:none}
-.dialogue-outer-layout{display:flex;gap:24px;align-items:stretch;width:100%;max-width:100%;flex:1;min-height:0}
-.dialogue-outer-layout .dialogue-yt-outer{flex:1;min-width:0;display:flex;align-items:flex-start}
-.dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap{aspect-ratio:16/9;border-radius:var(--r-xl);overflow:hidden;background:#000;box-shadow:var(--shadow-xl);width:100%}
+.dialogue-outer-layout{display:flex;gap:24px;align-items:stretch;width:100%;max-width:100%;flex:1;min-height:0;overflow:hidden}
+.dialogue-outer-layout .dialogue-yt-outer{flex:1;min-width:0;display:flex;align-items:stretch}
+.dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap{border-radius:var(--r-xl);overflow:hidden;background:#000;box-shadow:var(--shadow-xl);width:100%;height:100%}
+.dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap iframe,.dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap video{width:100%;height:100%;display:block;border:none}
 .dialogue-outer-layout .dialogue-right-col{flex:0 0 auto;width:400px;max-width:400px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
 .dialogue-outer-layout .flashcard.dialogue-mode{flex:0 0 auto;width:100%;max-width:100%}
 .main:has(.dialogue-outer-layout){max-width:100%;padding-left:30px;padding-right:30px}
