@@ -327,7 +327,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 
 /* REVIEW */
 .review-container{display:flex;flex-direction:column;align-items:center;padding:8px 0 0;flex:1;min-height:0;overflow:hidden}
-.review-progress{width:100%;margin-bottom:20px}
+.review-progress{width:100%;margin-bottom:8px}
 .review-progress-bar{width:100%;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .review-progress-fill{height:100%;border-radius:3px;background:var(--primary);transition:width .3s ease}
 .review-counts{display:flex;gap:16px;justify-content:center;margin-top:10px;font-size:13px;font-weight:600}
@@ -635,27 +635,24 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 <!-- REVIEW VIEW -->
 <div class="view" id="viewReview">
   <div class="review-container" style="position:relative">
-    <div class="review-header" style="width:100%;display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+    <div class="review-header" style="width:100%;display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="exitReview()">← Back</button>
       <button class="btn btn-ghost btn-sm" id="undoBtn" style="display:none" onclick="undoAnswer()">↩ Previous</button>
-      <h2 style="font-size:16px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="reviewDeckName"></h2>
+      <h2 style="font-size:15px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="reviewDeckName"></h2>
+      <div class="streak-bar" id="streakBar" style="margin:0;padding:4px 12px;max-width:none;width:auto;flex:none">
+        <div class="streak-combo" id="streakCombo"><div class="streak-fire" id="streakFire">🔥</div><div class="streak-count" id="streakCount">0</div></div>
+        <div class="streak-xp" id="streakXp">⚡ <span id="sessionXp">0</span> XP</div>
+        <div class="streak-multiplier" id="streakMultiplier">x1</div>
+      </div>
       <div class="mode-toggle" id="modeIndicator" style="pointer-events:none;margin-bottom:0;flex:none">
         <button id="modeFlip">🔄 Flip card</button>
         <button id="modeType">⌨️ Type answer</button>
       </div>
-      <div class="review-counts" style="display:flex;gap:8px;font-size:13px;flex:none">
+      <div class="review-counts" style="display:flex;gap:8px;font-size:12px;flex:none">
         <span class="cnt-new" id="cntNew">0 new</span>
         <span class="cnt-learn" id="cntLearn">0 learning</span>
         <span class="cnt-due" id="cntDue">0 review</span>
       </div>
-    </div>
-    <div class="streak-bar" id="streakBar">
-      <div class="streak-combo" id="streakCombo">
-        <div class="streak-fire" id="streakFire">🔥</div>
-        <div class="streak-count" id="streakCount">0</div>
-      </div>
-      <div class="streak-xp" id="streakXp">⚡ <span id="sessionXp">0</span> XP</div>
-      <div class="streak-multiplier" id="streakMultiplier">x1</div>
     </div>
     <div class="review-progress">
       <div class="review-progress-bar"><div class="review-progress-fill" id="reviewProgressFill"></div></div>
