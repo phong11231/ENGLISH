@@ -186,7 +186,8 @@ body{font-family:var(--font);background:#000;display:flex;align-items:center;jus
 .intro-logo{font-size:64px;margin-bottom:16px}
 .intro-title{font-family:var(--font-display);font-size:28px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#0891b2);-webkit-background-clip:text;background-clip:text;color:transparent}
 .intro-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;line-height:1.5}
-.intro-start{margin-top:24px;background:var(--primary);color:#fff;border:none;border-radius:var(--r-lg);padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+.intro-start{margin-top:24px;background:var(--primary);color:#fff;border:none;border-radius:var(--r-lg);padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.3);position:relative;z-index:95}
+.step-next{position:relative;z-index:95}
 </style>
 </head>
 <body>
@@ -211,7 +212,7 @@ body{font-family:var(--font);background:#000;display:flex;align-items:center;jus
       <div class="intro-logo">🧠</div>
       <div class="intro-title">FlashMind</div>
       <div class="intro-sub">Hướng dẫn sử dụng<br>Học tiếng Anh thông minh kiểu Anki</div>
-      <button class="intro-start" onclick="goStep(1)">Bắt đầu ▶</button>
+      <button class="intro-start" id="btnStart">Bắt đầu ▶</button>
     </div>
   </div>
 
@@ -422,7 +423,7 @@ body{font-family:var(--font);background:#000;display:flex;align-items:center;jus
         <div class="completed-stat"><div class="completed-stat-val">120</div><div class="completed-stat-lbl">XP</div></div>
         <div class="completed-stat"><div class="completed-stat-val">3</div><div class="completed-stat-lbl">Streak</div></div>
       </div>
-      <button class="intro-start" style="margin-top:24px;font-size:13px;padding:10px 24px" onclick="goStep(0)">🔄 Xem lại từ đầu</button>
+      <button class="intro-start" id="btnRestart" style="margin-top:24px;font-size:13px;padding:10px 24px">🔄 Xem lại từ đầu</button>
     </div>
   </div>
 
@@ -433,7 +434,7 @@ body{font-family:var(--font);background:#000;display:flex;align-items:center;jus
   <div class="step-bar" id="stepBar">
     <div class="step-num" id="stepNum">1</div>
     <div class="step-text" id="stepText">Đây là trang chính của FlashMind</div>
-    <button class="step-next" id="stepNext" onclick="nextStep()">Tiếp ▶</button>
+    <button class="step-next" id="stepNext">Tiếp ▶</button>
   </div>
 
   <!-- ARROW -->
@@ -520,9 +521,11 @@ function goStep(n){
   document.getElementById(s.slide).classList.add('active');
 
   // Step bar
-  if(s.hideBar){stepBar.style.display='none'}
+  var progBar=document.querySelector('.step-progress');
+  if(s.hideBar){stepBar.style.display='none';progBar.style.display='none'}
   else{
     stepBar.style.display='';
+    progBar.style.display='';
     stepText.textContent=s.text;
     stepNum.textContent=n;
   }
@@ -592,7 +595,9 @@ function startAuto(){
   },5000);
 }
 
-// No phone-level click handler needed
+document.getElementById('btnStart').addEventListener('click',function(e){e.stopPropagation();goStep(1);});
+document.getElementById('btnRestart').addEventListener('click',function(e){e.stopPropagation();goStep(0);});
+document.getElementById('stepNext').addEventListener('click',function(e){e.stopPropagation();nextStep();});
 
 goStep(0);
 </script>
