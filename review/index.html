@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashMind — Review</title>
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<meta name="theme-color" content="#8b5cf6">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/fm.css?v=3">
+</head>
+<body>
+
+<div class="app active" id="appShell">
+<nav class="nav">
+  <div class="nav-brand"><span>🧠</span> FlashMind</div>
+  <div class="nav-actions">
+    <button class="nav-btn" onclick="showView('decks')" title="Decks" id="navDecks">📚</button>
+    <button class="nav-btn active" onclick="showView('review')" title="Review" id="navReview">🔄</button>
+    <button class="nav-btn" onclick="showView('quiz')" title="Quiz" id="navQuiz">🎯</button>
+    <button class="nav-btn" onclick="showView('stats')" title="Stats" id="navStats">📊</button>
+    <button class="nav-btn" onclick="toggleTheme()" title="Theme" id="navTheme">🌙</button>
+    <button class="nav-btn" onclick="openAuthModal()" title="Sign in" id="navLogin">👤</button>
+    <img class="user-avatar" id="userAvatar" onclick="toggleUserMenu()" alt="avatar" style="display:none">
+    <div class="user-avatar user-avatar-initial" id="userAvatarInitial" onclick="toggleUserMenu()" style="display:none"></div>
+  </div>
+  <div class="user-menu" id="userMenu">
+    <div class="user-menu-name" id="userName"></div>
+    <button class="user-menu-item" onclick="syncToCloud()">☁️ Sync to cloud</button>
+    <button class="user-menu-item danger" onclick="signOutUser()">🚪 Sign out</button>
+  </div>
+</nav>
+
+<main class="main">
+<div class="view active" id="viewReviewLanding">
+  <div class="page-header"><h1>Review</h1><p>Choose a deck to review</p></div>
+  <div id="reviewDeckList"></div>
+</div>
+</main>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h2 id="authModalTitle">Sign In</h2><button class="modal-close" onclick="closeAuthModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Username</label><input type="text" id="authEmail" placeholder="Choose any name" autocomplete="username"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="authPass" placeholder="Min 6 characters" autocomplete="current-password"></div>
+      <div id="authNameGroup" class="form-group" style="display:none"><label>Display name</label><input type="text" id="authName" placeholder="Your name"></div>
+      <div id="authError" style="color:var(--red);font-size:13px;margin-top:4px;display:none"></div>
+      <div class="form-actions" style="flex-direction:column;gap:8px">
+        <button class="btn btn-primary" id="authSubmitBtn" onclick="submitAuth()" style="width:100%">Sign In</button>
+        <div style="text-align:center;font-size:13px;opacity:.7;margin-top:4px">
+          <span id="authToggleText">Don't have an account?</span>
+          <a href="#" onclick="toggleAuthMode(event)" style="color:var(--primary);text-decoration:underline" id="authToggleLink">Sign Up</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="../js/fm-shared.js?v=3"></script>
+<script>
+function renderReviewLanding(){
+  var wrap = document.getElementById('reviewDeckList');
+  if(!wrap) return;
+  var ids = Object.keys(db.decks);
+  if(ids.length === 0){
+    wrap.innerHTML = '<div style="text-align:center;padding:40px;opacity:.6"><p>No decks yet. Create one from the Decks page!</p></div>';
+    return;
+  }
+  var now = Date.now();
+  var html = '';
+  var totalDue = 0;
+  ids.forEach(function(id){
+    var deck = db.decks[id];
+    var cards = getDeckCards(id);
+    var newC = 0, learning = 0, due = 0;
+    cards.forEach(function(c){
+      if(c.suspended) return;
+      if(c.status === 'new') newC++;
+      else if(c.status === 'learning' || c.status === 'relearning') learning++;
+      else if(c.due <= now) due++;
+    });
+    totalDue += newC + learning + due;
+    var total = newC + learning + due;
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:8px;cursor:pointer;transition:transform .15s" onclick="startReview(\''+id+'\')" onmouseover="this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.transform=\'\'">';
+    html += '<div style="font-size:28px;width:44px;text-align:center">'+(deck.emoji||'📖')+'</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+deck.name+'</div>';
+    html += '<div style="display:flex;gap:12px;font-size:12px;margin-top:4px">';
+    if(newC > 0) html += '<span style="color:var(--blue-text,#4299e1)">'+newC+' new</span>';
+    if(learning > 0) html += '<span style="color:var(--orange-text,#ed8936)">'+learning+' learning</span>';
+    if(due > 0) html += '<span style="color:var(--green-text,#48bb78)">'+due+' review</span>';
+    if(total === 0) html += '<span style="opacity:.5">All done!</span>';
+    html += '</div></div>';
+    if(total > 0){
+      html += '<div style="display:flex;gap:6px">';
+      html += '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();startReview(\''+id+'\')">▶ Review</button>';
+      html += '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();startReviewAll(\''+id+'\')">All</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  var header = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)">';
+  header += '<div style="font-size:32px">🔄</div>';
+  header += '<div style="flex:1"><div style="font-size:24px;font-weight:800;color:var(--primary)">'+totalDue+'</div><div style="font-size:13px;opacity:.7">cards to review</div></div>';
+  header += '</div>';
+  wrap.innerHTML = header + html;
+}
+
+function pageRender(){
+  renderReviewLanding();
+  updateAdminUI();
+}
+pageRender();
+</script>
+</body>
+</html>

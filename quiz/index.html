@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FlashMind — Statistics</title>
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>FlashMind — Quiz</title>
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <meta name="theme-color" content="#8b5cf6">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/fm.css?v=2">
+<link rel="stylesheet" href="../css/fm.css?v=3">
 </head>
 <body>
 
@@ -17,8 +17,9 @@
   <div class="nav-brand"><span>🧠</span> FlashMind</div>
   <div class="nav-actions">
     <button class="nav-btn" onclick="showView('decks')" title="Decks" id="navDecks">📚</button>
-    <button class="nav-btn" onclick="showView('quiz')" title="Quiz" id="navQuiz">🎯</button>
-    <button class="nav-btn active" onclick="showView('stats')" title="Stats" id="navStats">📊</button>
+    <button class="nav-btn" onclick="showView('review')" title="Review" id="navReview">🔄</button>
+    <button class="nav-btn active" onclick="showView('quiz')" title="Quiz" id="navQuiz">🎯</button>
+    <button class="nav-btn" onclick="showView('stats')" title="Stats" id="navStats">📊</button>
     <button class="nav-btn" onclick="toggleTheme()" title="Theme" id="navTheme">🌙</button>
     <button class="nav-btn" onclick="openAuthModal()" title="Sign in" id="navLogin">👤</button>
     <img class="user-avatar" id="userAvatar" onclick="toggleUserMenu()" alt="avatar" style="display:none">
@@ -32,16 +33,27 @@
 </nav>
 
 <main class="main">
-<div class="view active" id="viewStats">
-  <div class="page-header"><h1>Statistics</h1><p>Your study progress</p></div>
-  <div class="stats-row" id="detailedStats"></div>
-  <div style="background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);padding:24px;margin-top:16px">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Review history — last 30 days</h3>
-    <div id="heatmapContainer" style="overflow-x:auto"></div>
+<div class="view active" id="viewQuiz">
+  <div class="page-header"><h1>Quiz Mode</h1><p>Test your knowledge with multiple choice</p></div>
+  <div id="quizSetup" style="text-align:center;padding:20px">
+    <p style="margin-bottom:16px;opacity:.8">Pick a deck to start a quiz</p>
+    <select id="quizDeckSelect" style="width:100%;max-width:400px;padding:12px;border-radius:var(--r-sm);background:var(--glass);border:1px solid var(--glass-border);color:var(--ink);font-size:15px;margin-bottom:16px"></select>
+    <div style="margin-bottom:16px"><label style="opacity:.7;font-size:13px">Number of questions</label><input type="number" id="quizCount" value="10" min="4" max="50" style="width:80px;padding:8px;border-radius:var(--r-sm);background:var(--glass);border:1px solid var(--glass-border);color:var(--ink);text-align:center;margin-left:8px"></div>
+    <button class="btn btn-primary" onclick="startQuiz()">Start Quiz</button>
   </div>
-  <div style="background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);padding:24px;margin-top:12px">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Card distribution by status</h3>
-    <div id="statusChart"></div>
+  <div id="quizArea" style="display:none">
+    <div id="quizProgress" style="text-align:center;margin-bottom:12px;font-size:14px;opacity:.7"></div>
+    <div id="quizQuestion" style="background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-xl);padding:24px;text-align:center;margin-bottom:16px;min-height:80px;display:flex;align-items:center;justify-content:center">
+      <div id="quizQuestionContent" style="font-size:22px;font-weight:700;font-family:var(--font-display)"></div>
+    </div>
+    <div id="quizVoiceBtn" style="text-align:center;margin-bottom:12px"></div>
+    <div id="quizOptions" style="display:flex;flex-direction:column;gap:10px;max-width:560px;margin:0 auto"></div>
+    <div id="quizResult" style="display:none;text-align:center;padding:30px">
+      <h2 id="quizScore" style="font-size:28px;margin-bottom:12px"></h2>
+      <p id="quizSummary" style="opacity:.7;margin-bottom:20px"></p>
+      <button class="btn btn-primary" onclick="startQuiz()">Play Again</button>
+      <button class="btn btn-ghost" onclick="showView('decks')" style="margin-left:8px">Back to Decks</button>
+    </div>
   </div>
 </div>
 </main>
@@ -73,10 +85,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="js/fm-shared.js?v=2"></script>
+<script src="../js/fm-shared.js?v=3"></script>
 <script>
 function pageRender(){
-  renderStats();
+  renderQuizSetup();
   updateAdminUI();
 }
 pageRender();

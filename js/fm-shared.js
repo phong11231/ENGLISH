@@ -1,3 +1,7 @@
+// ===== NAV HELPER =====
+var _basePath = location.pathname.indexOf('/ENGLISH/') >= 0 ? '/ENGLISH/' : '/';
+function _nav(path){ return _basePath + path; }
+
 // ===== FIREBASE =====
 firebase.initializeApp({apiKey:"AIzaSyD7UXDjRS0NaT1OYRBvpxqpirZz3SQYVyc",authDomain:"flashmind-8b1bc.firebaseapp.com",projectId:"flashmind-8b1bc",storageBucket:"flashmind-8b1bc.firebasestorage.app",messagingSenderId:"482268690491",appId:"1:482268690491:web:2c53f56d0bdf8d30c7c41e"});
 const auth = firebase.auth(), firestore = firebase.firestore();
@@ -174,9 +178,10 @@ let reviewQueue=[],reviewIndex=0,reviewMode='flip',viewingParentId=null,parentSt
 let undoStack=[], activeTagFilter=null;
 
 function showView(name){
-  if(name==='decks')location.href='index.html';
-  else if(name==='quiz')location.href='quiz.html';
-  else if(name==='stats')location.href='stats.html';
+  if(name==='decks')location.href=_basePath;
+  else if(name==='review')location.href=_basePath+'review/';
+  else if(name==='quiz')location.href=_basePath+'quiz/';
+  else if(name==='stats')location.href=_basePath+'stats/';
   else{
     currentView=name;
     var el=document.getElementById('view'+name.charAt(0).toUpperCase()+name.slice(1));
@@ -324,7 +329,7 @@ function renderDecks(){
 function onDeckClick(id){
   var deck=db.decks[id];
   if(deck&&getSubDecks(id).length>0){navigateIntoDeck(id);}
-  else{location.href='deck.html?id='+id;}
+  else{location.href=_basePath+id;}
 }
 
 // ===== DECK MODAL =====
@@ -608,9 +613,9 @@ function clozeToBack(text,num){return text.replace(/\{\{c(\d+)::([^}]+)\}\}/g,(_
 
 // ===== CARD BROWSER =====
 function openBrowser(deckId){
-  location.href='deck.html?id='+deckId;
+  location.href=_basePath+deckId;
 }
-function exitBrowser(){currentDeckId=null;location.href='index.html';}
+function exitBrowser(){currentDeckId=null;location.href=_basePath;}
 
 function renderTagFilter(){
   const cards=getDeckCards(currentDeckId);
@@ -745,11 +750,11 @@ function downloadFile(name,content,type){
 
 // ===== REVIEW =====
 function startReviewAll(deckId){
-  location.href='review.html?deck='+deckId+'&mode=all';
+  location.href=_basePath+deckId+'/review?mode=all';
 }
 
 function startReview(deckId){
-  location.href='review.html?deck='+deckId;
+  location.href=_basePath+deckId+'/review';
 }
 
 // ===== SLEEP LISTEN =====
@@ -1041,7 +1046,7 @@ function stopAllAudio(){
   window._dialoguePlaying=false;
   destroyYtPlayer();
 }
-function exitReview(){stopAllAudio();cleanupDialogueLayout();reviewQueue=[];location.href='index.html';}
+function exitReview(){stopAllAudio();cleanupDialogueLayout();reviewQueue=[];location.href=_basePath;}
 function cleanupDialogueLayout(){
   const outer=document.querySelector('.dialogue-outer-layout');
   if(outer){
@@ -2135,7 +2140,7 @@ function startCustomStudy(){
   var deckId=customStudyDeckId;
   var tag='';
   if(filter==='tag') tag=document.getElementById('customTagInput').value.trim().toLowerCase();
-  location.href='review.html?deck='+deckId+'&mode=custom&filter='+filter+'&limit='+limit+'&order='+order+'&tag='+encodeURIComponent(tag);
+  location.href=_basePath+deckId+'/review?mode=custom&filter='+filter+'&limit='+limit+'&order='+order+'&tag='+encodeURIComponent(tag);
 }
 
 function renderStreakWidget(){
@@ -2337,7 +2342,7 @@ async function generateAIConversation(){
 function openTutorial(){
   var ov=document.getElementById('tutorialOverlay');
   ov.style.display='flex';
-  document.getElementById('tutorialFrame').src='tutorial.html';
+  document.getElementById('tutorialFrame').src=_basePath+'tutorial.html';
 }
 function closeTutorial(){
   var ov=document.getElementById('tutorialOverlay');

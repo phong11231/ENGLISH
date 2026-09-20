@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FlashMind">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/fm.css?v=2">
+<link rel="stylesheet" href="css/fm.css?v=3">
 </head>
 <body>
 
@@ -21,6 +21,7 @@
   <div class="nav-brand"><span>🧠</span> FlashMind</div>
   <div class="nav-actions">
     <button class="nav-btn active" onclick="showView('decks')" title="Decks" id="navDecks">📚</button>
+    <button class="nav-btn" onclick="showView('review')" title="Review" id="navReview">🔄</button>
     <button class="nav-btn" onclick="showView('quiz')" title="Quiz" id="navQuiz">🎯</button>
     <button class="nav-btn" onclick="showView('stats')" title="Stats" id="navStats">📊</button>
     <button class="nav-btn" onclick="toggleTheme()" title="Theme" id="navTheme">🌙</button>
@@ -270,7 +271,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="js/fm-shared.js?v=2"></script>
+<script src="js/fm-shared.js?v=3"></script>
 <script>
 function pageRender(){
   renderDecks();initParticles();loadSharedDecks();
