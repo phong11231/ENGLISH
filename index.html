@@ -179,9 +179,10 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .user-menu-name{padding:10px 14px;font-size:13px;color:var(--ink-dim);border-bottom:1px solid var(--line);margin-bottom:4px}
 
 /* MAIN */
-.main{flex:1;max-width:1400px;width:100%;margin:0 auto;padding:24px 40px 20px;overflow:hidden;min-height:0}
+.main{flex:1;max-width:1400px;width:100%;margin:0 auto;padding:24px 40px 20px;overflow-y:auto;min-height:0;display:flex;flex-direction:column}
 .view{display:none}
 .view.active{display:block}
+#viewDecks.active{display:flex;flex-direction:column;height:100%;overflow:hidden}
 .page-header{margin-bottom:16px;position:relative}
 .page-header h1{font-size:36px;font-weight:900;letter-spacing:-.03em;font-family:var(--font-display);background:linear-gradient(135deg,#1e1b4b,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .page-header p{color:var(--ink-soft);margin-top:8px;font-size:15px;letter-spacing:.02em}
@@ -201,9 +202,9 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .breadcrumb .sep{color:var(--ink-dim);opacity:.5}
 
 /* DECKS LAYOUT */
-.decks-layout{display:flex;gap:20px;align-items:stretch;height:100%}
+.decks-layout{display:flex;gap:20px;align-items:stretch;flex:1;min-height:0}
 .decks-main{flex:7;min-width:0;overflow-y:auto}
-.decks-sidebar{flex:3;min-width:0;background:#fff;border-radius:var(--r-lg);border:1px solid rgba(124,58,237,.08);box-shadow:var(--shadow-sm);height:calc(100vh - 120px);max-height:calc(100vh - 120px);display:flex;flex-direction:column;overflow:hidden}
+.decks-sidebar{flex:3;min-width:0;background:#fff;border-radius:var(--r-lg);border:1px solid rgba(124,58,237,.08);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;overflow:hidden}
 .decks-sidebar-header{padding:16px 18px 12px;font-weight:800;font-size:16px;font-family:var(--font-display);color:var(--ink);border-bottom:1px solid rgba(124,58,237,.06);flex-shrink:0}
 .decks-sidebar-scroll{flex:1;overflow-y:auto;padding:10px}
 .decks-sidebar-scroll::-webkit-scrollbar{width:4px}
@@ -562,7 +563,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
   .nav{padding:0 16px;height:56px}.nav-brand{font-size:17px}
   .main{padding:16px 14px 20px;overflow-y:auto}.page-header h1{font-size:24px}
   .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}.stat-card{padding:12px 14px}.stat-card .stat-value{font-size:22px}
-  .decks-layout{flex-direction:column}.decks-sidebar{position:static;max-height:none}.deck-item .deck-color{width:36px;height:36px;font-size:18px}
+  #viewDecks.active{height:auto;overflow:visible}.decks-layout{flex-direction:column}.decks-sidebar{position:static;max-height:none}.deck-item .deck-color{width:36px;height:36px;font-size:18px}
   .flashcard-content{font-size:18px}.review-actions{flex-wrap:wrap}.review-btn{min-width:calc(50% - 5px)}
   .modal{border-radius:var(--r-lg)}.fab{bottom:16px;right:16px;width:52px;height:52px;border-radius:16px;font-size:24px}
   .daily-goal-actions{gap:10px}.action-card-icon{width:40px;height:40px;font-size:18px}.action-card-title{font-size:13px}.action-card-sub{font-size:11px}.action-card-arrow{display:none}
