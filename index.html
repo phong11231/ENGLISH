@@ -3289,16 +3289,23 @@ async function generateAIConversation(){
   document.getElementById('aiLoading').style.display='block';
   document.getElementById('aiResult').style.display='none';
   document.getElementById('aiError').style.display='none';
+  var models=['gemini-2.5-flash','gemini-3.6-flash','gemini-2.0-flash-lite'];
+  var prompt=buildAIPrompt();var body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9,maxOutputTokens:4096}});
+  var lastErr='';
   try{
-    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key='+key,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:buildAIPrompt()}]}],generationConfig:{temperature:0.9,maxOutputTokens:4096}})
-    });
-    var data=await resp.json();
-    if(!resp.ok)throw new Error(data.error?.message||'API error '+resp.status);
-    var text=data.candidates?.[0]?.content?.parts?.[0]?.text||'No response';
-    document.getElementById('aiResult').textContent=text;
-    document.getElementById('aiResult').style.display='block';
+    for(var m of models){
+      var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+key,{
+        method:'POST',headers:{'Content-Type':'application/json'},body:body
+      });
+      var data=await resp.json();
+      if(resp.ok&&data.candidates?.[0]?.content?.parts?.[0]?.text){
+        document.getElementById('aiResult').textContent=data.candidates[0].content.parts[0].text;
+        document.getElementById('aiResult').style.display='block';
+        lastErr='';break;
+      }
+      lastErr=data.error?.message||'API error '+resp.status;
+    }
+    if(lastErr)throw new Error(lastErr);
   }catch(e){
     document.getElementById('aiError').textContent='Error: '+e.message;
     document.getElementById('aiError').style.display='block';
