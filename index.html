@@ -1453,10 +1453,15 @@ function saveDeck(){
   closeDeckModal();renderDecks();
 }
 function deleteDeck(id){
-  if(db.decks[id]._shared&&!isAdmin){toast('This is a default deck and cannot be deleted');return;}
-  if(!confirm('Delete "'+db.decks[id].name+'" and everything inside?'))return;
-  const wasShared=db.decks[id]._shared;
-  // Delete sub-decks recursively
+  var deck=db.decks[id];if(!deck)return;
+  if(deck._shared&&!isAdmin){
+    if(!confirm('Remove "'+deck.name+'" from your list? You can get it back by syncing.'))return;
+    getSubDecks(id).forEach(([subId])=>{delete db.decks[subId];deleteDeckData(subId);});
+    delete db.decks[id];deleteDeckData(id);
+    renderDecks();toast('Removed');return;
+  }
+  if(!confirm('Delete "'+deck.name+'" and everything inside?'))return;
+  const wasShared=deck._shared;
   getSubDecks(id).forEach(([subId])=>deleteDeck(subId));
   delete db.decks[id];deleteDeckData(id);
   if(wasShared&&isAdmin&&typeof firestore!=='undefined'){firestore.collection('sharedDecks').doc(id).delete().catch(console.error);}
