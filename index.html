@@ -3284,14 +3284,14 @@ function buildAIPrompt(){
   return p;
 }
 async function streamGemini(key,prompt,onChunk){
-  var models=['gemini-1.5-flash','gemini-3.6-flash'];
+  var models=['gemini-1.5-flash-latest','gemini-2.0-flash-lite','gemini-pro'];
   var body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9,maxOutputTokens:8192}});
   for(var m of models){
     try{
       var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':streamGenerateContent?alt=sse&key='+key,{
         method:'POST',headers:{'Content-Type':'application/json'},body:body
       });
-      if(!resp.ok){var err=await resp.json();if(err.error?.message)throw new Error(m+': '+err.error.message);continue;}
+      if(!resp.ok){try{var err=await resp.json();var msg=err.error?.message||'HTTP '+resp.status;}catch(e){var msg='HTTP '+resp.status;}if(models.indexOf(m)<models.length-1)continue;throw new Error(m+': '+msg);}
       var reader=resp.body.getReader();var decoder=new TextDecoder();var buf='';
       while(true){
         var chunk=await reader.read();if(chunk.done)break;
