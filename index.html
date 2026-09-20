@@ -1356,7 +1356,7 @@ function renderDecks(){
       <div class="action-card-text"><div class="action-card-title">AI Practice</div><div class="action-card-sub">Generate daily conversation prompt</div></div>
       <div class="action-card-arrow">›</div>
     </div>
-    ${isAdmin?'<div class="action-card" onclick="openTutorial()" style="background:linear-gradient(135deg,rgba(249,115,22,.1),rgba(234,179,8,.1));border-color:rgba(249,115,22,.2)"><div class="action-card-icon">📖</div><div class="action-card-text"><div class="action-card-title">Hướng dẫn</div><div class="action-card-sub">Cách sử dụng FlashMind</div></div><div class="action-card-arrow">›</div></div>':''}
+    ${isAdmin&&currentUser?'<div class="action-card" onclick="openTutorial()" style="background:linear-gradient(135deg,rgba(249,115,22,.1),rgba(234,179,8,.1));border-color:rgba(249,115,22,.2)"><div class="action-card-icon">📖</div><div class="action-card-text"><div class="action-card-title">Hướng dẫn</div><div class="action-card-sub">Cách sử dụng FlashMind</div></div><div class="action-card-arrow">›</div></div>':''}
   </div>`;
 
   if(deckEntries.length===0&&!viewingParentId){
