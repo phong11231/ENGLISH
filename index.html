@@ -267,7 +267,8 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .front-transition{animation:frontSlide .4s cubic-bezier(.4,0,.2,1)}
 @keyframes frontSlide{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .front-counter{position:absolute;top:12px;right:16px;font-size:12px;color:var(--ink-dim);background:var(--surface-2);padding:2px 8px;border-radius:10px}
-.dialogue-list{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left}
+.dialogue-list{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;max-height:60vh;overflow-y:auto;padding-right:4px}
+.dialogue-trans{font-size:12px;color:var(--ink-dim);font-style:italic;margin-top:3px;line-height:1.4}
 .dialogue-line{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--glass-border);cursor:pointer;transition:background .2s}
 .dialogue-line:hover{background:var(--surface)}
 .dialogue-line.alt{opacity:.85}
@@ -2709,11 +2710,13 @@ function flipCard(){
       fronts.forEach(function(f,i){
         const txt=getDialogueText(f);
         const spk=getDialogueSpeaker(f);
+        const trans=typeof f==='object'&&f.trans?f.trans:'';
         const safe=esc(txt).replace(/'/g,"\\'").replace(/\n/g,' ');
         const vid=spk&&vMap[spk]?vMap[spk]:'';
         const speakFn=vid?'speakTextAs(\''+safe+'\',\''+vid+'\')':'speakText(\''+safe+'\')';
         const spkLabel=spk?'<span class="dialogue-speaker">'+esc(spk)+'</span>':'';
-        transcriptHtml+='<div class="dialogue-line'+(i%2===1?' alt':'')+'" onclick="event.stopPropagation();toggleDialogueText(this)"><button class="dialogue-speak-btn" onclick="event.stopPropagation();'+speakFn+'" title="Play">🔊</button>'+spkLabel+'<div class="dialogue-text hidden-text">'+renderContent(txt)+'</div><button class="dialogue-eye-btn" onclick="event.stopPropagation();toggleDialogueText(this.closest(\'.dialogue-line\'))" title="Show/Hide">👁</button></div>';
+        const transHtml=trans?'<div class="dialogue-trans">'+esc(trans)+'</div>':'';
+        transcriptHtml+='<div class="dialogue-line'+(i%2===1?' alt':'')+'" onclick="event.stopPropagation();toggleDialogueText(this)"><button class="dialogue-speak-btn" onclick="event.stopPropagation();'+speakFn+'" title="Play">🔊</button>'+spkLabel+'<div class="dialogue-text hidden-text">'+renderContent(txt)+transHtml+'</div><button class="dialogue-eye-btn" onclick="event.stopPropagation();toggleDialogueText(this.closest(\'.dialogue-line\'))" title="Show/Hide">👁</button></div>';
       });
       transcriptHtml+='</div>';
       el.innerHTML=transcriptHtml;
@@ -3211,12 +3214,19 @@ function openChatAddModal(){
 }
 function closeChatAdd(){document.getElementById('chatAddModal').classList.remove('active');}
 function parseChatLines(text){
-  var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0&&!l.startsWith('(');});
-  return lines.map(function(line){
+  var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+  var result=[];
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i];
+    if(line.startsWith('(')){
+      if(result.length>0&&!result[result.length-1].trans){result[result.length-1].trans=line;}
+      continue;
+    }
     var m=line.match(/^([A-Za-z0-9_]+)\s*(?:\([^)]*\))?\s*[:：]\s*(.+)$/);
-    if(m)return{speaker:m[1],text:m[2].trim()};
-    return{speaker:'',text:line};
-  });
+    if(m)result.push({speaker:m[1],text:m[2].trim(),trans:''});
+    else result.push({speaker:'',text:line,trans:''});
+  }
+  return result;
 }
 function saveChatCard(){
   var text=document.getElementById('chatInput').value.trim();
@@ -3228,7 +3238,7 @@ function saveChatCard(){
   var ytStart=parseFloat(document.getElementById('chatYtStart').value)||null;
   var ytEnd=parseFloat(document.getElementById('chatYtEnd').value)||null;
   var tags=document.getElementById('chatTags').value.split(',').map(function(t){return t.trim();}).filter(function(t){return t;});
-  var fronts=parsed.map(function(p){return{speaker:p.speaker,text:p.text};});
+  var fronts=parsed.map(function(p){var o={speaker:p.speaker,text:p.text};if(p.trans)o.trans=p.trans;return o;});
   var card=newCardData();
   card.cardName=cardName;
   card.front=fronts[0].text;
