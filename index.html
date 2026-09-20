@@ -3247,6 +3247,7 @@ function saveChatCard(){
 }
 
 // ===== AI PRACTICE =====
+function isVietnamese(t){return /[àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]/i.test(t);}
 function collectAllVocab(){
   var words=[],sentences=[],idioms=[];
   Object.values(db.decks).forEach(function(deck){
@@ -3256,6 +3257,7 @@ function collectAllVocab(){
       var name=(card.cardName||'').trim();
       if(!front&&!name)return;
       var text=name||front;
+      if(isVietnamese(text))return;
       var hasSpace=text.indexOf(' ')>-1;
       if(hasSpace&&text.length>40)sentences.push(text);
       else if(hasSpace&&(text.toLowerCase().indexOf('idiom')>-1||back.toLowerCase().indexOf('idiom')>-1||text.split(' ').length>=3))idioms.push(text);
@@ -3263,7 +3265,7 @@ function collectAllVocab(){
       if(card.fronts&&card.fronts.length>1){
         card.fronts.forEach(function(f){
           var t=typeof f==='object'?f.text:f;
-          if(t)sentences.push(t.replace(/<[^>]*>/g,'').trim());
+          if(t){t=t.replace(/<[^>]*>/g,'').trim();if(!isVietnamese(t))sentences.push(t);}
         });
       }
     });
