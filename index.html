@@ -297,6 +297,15 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .dialogue-eye-btn:hover{background:var(--surface-2);color:var(--ink)}
 .dialogue-answer-btn{margin-top:12px;width:100%;padding:12px;font-size:15px;border-radius:var(--r-md)}
 .dialogue-yt-wrap{border-radius:var(--r-md);overflow:hidden;aspect-ratio:16/9;background:#000;width:100%}
+.cake-player{position:relative;width:100%;height:100%;border-radius:inherit;overflow:hidden;background:#000}
+.cake-controls{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;gap:24px;align-items:center;z-index:5;opacity:0;transition:opacity .3s}
+.cake-player:hover .cake-controls,.cake-player:focus-within .cake-controls{opacity:1}
+.cake-ctrl-btn{width:44px;height:44px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .2s,transform .15s}
+.cake-ctrl-btn:hover{background:rgba(0,0,0,.75);transform:scale(1.1)}
+.cake-ctrl-btn.cake-pp{width:52px;height:52px;font-size:22px}
+.cake-progress{position:absolute;bottom:0;left:0;right:0;height:5px;background:rgba(255,255,255,.25);cursor:pointer;z-index:5;transition:height .2s}
+.cake-player:hover .cake-progress{height:8px}
+.cake-progress-bar{height:100%;background:var(--primary,#e03131);border-radius:0 3px 3px 0;transition:width .2s linear;width:0}
 .flashcard.dialogue-mode{max-width:500px;perspective:none;flex:none;min-height:auto}
 .flashcard.dialogue-mode .flashcard-inner{transform:none!important;transform-style:flat;position:relative;height:auto}
 .flashcard.dialogue-mode .flashcard-face.front{position:relative;inset:auto;height:auto;min-height:0;justify-content:flex-start;text-align:left;padding:20px}
@@ -306,7 +315,7 @@ input,textarea,select{font-family:inherit;font-size:inherit}
 .dialogue-outer-layout{display:flex;gap:24px;align-items:stretch;width:100%;max-width:100%;flex:1;min-height:0;overflow:hidden}
 .dialogue-outer-layout .dialogue-yt-outer{flex:1;min-width:0;display:flex;align-items:stretch}
 .dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap{border-radius:var(--r-xl);overflow:hidden;background:#000;box-shadow:var(--shadow-xl);width:100%;height:100%}
-.dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap iframe,.dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap video{width:100%;height:100%;display:block;border:none}
+.dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap iframe,.dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap video,.dialogue-outer-layout .dialogue-yt-outer .dialogue-yt-wrap .cake-player{width:100%;height:100%;display:block;border:none}
 .dialogue-outer-layout .dialogue-right-col{flex:0 0 auto;width:400px;max-width:400px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
 .dialogue-outer-layout .flashcard.dialogue-mode{flex:0 0 auto;width:100%;max-width:100%}
 .main:has(.dialogue-outer-layout){max-width:100%;padding:8px 20px 0}
@@ -1933,7 +1942,7 @@ function playSleepVideo(){
 function playSleepYouTube(ytId,start,end){
   const wrap=document.getElementById('sleepListenPlayer');
   const iframe=document.createElement('iframe');
-  let src='https://www.youtube.com/embed/'+ytId+'?playsinline=1&rel=0&modestbranding=1&autoplay=1&vq=small';
+  let src='https://www.youtube.com/embed/'+ytId+'?playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&cc_load_policy=0&controls=0&showinfo=0&autoplay=1&vq=small';
   if(start!=null)src+='&start='+Math.floor(start);
   if(end!=null)src+='&end='+Math.floor(end);
   src+='&enablejsapi=1&origin='+encodeURIComponent(location.origin);
@@ -2167,7 +2176,8 @@ function getDriveStreamUrl(driveId){return 'https://valleystudy.com/api/drive/st
 function getDriveEmbedUrl(driveId){return 'https://drive.google.com/file/d/'+driveId+'/preview';}
 
 function destroyYtPlayer(){
-  document.querySelectorAll('.yt-card-wrap iframe, .dialogue-yt-wrap iframe, .dialogue-yt-wrap video, #ytPreviewPlayer iframe').forEach(f=>f.remove());
+  document.querySelectorAll('.cake-player').forEach(function(p){if(p._pollTimer)clearInterval(p._pollTimer);if(p._ytPlayer)try{p._ytPlayer.destroy();}catch(e){}});
+  document.querySelectorAll('.yt-card-wrap iframe, .dialogue-yt-wrap iframe, .dialogue-yt-wrap video, #ytPreviewPlayer iframe, .cake-player').forEach(f=>f.remove());
 }
 
 function buildDriveEmbed(driveId,start,end){
@@ -2201,16 +2211,113 @@ function buildDriveEmbed(driveId,start,end){
   return wrap;
 }
 function buildYtEmbed(videoId,start,end){
+  const wrap=document.createElement('div');
+  wrap.className='cake-player';
+  wrap.dataset.videoId=videoId;
+  if(start!=null)wrap.dataset.start=start;
+  if(end!=null)wrap.dataset.end=end;
   const iframe=document.createElement('iframe');
-  let src='https://www.youtube.com/embed/'+videoId+'?playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&cc_load_policy=0&autoplay=1&vq=small';
+  let src='https://www.youtube.com/embed/'+videoId+'?playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&cc_load_policy=0&controls=0&showinfo=0&autoplay=1&vq=small&enablejsapi=1&origin='+encodeURIComponent(location.origin);
   if(start!=null)src+='&start='+Math.floor(start);
   if(end!=null)src+='&end='+Math.floor(end);
   iframe.src=src;
   iframe.width='100%';iframe.height='100%';
-  iframe.style.border='none';iframe.style.display='block';iframe.style.borderRadius='var(--r-md)';
+  iframe.id='yt-cake-'+Date.now();
+  iframe.style.cssText='border:none;display:block;border-radius:inherit;position:absolute;top:0;left:0';
   iframe.setAttribute('allowfullscreen','');
   iframe.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
-  return iframe;
+  wrap.appendChild(iframe);
+  var ctrl=document.createElement('div');
+  ctrl.className='cake-controls';
+  ctrl.innerHTML='<button class="cake-ctrl-btn cake-rw" onclick="event.stopPropagation();cakeSeek(-5)">⏪</button><button class="cake-ctrl-btn cake-pp" onclick="event.stopPropagation();cakePlayPause()">⏸</button><button class="cake-ctrl-btn cake-fw" onclick="event.stopPropagation();cakeSeek(5)">⏩</button>';
+  ctrl.onclick=function(e){e.stopPropagation();};
+  wrap.appendChild(ctrl);
+  var prog=document.createElement('div');
+  prog.className='cake-progress';
+  prog.innerHTML='<div class="cake-progress-bar"></div>';
+  prog.onclick=function(e){e.stopPropagation();cakeSeekTo(e);};
+  wrap.appendChild(prog);
+  wrap._iframeId=iframe.id;
+  wrap._start=start||0;
+  wrap._end=end||0;
+  initCakePlayer(wrap,iframe);
+  return wrap;
+}
+function initCakePlayer(wrap,iframe){
+  var player=null;
+  var pollTimer=null;
+  iframe.onload=function(){
+    try{
+      var tag=document.createElement('script');
+      tag.src='https://www.youtube.com/iframe_api';
+      if(!document.querySelector('script[src*="iframe_api"]'))document.head.appendChild(tag);
+    }catch(e){}
+    function tryInit(){
+      if(window.YT&&window.YT.Player){
+        try{
+          player=new YT.Player(iframe.id,{
+            events:{
+              onReady:function(){wrap._ytPlayer=player;startPoll();},
+              onStateChange:function(e){
+                var ppBtn=wrap.querySelector('.cake-pp');
+                if(e.data===YT.PlayerState.PLAYING){if(ppBtn)ppBtn.textContent='⏸';}
+                else if(e.data===YT.PlayerState.PAUSED){if(ppBtn)ppBtn.textContent='▶';}
+              }
+            }
+          });
+        }catch(e){}
+      }else{setTimeout(tryInit,500);}
+    }
+    setTimeout(tryInit,800);
+  };
+  function startPoll(){
+    if(pollTimer)clearInterval(pollTimer);
+    pollTimer=setInterval(function(){
+      if(!player||!player.getCurrentTime)return;
+      try{
+        var cur=player.getCurrentTime();
+        var s=wrap._start||0;
+        var e=wrap._end||player.getDuration()||0;
+        var dur=e-s;
+        if(dur<=0)dur=player.getDuration()||1;
+        var pct=Math.max(0,Math.min(100,((cur-s)/dur)*100));
+        var bar=wrap.querySelector('.cake-progress-bar');
+        if(bar)bar.style.width=pct+'%';
+      }catch(ex){}
+    },300);
+    wrap._pollTimer=pollTimer;
+  }
+}
+function cakePlayPause(){
+  var wrap=document.querySelector('.cake-player');
+  if(!wrap||!wrap._ytPlayer)return;
+  try{
+    var state=wrap._ytPlayer.getPlayerState();
+    if(state===1)wrap._ytPlayer.pauseVideo();
+    else wrap._ytPlayer.playVideo();
+  }catch(e){}
+}
+function cakeSeek(delta){
+  var wrap=document.querySelector('.cake-player');
+  if(!wrap||!wrap._ytPlayer)return;
+  try{
+    var cur=wrap._ytPlayer.getCurrentTime();
+    wrap._ytPlayer.seekTo(cur+delta,true);
+  }catch(e){}
+}
+function cakeSeekTo(evt){
+  var wrap=document.querySelector('.cake-player');
+  if(!wrap||!wrap._ytPlayer)return;
+  try{
+    var prog=evt.currentTarget;
+    var rect=prog.getBoundingClientRect();
+    var pct=(evt.clientX-rect.left)/rect.width;
+    var s=wrap._start||0;
+    var e=wrap._end||wrap._ytPlayer.getDuration()||0;
+    var dur=e-s;
+    if(dur<=0)dur=wrap._ytPlayer.getDuration()||1;
+    wrap._ytPlayer.seekTo(s+pct*dur,true);
+  }catch(e){}
 }
 function buildVideoEmbed(card){
   const driveId=extractDriveId(card.driveUrl);
