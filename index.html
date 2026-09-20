@@ -3273,39 +3273,39 @@ async function fetchGeminiConfig(){try{var doc=await firestore.collection('siteC
 function saveGeminiConfig(val){return firestore.collection('siteConfig').doc('ai').set({key:val});}
 function buildAIPrompt(){
   var v=collectAllVocab();
-  var prompt='You are an English conversation partner. Create a natural, casual daily conversation between 2 people (A and B) that incorporates as many of the following vocabulary items as possible.\n\n';
-  prompt+='RULES:\n- The conversation should feel natural and realistic (daily life topics)\n- Use each word/phrase/idiom at least once in context\n- After the conversation, list which words/phrases were used and highlight any that were NOT used\n- Keep it at intermediate English level\n- Add Vietnamese translation for each line\n\n';
-  if(v.words.length>0)prompt+='WORDS ('+v.words.length+'):\n'+v.words.join(', ')+'\n\n';
-  if(v.idioms.length>0)prompt+='IDIOMS & PHRASES ('+v.idioms.length+'):\n'+v.idioms.join(', ')+'\n\n';
-  if(v.sentences.length>0)prompt+='SENTENCES & EXPRESSIONS ('+v.sentences.length+'):\n'+v.sentences.join('\n')+'\n\n';
-  prompt+='Total: '+(v.words.length+v.sentences.length+v.idioms.length)+' items. Generate the conversation now.';
-  return prompt;
+  var p='You are an English conversation partner. Create a VERY LONG natural daily conversation between 2 people (A and B) that uses ALL of the vocabulary below. Make as many exchanges as needed to cover every single word.\n\n';
+  p+='RULES:\n- You MUST use EVERY word/phrase/idiom at least once in the conversation\n- Make it natural (daily life, work, school, hobbies, travel, food)\n- Vietnamese translation for each line in parentheses\n- At the end, list ALL words that were NOT used (if any)\n- Intermediate English level\n- The conversation can be as long as needed\n\n';
+  if(v.words.length>0)p+='WORDS ('+v.words.length+'):\n'+v.words.join(', ')+'\n\n';
+  if(v.idioms.length>0)p+='IDIOMS & PHRASES ('+v.idioms.length+'):\n'+v.idioms.join(', ')+'\n\n';
+  if(v.sentences.length>0)p+='SENTENCES ('+v.sentences.length+'):\n'+v.sentences.join('\n')+'\n\n';
+  p+='Total: '+(v.words.length+v.sentences.length+v.idioms.length)+' items. Generate the conversation now — use ALL of them.';
+  return p;
+}
+async function callGemini(key,prompt){
+  var models=['gemini-2.5-flash','gemini-3.6-flash','gemini-2.0-flash-lite'];
+  var body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9,maxOutputTokens:8192}});
+  for(var m of models){
+    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:body
+    });
+    var data=await resp.json();
+    if(resp.ok&&data.candidates?.[0]?.content?.parts?.[0]?.text)return data.candidates[0].content.parts[0].text;
+  }
+  throw new Error('All models failed');
 }
 async function generateAIConversation(){
   var key=await fetchGeminiConfig();
   if(!key){toast('Admin has not set up AI key yet. Go to Settings to add Gemini API key.');return;}
   var btn=document.getElementById('aiGenBtn');
-  btn.disabled=true;btn.textContent='Generating...';
+  btn.disabled=true;
   document.getElementById('aiLoading').style.display='block';
   document.getElementById('aiResult').style.display='none';
   document.getElementById('aiError').style.display='none';
-  var models=['gemini-2.5-flash','gemini-3.6-flash','gemini-2.0-flash-lite'];
-  var prompt=buildAIPrompt();var body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9,maxOutputTokens:4096}});
-  var lastErr='';
+  btn.textContent='Generating...';
   try{
-    for(var m of models){
-      var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+key,{
-        method:'POST',headers:{'Content-Type':'application/json'},body:body
-      });
-      var data=await resp.json();
-      if(resp.ok&&data.candidates?.[0]?.content?.parts?.[0]?.text){
-        document.getElementById('aiResult').textContent=data.candidates[0].content.parts[0].text;
-        document.getElementById('aiResult').style.display='block';
-        lastErr='';break;
-      }
-      lastErr=data.error?.message||'API error '+resp.status;
-    }
-    if(lastErr)throw new Error(lastErr);
+    var text=await callGemini(key,buildAIPrompt());
+    document.getElementById('aiResult').textContent=text;
+    document.getElementById('aiResult').style.display='block';
   }catch(e){
     document.getElementById('aiError').textContent='Error: '+e.message;
     document.getElementById('aiError').style.display='block';
