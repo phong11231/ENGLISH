@@ -3281,15 +3281,27 @@ function buildAIPrompt(){
   p+='Total: '+(v.words.length+v.sentences.length+v.idioms.length)+' items. Generate the conversation now — use ALL of them.';
   return p;
 }
-async function callGemini(key,prompt){
-  var models=['gemini-2.5-flash','gemini-3.6-flash','gemini-2.0-flash-lite'];
+async function streamGemini(key,prompt,onChunk){
+  var models=['gemini-2.5-flash','gemini-2.0-flash'];
   var body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9,maxOutputTokens:8192}});
   for(var m of models){
-    var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+key,{
-      method:'POST',headers:{'Content-Type':'application/json'},body:body
-    });
-    var data=await resp.json();
-    if(resp.ok&&data.candidates?.[0]?.content?.parts?.[0]?.text)return data.candidates[0].content.parts[0].text;
+    try{
+      var resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':streamGenerateContent?alt=sse&key='+key,{
+        method:'POST',headers:{'Content-Type':'application/json'},body:body
+      });
+      if(!resp.ok){var err=await resp.json();if(err.error?.message)throw new Error(m+': '+err.error.message);continue;}
+      var reader=resp.body.getReader();var decoder=new TextDecoder();var buf='';
+      while(true){
+        var chunk=await reader.read();if(chunk.done)break;
+        buf+=decoder.decode(chunk.value,{stream:true});
+        var lines=buf.split('\n');buf=lines.pop();
+        for(var line of lines){
+          if(!line.startsWith('data: '))continue;
+          try{var j=JSON.parse(line.slice(6));var t=j.candidates?.[0]?.content?.parts?.[0]?.text;if(t)onChunk(t);}catch(e){}
+        }
+      }
+      return;
+    }catch(e){if(models.indexOf(m)===models.length-1)throw e;}
   }
   throw new Error('All models failed');
 }
@@ -3297,20 +3309,17 @@ async function generateAIConversation(){
   var key=await fetchGeminiConfig();
   if(!key){toast('Admin has not set up AI key yet. Go to Settings to add Gemini API key.');return;}
   var btn=document.getElementById('aiGenBtn');
-  btn.disabled=true;
-  document.getElementById('aiLoading').style.display='block';
-  document.getElementById('aiResult').style.display='none';
+  btn.disabled=true;btn.textContent='Generating...';
+  var resultEl=document.getElementById('aiResult');
+  resultEl.textContent='';resultEl.style.display='block';
+  document.getElementById('aiLoading').style.display='none';
   document.getElementById('aiError').style.display='none';
-  btn.textContent='Generating...';
   try{
-    var text=await callGemini(key,buildAIPrompt());
-    document.getElementById('aiResult').textContent=text;
-    document.getElementById('aiResult').style.display='block';
+    await streamGemini(key,buildAIPrompt(),function(chunk){resultEl.textContent+=chunk;resultEl.scrollTop=resultEl.scrollHeight;});
   }catch(e){
     document.getElementById('aiError').textContent='Error: '+e.message;
     document.getElementById('aiError').style.display='block';
   }
-  document.getElementById('aiLoading').style.display='none';
   btn.disabled=false;btn.textContent='✨ Generate';
 }
 function openAIPrompt(){
