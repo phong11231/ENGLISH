@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashMind — Hướng dẫn sử dụng</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f6ff;--surface:#ffffff;--surface-2:#f0edff;
+  --ink:#1e1b4b;--ink-soft:#4c4578;--ink-dim:#8b83b0;
+  --primary:#7c3aed;--primary-dark:#6d28d9;--primary-light:#a78bfa;
+  --primary-bg:rgba(124,58,237,.06);
+  --green:#059669;--red:#dc2626;--orange:#d97706;
+  --line:rgba(124,58,237,.06);--line-strong:rgba(124,58,237,.1);
+  --shadow-sm:0 1px 4px rgba(124,58,237,.06);
+  --shadow-md:0 4px 14px rgba(124,58,237,.08);
+  --shadow-lg:0 8px 24px rgba(124,58,237,.1);
+  --r-sm:10px;--r-md:16px;--r-lg:22px;
+  --font:'Inter',system-ui,sans-serif;
+  --font-display:'Space Grotesk','Inter',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden}
+
+/* PHONE FRAME */
+.phone{width:min(390px,95vw);height:min(844px,96vh);background:var(--bg);position:relative;overflow:hidden;border-radius:40px;border:4px solid #222;box-shadow:0 0 80px rgba(124,58,237,.3)}
+.phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:160px;height:28px;background:#222;border-radius:0 0 18px 18px;z-index:100}
+
+/* NAV */
+.fm-nav{height:52px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--line);gap:8px;position:relative;z-index:10;margin-top:28px}
+.fm-logo{font-family:var(--font-display);font-weight:800;font-size:16px;background:linear-gradient(135deg,#7c3aed,#0891b2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav-btns{margin-left:auto;display:flex;gap:4px}
+.nav-btn{width:36px;height:36px;border-radius:var(--r-sm);background:transparent;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.nav-btn.active{background:var(--primary-bg);color:var(--primary)}
+
+/* SLIDES */
+.slide{position:absolute;top:80px;left:0;right:0;bottom:0;padding:12px 16px;opacity:0;pointer-events:none;transition:opacity .5s;overflow-y:auto}
+.slide.active{opacity:1;pointer-events:auto}
+
+/* STEP INSTRUCTION */
+.step-bar{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:16px 20px;z-index:90;display:flex;align-items:center;gap:12px}
+.step-num{background:rgba(255,255,255,.2);color:#fff;font-weight:800;font-size:13px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-text{color:#fff;font-size:13px;font-weight:500;line-height:1.4;flex:1}
+.step-next{background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:var(--r-sm);padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit}
+.step-next:hover{background:rgba(255,255,255,.3)}
+.step-progress{position:absolute;bottom:68px;left:0;right:0;height:3px;background:rgba(124,58,237,.15);z-index:90}
+.step-progress-fill{height:100%;background:var(--orange);transition:width .4s;border-radius:0 2px 2px 0}
+
+/* ANIMATED ARROW */
+.arrow-wrap{position:absolute;z-index:80;pointer-events:none;opacity:0;transition:opacity .4s}
+.arrow-wrap.show{opacity:1}
+.arrow-svg{width:80px;height:80px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))}
+.arrow-pulse{animation:arrowBounce 1s ease-in-out infinite}
+@keyframes arrowBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* CLICK RING */
+.click-dot{position:absolute;z-index:79;width:44px;height:44px;border-radius:50%;pointer-events:none;opacity:0}
+.click-dot.show{opacity:1}
+.click-dot::before{content:'';position:absolute;inset:0;border:3px solid var(--orange);border-radius:50%;animation:clickPulse 1.2s ease-out infinite}
+.click-dot::after{content:'';position:absolute;inset:8px;background:var(--orange);border-radius:50%;opacity:.4}
+@keyframes clickPulse{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.6);opacity:0}}
+
+/* HOME ELEMENTS */
+.page-header h1{font-family:var(--font-display);font-size:22px;font-weight:800;background:linear-gradient(135deg,#1e1b4b,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent}
+.page-header p{font-size:12px;color:var(--ink-dim);margin-top:2px}
+.streak-widget{background:var(--primary-bg);border:1px solid var(--line-strong);border-radius:var(--r-md);padding:14px;margin-top:12px;display:flex;align-items:center;gap:12px}
+.streak-fire{font-size:28px}
+.streak-info .days{font-size:22px;font-weight:800;color:var(--orange)}
+.streak-info .label{font-size:10px;color:var(--ink-dim)}
+.streak-xp{margin-left:auto;text-align:right}
+.streak-xp .val{font-size:20px;font-weight:800;color:var(--primary)}
+.streak-xp .lbl{font-size:9px;color:var(--ink-dim)}
+.week-row{display:flex;gap:4px;margin-top:6px}
+.week-dot{width:28px;height:28px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--line-strong);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:8px;color:var(--ink-dim)}
+.week-dot.done{background:var(--primary);border-color:var(--primary);color:#fff}
+.stats-row{display:flex;gap:8px;margin-top:12px}
+.stat-card{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:10px;text-align:center}
+.stat-icon{font-size:16px}
+.stat-value{font-size:20px;font-weight:800;color:var(--primary)}
+.stat-label{font-size:8px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.action-row{display:flex;gap:8px;margin-top:12px}
+.action-card{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s}
+.action-card-icon{font-size:20px}
+.action-card-title{font-weight:700;font-size:12px;color:var(--ink)}
+.action-card-sub{font-size:9px;color:var(--ink-dim)}
+.action-card-arrow{margin-left:auto;color:var(--ink-dim);font-size:16px}
+
+/* DECK LIST (sidebar on mobile = below) */
+.deck-section-title{font-weight:700;font-size:13px;color:var(--ink);margin:16px 0 8px;display:flex;align-items:center;gap:6px}
+.deck-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px;margin-bottom:8px;cursor:pointer;transition:.2s}
+.deck-item:hover{border-color:var(--primary);transform:translateY(-1px)}
+.deck-name{font-weight:700;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:6px}
+.deck-meta{font-size:10px;color:var(--ink-dim);margin-top:2px}
+.deck-actions-row{display:flex;gap:4px;margin-top:6px}
+.deck-action-btn{background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer}
+
+/* REVIEW */
+.review-header{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.btn-ghost{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 10px;font-size:11px;color:var(--ink);font-weight:500;cursor:pointer;font-family:inherit}
+.review-deck-name{font-size:14px;font-weight:700;color:var(--ink);flex:1}
+.streak-bar{display:flex;gap:8px;align-items:center;background:var(--primary-bg);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:4px 10px;font-size:11px;color:var(--ink)}
+.mode-toggle{display:flex;background:var(--surface-2);border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--line)}
+.mode-toggle button{border:none;background:none;padding:4px 10px;font-size:10px;cursor:pointer;font-family:inherit;color:var(--ink-dim)}
+.mode-toggle button.active{background:var(--primary);color:#fff;font-weight:600}
+
+/* FLASHCARD */
+.flashcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px 24px;text-align:center;box-shadow:var(--shadow-md);max-width:360px;margin:20px auto;position:relative}
+.flashcard-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--ink-dim);font-weight:700}
+.flashcard-counter{position:absolute;top:12px;right:14px;font-size:10px;color:var(--ink-dim)}
+.voice-btn{width:64px;height:64px;border-radius:50%;background:var(--primary);border:none;display:flex;align-items:center;justify-content:center;margin:16px auto 8px;box-shadow:0 4px 16px rgba(124,58,237,.3);cursor:pointer}
+.voice-btn span{color:#fff;font-size:22px}
+.voice-label{font-size:12px;color:var(--primary);font-weight:600}
+.card-btn{display:block;margin:8px auto 0;padding:10px 24px;border-radius:var(--r-lg);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid}
+.card-btn.listen{background:var(--primary-bg);border-color:var(--primary);color:var(--primary)}
+.card-btn.watch{background:var(--surface);border-color:var(--green);color:var(--green)}
+
+/* SPLIT REVIEW (video + transcript) */
+.review-split{display:flex;flex-direction:column;gap:10px;flex:1;min-height:0}
+.video-wrap{background:#000;border-radius:var(--r-md);overflow:hidden;position:relative;aspect-ratio:16/9}
+.video-placeholder{color:#888;font-size:12px;display:flex;align-items:center;justify-content:center;height:100%}
+.video-controls{display:flex;justify-content:center;gap:16px;padding:8px;position:absolute;bottom:16px;left:50%;transform:translateX(-50%)}
+.video-ctrl{color:#fff;font-size:16px;background:rgba(0,0,0,.55);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;backdrop-filter:blur(4px)}
+.video-ctrl.big{width:44px;height:44px;font-size:18px}
+.video-progress{position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(255,255,255,.2)}
+.video-progress-fill{height:100%;background:#ef4444;width:35%;border-radius:2px}
+.action-btns{display:flex;flex-wrap:wrap;gap:5px}
+.action-btn{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 10px;font-size:10px;font-weight:500;color:var(--ink);cursor:pointer;font-family:inherit}
+.action-btn.green{background:var(--green);color:#fff;border-color:var(--green);font-weight:700}
+.transcript-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px;box-shadow:var(--shadow-sm)}
+.transcript-line{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--line)}
+.transcript-line:last-child{border:none}
+.speaker-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:#fff}
+.speaker-icon.a{background:var(--primary)}
+.speaker-icon.b{background:var(--green)}
+.transcript-speaker{font-weight:700;font-size:11px;width:14px}
+.transcript-speaker.a{color:var(--primary)}
+.transcript-speaker.b{color:var(--green)}
+.transcript-text{font-size:11px;color:var(--ink);flex:1}
+.transcript-text.hidden{color:transparent;background:var(--surface-2);border-radius:4px;user-select:none}
+.trans-btns{display:flex;gap:4px;font-size:12px;flex-shrink:0}
+
+/* WRITING */
+.writing-front{font-size:17px;font-weight:600;color:var(--ink);margin:12px 0}
+.writing-input{width:100%;padding:10px 14px;border:2px solid var(--line-strong);border-radius:var(--r-md);font-size:14px;font-family:inherit;outline:none;text-align:center;background:var(--surface)}
+.writing-input.correct{border-color:var(--green);background:rgba(5,150,105,.04)}
+.writing-answer{font-size:12px;color:var(--green);margin-top:6px;font-weight:600}
+
+/* RATING */
+.rating-row{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.rating-btn{padding:8px 16px;border-radius:var(--r-sm);border:none;font-size:11px;font-weight:700;cursor:pointer;color:#fff;font-family:inherit}
+.rating-btn.again{background:#dc2626}
+.rating-btn.hard{background:#d97706}
+.rating-btn.good{background:#059669}
+.rating-btn.easy{background:#7c3aed}
+
+/* CREATE DECK MODAL */
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:85;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal-box{background:var(--surface);border-radius:var(--r-lg);padding:24px;width:320px;box-shadow:var(--shadow-lg)}
+.modal-title{font-size:16px;font-weight:800;color:var(--ink);margin-bottom:12px}
+.form-group{margin-bottom:12px}
+.form-group label{font-size:11px;font-weight:600;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+.form-group input,.form-group textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line-strong);border-radius:var(--r-sm);font-size:13px;font-family:inherit;background:var(--surface-2);color:var(--ink);outline:none}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--primary)}
+.btn-primary{background:var(--primary);color:#fff;border:none;border-radius:var(--r-sm);padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ADD CARD MODAL */
+.card-type-tabs{display:flex;gap:4px;margin-bottom:12px}
+.card-type-tab{flex:1;padding:6px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:10px;text-align:center;cursor:pointer;font-family:inherit;background:var(--surface)}
+.card-type-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600}
+
+/* COMPLETED SCREEN */
+.completed{text-align:center;padding:40px 20px}
+.completed-icon{font-size:48px;margin-bottom:12px}
+.completed-title{font-size:20px;font-weight:800;color:var(--ink)}
+.completed-sub{font-size:12px;color:var(--ink-dim);margin-top:4px}
+.completed-stats{display:flex;gap:12px;justify-content:center;margin-top:20px}
+.completed-stat{text-align:center}
+.completed-stat-val{font-size:24px;font-weight:800;color:var(--primary)}
+.completed-stat-lbl{font-size:9px;color:var(--ink-dim);text-transform:uppercase}
+
+/* INTRO/OUTRO */
+.intro-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px 20px}
+.intro-logo{font-size:64px;margin-bottom:16px}
+.intro-title{font-family:var(--font-display);font-size:28px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#0891b2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.intro-sub{font-size:14px;color:var(--ink-dim);margin-top:8px;line-height:1.5}
+.intro-start{margin-top:24px;background:var(--primary);color:#fff;border:none;border-radius:var(--r-lg);padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <!-- NAV (fixed) -->
+  <div class="fm-nav">
+    <span style="font-size:18px">🧠</span>
+    <span class="fm-logo">FlashMind</span>
+    <div class="nav-btns">
+      <button class="nav-btn active" id="navDecks">📚</button>
+      <button class="nav-btn" id="navQuiz">🎯</button>
+      <button class="nav-btn" id="navStats">📊</button>
+      <button class="nav-btn" id="navTheme">🌙</button>
+      <button class="nav-btn" id="navLogin">👤</button>
+    </div>
+  </div>
+
+  <!-- SLIDE 0: INTRO -->
+  <div class="slide active" id="s0">
+    <div class="intro-screen">
+      <div class="intro-logo">🧠</div>
+      <div class="intro-title">FlashMind</div>
+      <div class="intro-sub">Hướng dẫn sử dụng<br>Học tiếng Anh thông minh kiểu Anki</div>
+      <button class="intro-start" onclick="goStep(1)">Bắt đầu ▶</button>
+    </div>
+  </div>
+
+  <!-- SLIDE 1: HOME -->
+  <div class="slide" id="s1">
+    <div class="page-header"><h1>Your Decks</h1><p>Choose a deck to start studying</p></div>
+    <div class="streak-widget">
+      <span class="streak-fire">🔥</span>
+      <div class="streak-info"><div class="days">2 days</div><div class="label">Streak going — keep it up!</div>
+        <div class="week-row">
+          <div class="week-dot done">Sun</div><div class="week-dot done">Mon</div><div class="week-dot">Tue</div><div class="week-dot">Wed</div><div class="week-dot">Thu</div><div class="week-dot">Fri</div><div class="week-dot">Sat</div>
+        </div>
+      </div>
+      <div class="streak-xp"><div class="val">5940</div><div class="lbl">Total XP</div></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">44</div><div class="stat-label">TOTAL</div></div>
+      <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value">2</div><div class="stat-label">Streak</div></div>
+      <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">120</div><div class="stat-label">TODAY</div></div>
+      <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-value">11</div><div class="stat-label">NEW</div></div>
+    </div>
+    <div class="action-row">
+      <div class="action-card" id="cardSettings"><div class="action-card-icon">⚙️</div><div><div class="action-card-title">Settings</div><div class="action-card-sub">Customize</div></div><div class="action-card-arrow">›</div></div>
+      <div class="action-card" id="cardCreate"><div class="action-card-icon">📂</div><div><div class="action-card-title">Create Deck</div><div class="action-card-sub">Add new</div></div><div class="action-card-arrow">›</div></div>
+      <div class="action-card" id="cardAI" style="background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(59,130,246,.15));border-color:rgba(139,92,246,.3)"><div class="action-card-icon">🤖</div><div><div class="action-card-title">AI Practice</div><div class="action-card-sub">Generate</div></div><div class="action-card-arrow">›</div></div>
+    </div>
+    <div class="deck-section-title">📚 Decks</div>
+    <div class="deck-item" id="deckWriting"><div class="deck-name">📝 WRITING</div><div class="deck-meta">📇 20 cards</div><div class="deck-actions-row"><span class="deck-action-btn">📋</span><span class="deck-action-btn">🎯</span><span class="deck-action-btn">🌙</span><span class="deck-action-btn">✏️</span><span class="deck-action-btn">🗑️</span></div></div>
+    <div class="deck-item"><div class="deck-name">📋 COLLOCATIONS AND IDIOMS</div><div class="deck-meta">📇 2 cards</div></div>
+    <div class="deck-item"><div class="deck-name">⚡ Vocabulary</div><div class="deck-meta">📇 14 cards</div></div>
+    <div class="deck-item" id="deckChat"><div class="deck-name">💬 CHAT</div><div class="deck-meta">📇 8 cards · Hội thoại YouTube</div></div>
+  </div>
+
+  <!-- SLIDE 2: REVIEW VOICE (CHAT deck) -->
+  <div class="slide" id="s2">
+    <div class="review-header">
+      <button class="btn-ghost">← Back</button>
+      <span class="review-deck-name">CHAT</span>
+      <div class="streak-bar"><span>🔥 0</span><span>⚡ 0 XP</span><span>x1</span></div>
+      <div class="mode-toggle"><button class="active" id="modeFlipBtn">🔄 Flip card</button><button>⌨️ Type</button></div>
+    </div>
+    <div class="flashcard" id="voiceCard">
+      <span class="flashcard-label">QUESTION</span>
+      <span class="flashcard-counter">1 / 8</span>
+      <div class="voice-btn"><span>🔊</span></div>
+      <div class="voice-label">Playing...</div>
+      <button class="card-btn listen" id="listenBtn">🎧 Listen to the dialogue</button>
+      <button class="card-btn watch" id="watchBtn">🎬 Watch video</button>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: FLIPPED - VIDEO + TRANSCRIPT -->
+  <div class="slide" id="s3" style="display:flex;flex-direction:column">
+    <div class="review-header">
+      <button class="btn-ghost">← Back</button>
+      <span class="review-deck-name">CHAT</span>
+      <div class="streak-bar"><span>🔥 0</span><span>⚡ 0 XP</span></div>
+    </div>
+    <div class="review-split">
+      <div class="video-wrap">
+        <div class="video-placeholder">🎬 Video YouTube đang phát...</div>
+        <div class="video-controls">
+          <button class="video-ctrl">⏪</button>
+          <button class="video-ctrl big">⏸</button>
+          <button class="video-ctrl">⏩</button>
+        </div>
+        <div class="video-progress"><div class="video-progress-fill"></div></div>
+      </div>
+      <div class="action-btns" id="actionBtns">
+        <span class="action-btn">🔄 Replay</span>
+        <span class="action-btn" id="btnShowHide">Show / Hide all</span>
+        <span class="action-btn">↩ Flip back</span>
+        <span class="action-btn">📖 Dictionary</span>
+        <span class="action-btn">🍰 Cake</span>
+        <span class="action-btn" id="btnDictation">✍️ Dictation</span>
+        <span class="action-btn green" id="btnNext">Next ▶</span>
+      </div>
+      <div class="transcript-card" id="transcriptCard">
+        <div class="flashcard-label" style="margin-bottom:6px">ANSWER</div>
+        <div class="transcript-line">
+          <div class="speaker-icon a">🔊</div>
+          <span class="transcript-speaker a">A</span>
+          <span class="transcript-text">What's up?</span>
+          <div class="trans-btns"><span>🇻🇳</span><span>👁</span></div>
+        </div>
+        <div class="transcript-line">
+          <div class="speaker-icon b">🔊</div>
+          <span class="transcript-speaker b">B</span>
+          <span class="transcript-text">Not much, just hanging out.</span>
+          <div class="trans-btns"><span>🇻🇳</span><span>👁</span></div>
+        </div>
+        <div class="transcript-line">
+          <div class="speaker-icon a">🔊</div>
+          <span class="transcript-speaker a">A</span>
+          <span class="transcript-text hidden" id="hiddenLine">Do you want to grab some food?</span>
+          <div class="trans-btns"><span>👁</span></div>
+        </div>
+        <div class="transcript-line">
+          <div class="speaker-icon b">🔊</div>
+          <span class="transcript-speaker b">B</span>
+          <span class="transcript-text hidden">Sure, let's go!</span>
+          <div class="trans-btns"><span>👁</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: WRITING MODE -->
+  <div class="slide" id="s4">
+    <div class="review-header">
+      <button class="btn-ghost">← Back</button>
+      <span class="review-deck-name">WRITING</span>
+      <div class="streak-bar"><span>⚡ 40 XP</span><span>x1</span></div>
+      <div class="mode-toggle"><button>🔄 Flip</button><button class="active">⌨️ Type answer</button></div>
+    </div>
+    <div class="flashcard">
+      <span class="flashcard-label">QUESTION</span>
+      <span class="flashcard-counter">3 / 20</span>
+      <div class="writing-front">Tôi bắt đầu một công việc mới</div>
+      <input class="writing-input" id="typeInput" value="" placeholder="Gõ câu trả lời tiếng Anh..." readonly>
+      <div class="writing-answer" id="typeAnswer" style="display:none">✅ I start a new job.</div>
+      <div class="rating-row" id="ratingRow4" style="display:none">
+        <button class="rating-btn again">Again</button>
+        <button class="rating-btn hard">Hard</button>
+        <button class="rating-btn good">Good</button>
+        <button class="rating-btn easy">Easy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: VOCAB FLIP -->
+  <div class="slide" id="s5">
+    <div class="review-header">
+      <button class="btn-ghost">← Back</button>
+      <span class="review-deck-name">Vocabulary</span>
+      <div class="streak-bar"><span>⚡ 80 XP</span><span>x1</span></div>
+      <div class="mode-toggle"><button class="active">🔄 Flip card</button><button>⌨️ Type</button></div>
+    </div>
+    <div class="flashcard" id="vocabCard">
+      <span class="flashcard-label">QUESTION</span>
+      <span class="flashcard-counter">5 / 14</span>
+      <div class="voice-btn"><span>🔊</span></div>
+      <div style="font-size:18px;font-weight:700;color:var(--ink);margin-top:8px">nurse</div>
+      <div id="vocabAnswer" style="display:none;margin-top:14px;padding-top:14px;border-top:2px solid var(--line-strong)">
+        <div class="flashcard-label">ANSWER</div>
+        <div style="font-size:20px;font-weight:700;color:var(--primary);margin-top:6px">y tá</div>
+        <div class="rating-row" style="margin-top:12px">
+          <button class="rating-btn again">Again</button>
+          <button class="rating-btn hard">Hard</button>
+          <button class="rating-btn good" id="ratingGood">Good</button>
+          <button class="rating-btn easy">Easy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: CREATE DECK -->
+  <div class="slide" id="s6">
+    <div class="page-header"><h1>Your Decks</h1><p>Choose a deck to start studying</p></div>
+    <div class="action-row" style="margin-top:12px">
+      <div class="action-card"><div class="action-card-icon">⚙️</div><div><div class="action-card-title">Settings</div></div></div>
+      <div class="action-card" id="createBtn2" style="border:2px solid var(--primary);background:var(--primary-bg)"><div class="action-card-icon">📂</div><div><div class="action-card-title">Create Deck</div><div class="action-card-sub">Add new</div></div><div class="action-card-arrow">›</div></div>
+      <div class="action-card"><div class="action-card-icon">🤖</div><div><div class="action-card-title">AI Practice</div></div></div>
+    </div>
+    <div class="modal-overlay show" id="createModal">
+      <div class="modal-box">
+        <div class="modal-title">📂 Create Deck</div>
+        <div class="form-group"><label>Deck name</label><input id="deckNameInput" value="" placeholder="Nhập tên bộ thẻ..." readonly></div>
+        <div class="form-group"><label>Emoji</label><input value="📝" readonly style="width:60px"></div>
+        <div class="form-group"><label>Description (optional)</label><textarea rows="2" placeholder="Mô tả..." readonly></textarea></div>
+        <button class="btn-primary" id="createDeckBtn" style="width:100%">✅ Create Deck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: ADD CARD -->
+  <div class="slide" id="s7">
+    <div class="review-header"><button class="btn-ghost">← Back</button><span class="review-deck-name">Giao tiếp hàng ngày</span></div>
+    <div class="modal-overlay show">
+      <div class="modal-box" style="max-height:600px;overflow-y:auto">
+        <div class="modal-title">➕ Add Card</div>
+        <div class="card-type-tabs">
+          <div class="card-type-tab active" id="tabText">📝 Text</div>
+          <div class="card-type-tab" id="tabChat">💬 Chat</div>
+          <div class="card-type-tab" id="tabVoice">🔊 Voice</div>
+        </div>
+        <div class="form-group"><label>Front (question)</label><input id="cardFront" value="" placeholder="Từ/câu tiếng Anh..." readonly></div>
+        <div class="form-group"><label>Back (answer)</label><input id="cardBack" value="" placeholder="Nghĩa tiếng Việt..." readonly></div>
+        <div class="form-group"><label>Review mode</label>
+          <div style="display:flex;gap:6px">
+            <button class="card-type-tab active" style="flex:1">🔄 Flip</button>
+            <button class="card-type-tab" style="flex:1">⌨️ Type</button>
+          </div>
+        </div>
+        <button class="btn-primary" id="saveCardBtn" style="width:100%">💾 Save Card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: COMPLETED -->
+  <div class="slide" id="s8">
+    <div class="completed">
+      <div class="completed-icon">🎉</div>
+      <div class="completed-title">Hoàn thành!</div>
+      <div class="completed-sub">Bạn đã học xong tất cả thẻ hôm nay</div>
+      <div class="completed-stats">
+        <div class="completed-stat"><div class="completed-stat-val">8</div><div class="completed-stat-lbl">Cards</div></div>
+        <div class="completed-stat"><div class="completed-stat-val">120</div><div class="completed-stat-lbl">XP</div></div>
+        <div class="completed-stat"><div class="completed-stat-val">3</div><div class="completed-stat-lbl">Streak</div></div>
+      </div>
+      <button class="intro-start" style="margin-top:24px;font-size:13px;padding:10px 24px" onclick="goStep(0)">🔄 Xem lại từ đầu</button>
+    </div>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="step-progress"><div class="step-progress-fill" id="progFill"></div></div>
+
+  <!-- STEP BAR -->
+  <div class="step-bar" id="stepBar">
+    <div class="step-num" id="stepNum">1</div>
+    <div class="step-text" id="stepText">Đây là trang chính của FlashMind</div>
+    <button class="step-next" id="stepNext" onclick="nextStep()">Tiếp ▶</button>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-wrap" id="arrowWrap">
+    <svg class="arrow-svg arrow-pulse" viewBox="0 0 80 80">
+      <defs><filter id="glow"><feGaussianBlur stdDeviation="2" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <path d="M40 10 L40 55 M25 42 L40 58 L55 42" stroke="#f97316" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+      <circle cx="40" cy="65" r="6" fill="#f97316" opacity=".6">
+        <animate attributeName="r" values="5;8;5" dur="1s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".6;.3;.6" dur="1s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  </div>
+
+  <!-- CLICK DOT -->
+  <div class="click-dot" id="clickDot"></div>
+</div>
+
+<script>
+var steps=[
+  // 0: intro
+  {slide:'s0',text:'',arrow:null,hideBar:true},
+  // 1: home overview
+  {slide:'s1',text:'Đây là trang chính — hiển thị streak, XP, và danh sách bộ thẻ của bạn',arrow:null},
+  // 2: point to deck CHAT
+  {slide:'s1',text:'Bấm vào bộ thẻ CHAT để bắt đầu học hội thoại tiếng Anh',arrow:'deckChat'},
+  // 3: voice card
+  {slide:'s2',text:'Thẻ hội thoại: nghe audio tự động phát → bấm vào thẻ hoặc "Flip card" để lật xem transcript',arrow:'voiceCard'},
+  // 4: watch video button
+  {slide:'s2',text:'Hoặc bấm "Watch video" để xem clip YouTube — không quảng cáo!',arrow:'watchBtn'},
+  // 5: flipped with video
+  {slide:'s3',text:'Sau khi lật: video YouTube phát ở trên, transcript hội thoại ở dưới',arrow:null},
+  // 6: tap to reveal
+  {slide:'s3',text:'Bấm 👁 để mở từng câu ẩn — luyện nghe rồi kiểm tra',arrow:'hiddenLine'},
+  // 7: dictation button
+  {slide:'s3',text:'Bấm "Dictation" để chuyển sang chế độ nghe-chép — gõ lại từng câu',arrow:'btnDictation'},
+  // 8: next button
+  {slide:'s3',text:'Bấm "Next" để qua thẻ tiếp theo',arrow:'btnNext'},
+  // 9: writing deck
+  {slide:'s1',text:'Bấm vào bộ thẻ WRITING để luyện viết tiếng Anh',arrow:'deckWriting'},
+  // 10: writing mode
+  {slide:'s4',text:'Đọc câu tiếng Việt → gõ câu trả lời tiếng Anh vào ô bên dưới',arrow:'typeInput',
+   action:function(){typeAnimation('typeInput','I start a new job.',function(){
+     document.getElementById('typeInput').classList.add('correct');
+     document.getElementById('typeAnswer').style.display='';
+     document.getElementById('ratingRow4').style.display='';
+   })}},
+  // 11: rating
+  {slide:'s4',text:'Đánh giá mức nhớ: Again (quên) → Hard → Good → Easy (quá dễ)',arrow:'ratingRow4'},
+  // 12: vocab
+  {slide:'s5',text:'Bộ thẻ Vocabulary: nghe phát âm từ → bấm lật thẻ để xem nghĩa',arrow:'vocabCard',
+   action:function(){setTimeout(function(){document.getElementById('vocabAnswer').style.display='';},1500)}},
+  // 13: rating vocab
+  {slide:'s5',text:'Đánh giá mức nhớ rồi qua thẻ tiếp theo — thuật toán SRS tự lên lịch ôn',arrow:'ratingGood'},
+  // 14: create deck
+  {slide:'s6',text:'Bấm "Create Deck" để tạo bộ thẻ mới',arrow:'createBtn2',
+   action:function(){typeAnimation('deckNameInput','Giao tiếp hàng ngày',null)}},
+  // 15: add card
+  {slide:'s7',text:'Thêm thẻ: nhập mặt trước (từ/câu) và mặt sau (nghĩa)',arrow:'cardFront',
+   action:function(){
+     typeAnimation('cardFront','exhausted',function(){
+       typeAnimation('cardBack','kiệt sức',null);
+     });
+   }},
+  // 16: completed
+  {slide:'s8',text:'Khi ôn hết thẻ → màn hình hoàn thành với tổng kết XP và streak!',arrow:null},
+];
+
+var currentStep=0;
+var arrowWrap=document.getElementById('arrowWrap');
+var clickDot=document.getElementById('clickDot');
+var stepBar=document.getElementById('stepBar');
+var stepText=document.getElementById('stepText');
+var stepNum=document.getElementById('stepNum');
+var progFill=document.getElementById('progFill');
+var phone=document.getElementById('phone');
+
+function goStep(n){
+  currentStep=n;
+  var s=steps[n];
+
+  // Show slide
+  document.querySelectorAll('.slide').forEach(function(el){el.classList.remove('active')});
+  document.getElementById(s.slide).classList.add('active');
+
+  // Step bar
+  if(s.hideBar){stepBar.style.display='none'}
+  else{
+    stepBar.style.display='';
+    stepText.textContent=s.text;
+    stepNum.textContent=n;
+  }
+
+  // Progress
+  progFill.style.width=((n)/(steps.length-1)*100)+'%';
+
+  // Reset some elements
+  if(n<=10){
+    document.getElementById('typeInput').value='';
+    document.getElementById('typeInput').classList.remove('correct');
+    document.getElementById('typeAnswer').style.display='none';
+    document.getElementById('ratingRow4').style.display='none';
+  }
+  if(n<=12){
+    document.getElementById('vocabAnswer').style.display='none';
+  }
+
+  // Arrow
+  arrowWrap.classList.remove('show');
+  clickDot.classList.remove('show');
+  if(s.arrow){
+    setTimeout(function(){
+      var el=document.getElementById(s.arrow);
+      if(!el)return;
+      el.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(function(){
+        var r=el.getBoundingClientRect();
+        var pr=phone.getBoundingClientRect();
+        var cx=r.left-pr.left+r.width/2;
+        var cy=r.top-pr.top;
+        arrowWrap.style.left=(cx-40)+'px';
+        arrowWrap.style.top=(cy-78)+'px';
+        arrowWrap.classList.add('show');
+        clickDot.style.left=(cx-22)+'px';
+        clickDot.style.top=(cy-6)+'px';
+        clickDot.classList.add('show');
+      },400);
+    },200);
+  }
+
+  // Action
+  if(s.action){setTimeout(s.action,800)}
+}
+
+function nextStep(){
+  if(currentStep<steps.length-1){goStep(currentStep+1)}
+}
+
+function typeAnimation(inputId,text,cb){
+  var inp=document.getElementById(inputId);
+  if(!inp)return;
+  inp.value='';
+  var i=0;
+  var iv=setInterval(function(){
+    if(i<=text.length){inp.value=text.substring(0,i);i++}
+    else{clearInterval(iv);if(cb)cb()}
+  },50);
+}
+
+// Auto-play
+var autoTimer=null;
+function startAuto(){
+  autoTimer=setInterval(function(){
+    if(currentStep<steps.length-1)nextStep();
+    else{clearInterval(autoTimer);autoTimer=null}
+  },5000);
+}
+
+// No phone-level click handler needed
+
+goStep(0);
+</script>
+</body>
+</html>
