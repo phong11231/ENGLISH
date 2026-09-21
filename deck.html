@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashMind — Deck</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#8b5cf6">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/fm.css?v=2">
+</head>
+<body>
+
+<div class="app active" id="appShell">
+<nav class="nav">
+  <div class="nav-brand"><span>🧠</span> FlashMind</div>
+  <div class="nav-actions">
+    <button class="nav-btn" onclick="showView('decks')" title="Decks" id="navDecks">📚</button>
+    <button class="nav-btn" onclick="showView('quiz')" title="Quiz" id="navQuiz">🎯</button>
+    <button class="nav-btn" onclick="showView('stats')" title="Stats" id="navStats">📊</button>
+    <button class="nav-btn" onclick="toggleTheme()" title="Theme" id="navTheme">🌙</button>
+    <button class="nav-btn" onclick="openAuthModal()" title="Sign in" id="navLogin">👤</button>
+    <img class="user-avatar" id="userAvatar" onclick="toggleUserMenu()" alt="avatar" style="display:none">
+    <div class="user-avatar user-avatar-initial" id="userAvatarInitial" onclick="toggleUserMenu()" style="display:none"></div>
+  </div>
+  <div class="user-menu" id="userMenu">
+    <div class="user-menu-name" id="userName"></div>
+    <button class="user-menu-item" onclick="syncToCloud()">☁️ Sync to cloud</button>
+    <button class="user-menu-item" onclick="exportAllData()">📤 Export data</button>
+    <button class="user-menu-item" onclick="openAdminModal()">🔑 Admin</button>
+    <button class="user-menu-item" id="adminPushBtn" onclick="pushDecksToAll()" style="display:none">📢 Push decks to all users</button>
+    <button class="user-menu-item danger" onclick="signOutUser()">🚪 Sign out</button>
+  </div>
+</nav>
+
+<main class="main">
+<div class="view active" id="viewBrowser">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn btn-ghost btn-sm" onclick="exitBrowser()">← Back</button>
+    <h2 style="font-size:18px;font-weight:700;flex:1" id="browserDeckName"></h2>
+    <button class="btn btn-ghost btn-sm" onclick="startReview(deckId)">▶ Review</button>
+    <button class="btn btn-ghost btn-sm" onclick="startReviewAll(deckId)">▶ Review All</button>
+    <button class="btn btn-ghost btn-sm" onclick="openBulkAddModal()">📋 Bulk add</button>
+    <button class="btn btn-ghost btn-sm" onclick="openChatAddModal()">💬 Add Chat</button>
+    <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📥 Import</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportDeck()">📤 Export</button>
+    <button class="btn btn-primary btn-sm" onclick="openCardModal()">+ Add card</button>
+  </div>
+  <div id="tagFilterWrap"></div>
+  <div class="card-browser-header">
+    <div class="search-box"><input type="text" placeholder="Search cards..." id="cardSearch" oninput="filterCards()"></div>
+  </div>
+  <div id="cardTableWrap"></div>
+</div>
+</main>
+</div>
+
+<!-- CARD MODAL -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="cardModalTitle">Add New Card</h2><button class="modal-close" onclick="closeCardModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Card Type</label>
+        <select id="cardTypeSelect" onchange="onCardTypeChange()">
+          <option value="basic">Basic — Question / Answer</option>
+          <option value="reversed">Basic + Reversed — Create reverse card too</option>
+          <option value="cloze">Cloze — Fill in {{c1::blank}}</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Question Type</label>
+        <select id="cardDisplayMode" onchange="onDisplayModeChange()">
+          <option value="text">📝 Show text — Read the question</option>
+          <option value="voice">🔊 Listen & Answer — AI reads, flip to check</option>
+          <option value="voice-repeat">🔁 Listen & Repeat — AI reads, repeat the sentence</option>
+          <option value="voice-translate">🌐 Listen & Translate — AI reads, translate it</option>
+          <option value="quiz">🎯 Quiz — Listen & pick the right answer</option>
+        </select>
+      </div>
+      <div class="form-group" id="cardNameGroup"><label id="cardNameLabel">Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span></label><input id="cardNameInput" placeholder="e.g. Greeting, At the store..." maxlength="60" style="width:100%;padding:8px 12px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--glass-border);color:var(--ink);font-size:14px"></div>
+      <div id="basicFields">
+        <div class="form-group"><label>Front (question) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— multiple = dialogue mode</span></label>
+          <div id="frontFieldsWrap">
+            <div class="front-field-row"><textarea class="front-input" placeholder="Enter question, vocabulary..." rows="2"></textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove" style="display:none">✕</button></div>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addFrontField()" style="margin-top:6px" id="addFrontBtn">+ Add dialogue line</button>
+        </div>
+        <div class="form-group"><label>Back (answer)</label><textarea id="cardBackInput" placeholder="Enter answer, meaning..." rows="3"></textarea></div>
+        <div class="form-group"><label>Definition <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span></label><textarea id="cardDefinitionInput" placeholder="e.g. nghĩa tiếng Việt, explanation..." rows="2"></textarea></div>
+      </div>
+      <div id="clozeFields" style="display:none">
+        <div class="form-group"><label>Content (use {{c1::word}} to create blanks)</label><textarea id="clozeInput" placeholder="e.g. {{c1::Mitochondria}} is the powerhouse of the cell" rows="3"></textarea></div>
+        <p style="font-size:12px;color:var(--ink-dim);margin-top:-8px">Use {{c1::...}}, {{c2::...}} for multiple blanks</p>
+      </div>
+      <div class="form-group"><label>Review Mode</label>
+        <select id="cardReviewMode">
+          <option value="flip">🔄 Flip card — Self-evaluate</option>
+          <option value="type">⌨️ Type answer — Auto-graded</option>
+        </select>
+      </div>
+      <div class="form-group"><label>🎬 YouTube Video (optional)</label><input type="text" id="cardYoutubeUrl" placeholder="e.g. https://youtube.com/watch?v=..."></div>
+      <div class="form-group"><label>📁 Audio/Video URL (optional)</label><div style="display:flex;gap:6px"><input type="text" id="cardDriveUrl" placeholder="e.g. R2 or Drive URL" style="flex:1"><button type="button" id="btnUploadAudio" class="btn btn-ghost" onclick="uploadAudioFile()" style="display:none;white-space:nowrap;padding:8px 12px">🎵 Upload MP3</button></div></div>
+      <div style="display:flex;gap:8px">
+        <div class="form-group" style="flex:1"><label>Start (seconds)</label><input type="number" id="cardYtStart" placeholder="e.g. 85" min="0" step="0.1"></div>
+        <div class="form-group" style="flex:1"><label>End (seconds)</label><input type="number" id="cardYtEnd" placeholder="e.g. 92" min="0" step="0.1"></div>
+        <div class="form-group" style="flex:1;align-self:flex-end"><button type="button" class="btn btn-ghost" onclick="previewYtClip()" style="width:100%;padding:9px 0">▶ Preview</button></div>
+      </div>
+      <div id="ytPreviewWrap" style="display:none;margin-bottom:12px;border-radius:var(--r-md);overflow:hidden"><div id="ytPreviewPlayer"></div></div>
+      <div class="form-group"><label>🍰 Cake Link (optional)</label><input type="text" id="cardCakeUrl" placeholder="e.g. https://cake.me/..."></div>
+      <div class="form-group"><label>Tags (comma separated)</label><input type="text" id="cardTagsInput" placeholder="e.g. week-1, grammar, hard"></div>
+      <div class="form-group" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;margin-top:4px">
+        <button type="button" class="btn btn-ghost" onclick="sendCardToTelegram()" style="width:100%;padding:10px;border:1px solid rgba(0,136,204,0.3);color:#0088cc;border-radius:8px">📻 Send this card to Telegram</button>
+        <span id="cardTeleStatus" style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;display:block;text-align:center"></span>
+      </div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeCardModal()">Cancel</button><button class="btn btn-primary" onclick="saveCard()" id="saveCardBtn">Save card</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- BULK ADD MODAL -->
+<div class="modal-overlay" id="bulkModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Bulk Add</h2><button class="modal-close" onclick="closeBulkModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">One card per line, separate front/back with Tab or <code>|</code></p>
+      <textarea class="bulk-textarea" id="bulkInput" placeholder="hello | greeting&#10;goodbye | farewell&#10;thank you | thanks"></textarea>
+      <div class="form-group" style="margin-top:12px"><label>Review Mode</label>
+        <select id="bulkReviewMode">
+          <option value="flip">🔄 Flip card</option>
+          <option value="type">⌨️ Type answer</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Tags for all (optional)</label><input type="text" id="bulkTagsInput" placeholder="e.g. week-1"></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button><button class="btn btn-primary" onclick="saveBulkCards()">Add all</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Import from file</h2><button class="modal-close" onclick="closeImportModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">Supports JSON (exported from FlashMind) or CSV/TXT (front, back)</p>
+      <input type="file" id="importFile" accept=".json,.csv,.txt" style="margin-bottom:16px">
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeImportModal()">Cancel</button><button class="btn btn-primary" onclick="importFile()">Import</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT ADD MODAL -->
+<div class="modal-overlay" id="chatAddModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header"><h2>💬 Add Chat Dialogue</h2><button class="modal-close" onclick="closeChatAdd()">✕</button></div>
+    <div class="modal-body">
+      <p style="color:var(--ink-dim);font-size:13px;margin-bottom:8px">Paste a conversation. Each line = one dialogue line. Format: <code>Speaker: Text</code> or just <code>Text</code></p>
+      <textarea id="chatInput" placeholder="A: Hey, how are you?
+B: I'm doing great, thanks!
+A: What are you up to?
+B: Just studying English." style="width:100%;min-height:200px;padding:12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px;font-family:inherit;resize:vertical;line-height:1.6"></textarea>
+      <div class="form-group" style="margin-top:12px">
+        <label>Card Name</label>
+        <input id="chatCardName" placeholder="e.g. Daily greeting" style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px">
+      </div>
+      <div class="form-group" style="margin-top:8px">
+        <label>YouTube URL (optional)</label>
+        <input id="chatYtUrl" placeholder="https://youtube.com/watch?v=..." style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <div class="form-group" style="flex:1"><label>Start (s)</label><input id="chatYtStart" type="number" placeholder="0" style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px"></div>
+        <div class="form-group" style="flex:1"><label>End (s)</label><input id="chatYtEnd" type="number" placeholder="" style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px"></div>
+      </div>
+      <div class="form-group" style="margin-top:8px">
+        <label>Tags (comma separated)</label>
+        <input id="chatTags" placeholder="greeting, daily" style="width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--surface-2);color:var(--ink);font-size:14px">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeChatAdd()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveChatCard()">💬 Add Chat Card</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOM STUDY MODAL -->
+<div class="modal-overlay" id="customStudyModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Custom Study</h2><button class="modal-close" onclick="closeCustomStudy()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Filter by</label>
+        <select id="customFilter">
+          <option value="all">All cards</option>
+          <option value="difficult">Difficult (ease &lt; 2.0)</option>
+          <option value="leech">Leeches (failed many times)</option>
+          <option value="new">New cards only</option>
+          <option value="tag">Theo tag</option>
+        </select>
+      </div>
+      <div class="form-group" id="customTagGroup" style="display:none"><label>Choose tag</label><input type="text" id="customTagInput" placeholder="Enter tag..."></div>
+      <div class="form-group"><label>Max cards</label><input type="number" id="customLimit" value="50" min="1" max="500"></div>
+      <div class="form-group"><label>Order</label>
+        <select id="customOrder">
+          <option value="random">Random</option>
+          <option value="due">Theo due date</option>
+          <option value="added">Newest first</option>
+          <option value="difficulty">Hardest first</option>
+        </select>
+      </div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeCustomStudy()">Cancel</button><button class="btn btn-primary" onclick="startCustomStudy()">Start</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h2 id="authModalTitle">Sign In</h2><button class="modal-close" onclick="closeAuthModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Username</label><input type="text" id="authEmail" placeholder="Choose any name" autocomplete="username"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="authPass" placeholder="Min 6 characters" autocomplete="current-password"></div>
+      <div id="authNameGroup" class="form-group" style="display:none"><label>Display name</label><input type="text" id="authName" placeholder="Your name"></div>
+      <div id="authError" style="color:var(--red);font-size:13px;margin-top:4px;display:none"></div>
+      <div class="form-actions" style="flex-direction:column;gap:8px">
+        <button class="btn btn-primary" id="authSubmitBtn" onclick="submitAuth()" style="width:100%">Sign In</button>
+        <div style="text-align:center;font-size:13px;opacity:.7;margin-top:4px">
+          <span id="authToggleText">Don't have an account?</span>
+          <a href="#" onclick="toggleAuthMode(event)" style="color:var(--primary);text-decoration:underline" id="authToggleLink">Sign Up</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h2>Admin Access</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Admin password</label><input type="password" id="adminPassInput" placeholder="Enter admin password"></div>
+      <div id="adminError" style="color:var(--red);font-size:13px;margin-top:4px;display:none"></div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button><button class="btn btn-primary" onclick="verifyAdminPass()">Unlock</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/fm-shared.js?v=2"></script>
+<script>
+var deckId = new URLSearchParams(location.search).get('id');
+if(!deckId) location.href='index.html';
+var _deckLoaded = false;
+function pageRender(){
+  if(!deckId) return;
+  if(!db.decks[deckId]){
+    if(!_deckLoaded) document.getElementById('browserDeckName').textContent = 'Loading...';
+    return;
+  }
+  _deckLoaded = true;
+  currentDeckId = deckId;
+  document.title = 'FlashMind — ' + db.decks[deckId].name;
+  document.getElementById('browserDeckName').textContent = db.decks[deckId].name;
+  activeTagFilter = null;
+  renderTagFilter();
+  renderCardBrowser();
+  updateAdminUI();
+}
+pageRender();
+</script>
+</body>
+</html>
