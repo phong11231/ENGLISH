@@ -1510,9 +1510,9 @@ function speakText(text){
   let provider=db.settings.voiceProvider||'edge';
   let voiceId=db.settings.voiceId||'en-US-JennyNeural';
   if(!['edge','google-translate','browser'].includes(provider))provider='edge';
-  if(db.settings.randomVoice&&provider==='edge'&&edgeVoicesCache&&edgeVoicesCache.length>1){
-    const rv=edgeVoicesCache[Math.floor(Math.random()*edgeVoicesCache.length)];
-    voiceId=rv.id;
+  if((db.settings.randomVoice!==false)&&provider==='edge'&&edgeVoicesCache&&edgeVoicesCache.length>1){
+    let rv;do{rv=edgeVoicesCache[Math.floor(Math.random()*edgeVoicesCache.length)];}while(rv.id===window._lastRandomVoice&&edgeVoicesCache.length>1);
+    voiceId=rv.id;window._lastRandomVoice=rv.id;
   }
   if(provider==='browser'){speakFallback(text);return;}
   if(provider==='google-translate'){
@@ -2194,7 +2194,7 @@ function openSettings(){
   vpSel.value=validProviders.includes(savedProvider)?savedProvider:'edge';
   updateVoiceList();
   if(db.settings.voiceId)document.getElementById('voiceIdSelect').value=db.settings.voiceId;
-  document.getElementById('randomVoiceToggle').checked=!!db.settings.randomVoice;
+  document.getElementById('randomVoiceToggle').checked=db.settings.randomVoice!==false;
   document.getElementById('voiceTestStatus').textContent='';
   if(isAdmin){document.getElementById('aiKeyGroup').style.display='block';fetchGeminiConfig().then(function(k){document.getElementById('geminiKeyInput').value=k;});}
   else{document.getElementById('aiKeyGroup').style.display='none';}
