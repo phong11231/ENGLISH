@@ -1341,12 +1341,12 @@ function showCurrentCard(){
   } else if(isVoice){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
     const modeHint=card.displayMode==='voice-repeat'?'🔁 Listen and repeat the sentence':card.displayMode==='voice-translate'?'🌐 Listen and translate the sentence':'🎧 Listen and answer the question';
-    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">'+modeHint+'</div></div>';
+    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();stopAllAudio();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">'+modeHint+'</div></div>';
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
     const backFace=document.querySelector('.flashcard-face.back');
     const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
     const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Replay';
-    miniBtn.onclick=function(e){e.stopPropagation();speakText(card.front);};backFace.appendChild(miniBtn);
+    miniBtn.onclick=function(e){e.stopPropagation();stopAllAudio();speakText(card.front);};backFace.appendChild(miniBtn);
     setTimeout(()=>speakText(card.front),300);
   } else {
     document.getElementById('cardFront').innerHTML=renderContent(card.front);
@@ -1354,11 +1354,11 @@ function showCurrentCard(){
     const frontFace=document.querySelector('.flashcard-face.front');
     const oldFrontBtn=frontFace.querySelector('.voice-mini-btn');if(oldFrontBtn)oldFrontBtn.remove();
     const frontBtn=document.createElement('button');frontBtn.className='voice-mini-btn';frontBtn.textContent='🔊';frontBtn.title='Listen to answer';
-    frontBtn.onclick=function(e){e.stopPropagation();speakText(card.back);};frontFace.appendChild(frontBtn);
+    frontBtn.onclick=function(e){e.stopPropagation();stopAllAudio();speakText(card.back);};frontFace.appendChild(frontBtn);
     const backFace=document.querySelector('.flashcard-face.back');
     const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
     const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Read answer';
-    miniBtn.onclick=function(e){e.stopPropagation();speakText(card.back);};backFace.appendChild(miniBtn);
+    miniBtn.onclick=function(e){e.stopPropagation();stopAllAudio();speakText(card.back);};backFace.appendChild(miniBtn);
   }
 
   // YouTube handled in flipCard (outside card layout)
@@ -1650,6 +1650,7 @@ function initSpeedBtn(){
 
 function speakFallback(text){
   if(!('speechSynthesis' in window))return;
+  speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
   u.lang='en-US';u.rate=db.settings.speechRate||1;u.pitch=1;
   const voices=speechSynthesis.getVoices();
