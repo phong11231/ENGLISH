@@ -1528,8 +1528,9 @@ function speakText(text){
     try{
       const audio=googleTranslateTTS(text,voiceId);
       currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
-      audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};
-      audio.play().catch(()=>{done();speakFallback(text);});
+      let fell=false;const fb=()=>{if(fell)return;fell=true;done();speakFallback(text);};
+      audio.onended=done;audio.onerror=fb;
+      audio.play().catch(fb);
     }catch(e){done();speakFallback(text);}
     return;
   }
@@ -1537,8 +1538,9 @@ function speakText(text){
     try{
       const audio=edgeTTS(text,voiceId);
       currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
-      audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};
-      audio.play().catch(()=>{done();speakFallback(text);});
+      let fell=false;const fb=()=>{if(fell)return;fell=true;done();speakFallback(text);};
+      audio.onended=done;audio.onerror=fb;
+      audio.play().catch(fb);
     }catch(e){done();speakFallback(text);}
     return;
   }
@@ -1555,10 +1557,10 @@ function speakTextAs(text,forceVoiceId){
   if(!['edge','google-translate','browser'].includes(provider))provider='edge';
   if(provider==='browser'){speakFallback(text);return;}
   if(provider==='google-translate'){
-    try{const audio=googleTranslateTTS(text,forceVoiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};audio.play().catch(()=>{done();speakFallback(text);});}catch(e){done();speakFallback(text);}
+    try{const audio=googleTranslateTTS(text,forceVoiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;let fell=false;const fb=()=>{if(fell)return;fell=true;done();speakFallback(text);};audio.onended=done;audio.onerror=fb;audio.play().catch(fb);}catch(e){done();speakFallback(text);}
     return;
   }
-  try{const audio=edgeTTS(text,forceVoiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;audio.onended=done;audio.onerror=()=>{done();speakFallback(text);};audio.play().catch(()=>{done();speakFallback(text);});}catch(e){done();speakFallback(text);}
+  try{const audio=edgeTTS(text,forceVoiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;let fell=false;const fb=()=>{if(fell)return;fell=true;done();speakFallback(text);};audio.onended=done;audio.onerror=fb;audio.play().catch(fb);}catch(e){done();speakFallback(text);}
 }
 
 async function assignDialogueVoices(fronts){
