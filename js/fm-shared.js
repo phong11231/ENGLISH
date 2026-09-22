@@ -1351,6 +1351,10 @@ function showCurrentCard(){
   } else {
     document.getElementById('cardFront').innerHTML=renderContent(card.front);
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
+    const backFace=document.querySelector('.flashcard-face.back');
+    const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
+    const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Read answer';
+    miniBtn.onclick=function(e){e.stopPropagation();speakText(card.back);};backFace.appendChild(miniBtn);
   }
 
   // YouTube handled in flipCard (outside card layout)
