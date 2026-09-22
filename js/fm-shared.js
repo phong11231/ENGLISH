@@ -1351,6 +1351,10 @@ function showCurrentCard(){
   } else {
     document.getElementById('cardFront').innerHTML=renderContent(card.front);
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
+    const frontFace=document.querySelector('.flashcard-face.front');
+    const oldFrontBtn=frontFace.querySelector('.voice-mini-btn');if(oldFrontBtn)oldFrontBtn.remove();
+    const frontBtn=document.createElement('button');frontBtn.className='voice-mini-btn';frontBtn.textContent='🔊';frontBtn.title='Listen to answer';
+    frontBtn.onclick=function(e){e.stopPropagation();speakText(card.back);};frontFace.appendChild(frontBtn);
     const backFace=document.querySelector('.flashcard-face.back');
     const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
     const miniBtn=document.createElement('button');miniBtn.className='voice-mini-btn';miniBtn.textContent='🔊';miniBtn.title='Read answer';
