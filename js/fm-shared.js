@@ -1842,6 +1842,9 @@ function flipCard(){
     } else {
       document.getElementById('reviewActions').style.display='flex';
     }
+    if(!card.displayMode||(!card.displayMode.startsWith('voice')&&card.displayMode!=='quiz')){
+      setTimeout(function(){speakText(card.back);},300);
+    }
   }
 }
 function toggleDialogueText(lineEl){
