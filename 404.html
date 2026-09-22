@@ -91,6 +91,7 @@ if (!_routeId) location.replace(_basePath);
         <div class="streak-xp" id="streakXp">⚡ <span id="sessionXp">0</span> XP</div>
         <div class="streak-multiplier" id="streakMultiplier">x1</div>
       </div>
+      <button class="btn btn-ghost btn-sm" id="speedBtn" onclick="cycleSpeechRate()" title="Speech speed" style="flex:none;font-size:12px;min-width:44px">🔊 1x</button>
       <div class="mode-toggle" id="modeIndicator" style="pointer-events:none;margin-bottom:0;flex:none">
         <button id="modeFlip">🔄 Flip card</button>
         <button id="modeType">⌨️ Type answer</button>
@@ -383,7 +384,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="js/fm-shared.js?v=4"></script>
+<script src="js/fm-shared.js?v=5"></script>
 <script>
 (function(){
   if (_isDeckRoute) {
@@ -457,6 +458,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
       document.getElementById('reviewDone').style.display='none';
       document.getElementById('undoBtn').style.display='none';
       document.getElementById('reviewDeckName').textContent = label;
+      initSpeedBtn();
       updateStreakUI();
       showCurrentCard();
       document.title = 'FlashMind — ' + db.decks[_deckId].name;

@@ -1623,6 +1623,22 @@ function testVoice(){
   }
   status.textContent='❌ Provider not supported';btn.disabled=false;btn.textContent='▶ Preview';
 }
+var _speechRates=[0.5,0.75,1,1.25,1.5,2];
+function cycleSpeechRate(){
+  var cur=db.settings.speechRate||1;
+  var idx=_speechRates.indexOf(cur);
+  idx=(idx+1)%_speechRates.length;
+  db.settings.speechRate=_speechRates[idx];
+  saveSettings();
+  var btn=document.getElementById('speedBtn');
+  if(btn)btn.textContent='🔊 '+_speechRates[idx]+'x';
+  toast('Speed: '+_speechRates[idx]+'x');
+}
+function initSpeedBtn(){
+  var btn=document.getElementById('speedBtn');
+  if(btn)btn.textContent='🔊 '+(db.settings.speechRate||1)+'x';
+}
+
 function speakFallback(text){
   if(!('speechSynthesis' in window))return;
   const u=new SpeechSynthesisUtterance(text);
