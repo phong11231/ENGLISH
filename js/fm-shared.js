@@ -1468,6 +1468,7 @@ async function loadEdgeVoices(){
     return edgeVoicesCache;
   }catch(e){return[];}
 }
+loadEdgeVoices();
 
 function updateVoiceList(){
   const provider=document.getElementById('voiceProviderSelect').value;
