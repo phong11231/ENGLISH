@@ -1988,7 +1988,12 @@ function checkTypedAnswer(){
   if(correct){
     input.className='type-answer-input correct';result.className='type-answer-result correct';
     result.textContent='✓ Correct!';result.style.display='block';
-    answerCard(2);setTimeout(()=>showCurrentCard(),1200);
+    answerCard(2);
+    function goNext(){setTimeout(()=>showCurrentCard(),400);}
+    if(currentAudio){currentAudio.onended=goNext;}
+    else if('speechSynthesis' in window&&speechSynthesis.speaking){
+      var si=setInterval(()=>{if(!speechSynthesis.speaking){clearInterval(si);goNext();}},50);
+    } else {setTimeout(goNext,1200);}
   } else {
     input.className='type-answer-input wrong';result.className='type-answer-result wrong';
     result.innerHTML='✗ Wrong — Answer: <strong>'+esc(card.back)+'</strong>';result.style.display='block';
