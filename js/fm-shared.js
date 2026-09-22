@@ -1629,7 +1629,7 @@ function cycleSpeechRate(){
   var idx=_speechRates.indexOf(cur);
   idx=(idx+1)%_speechRates.length;
   db.settings.speechRate=_speechRates[idx];
-  saveSettings();
+  saveLocal();
   var btn=document.getElementById('speedBtn');
   if(btn)btn.textContent='🔊 '+_speechRates[idx]+'x';
   toast('Speed: '+_speechRates[idx]+'x');
