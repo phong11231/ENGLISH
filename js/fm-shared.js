@@ -900,7 +900,7 @@ function sleepListenReplay(){
 }
 function stopSleepListen(){
   if(sleepTimer){clearTimeout(sleepTimer);sleepTimer=null;}
-  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   document.getElementById('sleepListenPlayer').innerHTML='';
   document.getElementById('sleepListenOverlay').style.display='none';
@@ -1040,7 +1040,7 @@ function sleepChangeSpeed(delta){
 }
 
 function stopAllAudio(){
-  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
   window._dialoguePlaying=false;
@@ -1511,7 +1511,7 @@ function googleTranslateTTS(text,lang){
 }
 
 function speakText(text){
-  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   const btn=document.querySelector('.voice-play-btn');
   if(btn)btn.classList.add('speaking');
@@ -1548,7 +1548,7 @@ function speakText(text){
 }
 
 function speakTextAs(text,forceVoiceId){
-  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   const btn=document.querySelector('.voice-play-btn');
   if(btn)btn.classList.add('speaking');
@@ -1676,7 +1676,7 @@ function renderContent(text){
 function replayDialogue(){
   const fronts=window._cardFronts||[];
   if(fronts.length<2)return;
-  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
   window._dialoguePlaying=true;
@@ -1717,7 +1717,7 @@ function flipCard(){
   if(reviewMode==='type')return;
   var curCard=reviewQueue[reviewIndex];
   if(curCard&&curCard.displayMode==='quiz'&&(curCard.fronts&&curCard.fronts.length>1))return;
-  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
   const fc=document.getElementById('flashcard');
@@ -1930,13 +1930,13 @@ function showAllDictation(){
 }
 function exitDictation(){
   window._dictationMode=false;
-  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   window._dialogueShown=false;
   flipCard();
 }
 function toggleDialogueVideo(){
-  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
   window._dialoguePlaying=false;
