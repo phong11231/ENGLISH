@@ -1984,6 +1984,9 @@ function checkTypedAnswer(){
   const correct=normalize(card.back)===normalize(typed);
   const input=document.getElementById('typeAnswerInput'),result=document.getElementById('typeAnswerResult');
   document.getElementById('flashcard').classList.add('flipped');
+  if(!card.displayMode||(!card.displayMode.startsWith('voice')&&card.displayMode!=='quiz')){
+    setTimeout(function(){speakText(card.back);},300);
+  }
   if(correct){
     input.className='type-answer-input correct';result.className='type-answer-result correct';
     result.textContent='✓ Correct!';result.style.display='block';
