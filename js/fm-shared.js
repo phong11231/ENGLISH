@@ -1988,7 +1988,7 @@ function checkTypedAnswer(){
   if(correct){
     input.className='type-answer-input correct';result.className='type-answer-result correct';
     result.textContent='✓ Correct!';result.style.display='block';
-    answerCard(2);
+    answerCard(2);window._typeAnswered=true;
     document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
   } else {
     input.className='type-answer-input wrong';result.className='type-answer-result wrong';
@@ -1996,7 +1996,7 @@ function checkTypedAnswer(){
     document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
   }
 }
-function nextAfterType(){answerCard(0);showCurrentCard();}
+function nextAfterType(){if(!window._typeAnswered)answerCard(0);window._typeAnswered=false;showCurrentCard();}
 
 // ===== STREAK + XP SYSTEM =====
 let streak=0,bestStreak=0,sessionXp=0,sessionCorrect=0,sessionTotal=0;
