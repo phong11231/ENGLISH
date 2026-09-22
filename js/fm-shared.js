@@ -2454,10 +2454,10 @@ try{const _t=localStorage.getItem('flashmind_theme')||'auto';if(_t!=='auto'){doc
 document.addEventListener('keydown',e=>{
   var vr=document.getElementById('viewReview');
   if(vr&&vr.classList.contains('active')){
+    if(e.key==='P'&&e.shiftKey){e.preventDefault();stopAllAudio();var c=reviewQueue[reviewIndex];if(c){var fc=document.getElementById('flashcard');if(fc&&fc.classList.contains('flipped'))speakText(c.back);else speakText(c.displayMode&&c.displayMode.startsWith('voice')?c.front:c.back);}return;}
     if(e.target.id==='typeAnswerInput'&&e.key==='Enter'){e.preventDefault();
       const bc=document.getElementById('btnCheckAnswer'),bn=document.getElementById('btnNextCard');
       if(bc.style.display!=='none')checkTypedAnswer();else if(bn.style.display!=='none')nextAfterType();return;}
-    if(e.key==='P'&&e.shiftKey){e.preventDefault();var c=reviewQueue[reviewIndex];if(c){var fc=document.getElementById('flashcard');if(fc&&fc.classList.contains('flipped'))speakText(c.back);else speakText(c.displayMode&&c.displayMode.startsWith('voice')?c.front:c.back);}return;}
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
     if(e.code==='Space'){e.preventDefault();flipCard();}
     if(e.key==='z'&&(e.ctrlKey||e.metaKey)){e.preventDefault();undoAnswer();}
