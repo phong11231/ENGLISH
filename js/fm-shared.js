@@ -141,8 +141,13 @@ async function mergeAndLoadCloud(){
         await ref.child('decks/'+did).set(dd);
       }
       await ref.child('_migrated').set(true);
-      _skipNextListener=true;
       console.log('[Migration] Done! Total decks in local: '+Object.keys(local.decks).length);
+      // After migration: save all data locally, no listener needed this session
+      db.decks=local.decks;
+      db.settings.totalXp=Math.max(db.settings.totalXp||0,cloudSettings.totalXp||0);
+      saveLocal();renderCurrentView();
+      await loadSharedDecks();
+      return;
     }catch(e){console.error('[Migration] Firestore read error:',e);}
   }
   // Merge local decks -> RTDB (only missing ones)
@@ -173,9 +178,8 @@ async function mergeAndLoadCloud(){
   if(unsubDecks)unsubDecks();
   const decksRef=ref.child('decks');
   const onDecksValue=decksRef.on('value',s=>{
-    if(_skipNextListener){_skipNextListener=false;console.log('[RTDB listener] skipped (migration just ran)');saveLocal();renderCurrentView();return;}
     const val=s.val()||{};
-    console.log('[RTDB listener] received '+Object.keys(val).length+' decks: '+Object.keys(val).join(', '));
+    console.log('[RTDB listener] received '+Object.keys(val).length+' decks');
     const merged={};
     for(const[id,nd]of Object.entries(val)){
       var ex=db.decks[id];
@@ -187,10 +191,8 @@ async function mergeAndLoadCloud(){
       }
       merged[id]=nd;
     }
-    // Keep local-only decks not yet synced
     for(const[id,d]of Object.entries(db.decks)){if(!merged[id])merged[id]=d;}
     db.decks=merged;
-    console.log('[RTDB listener] final db.decks: '+Object.keys(db.decks).length+' -> '+Object.keys(db.decks).map(id=>(db.decks[id].name||id)).join(', '));
     saveLocal();renderCurrentView();
   });
   unsubDecks=()=>decksRef.off('value',onDecksValue);
