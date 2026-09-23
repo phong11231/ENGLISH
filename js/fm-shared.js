@@ -403,6 +403,19 @@ function deleteDeck(id){
   renderDecks();toast('Deleted');
 }
 
+// ===== DECK DEFAULTS =====
+function loadDeckDefaults(){
+  var d=db.decks[currentDeckId];if(!d)return;
+  var dd=document.getElementById('deckDefaultDisplay');if(dd)dd.value=d.defaultDisplayMode||'voice';
+  var dr=document.getElementById('deckDefaultReview');if(dr)dr.value=d.defaultReviewMode||'flip';
+}
+function saveDeckDefaults(){
+  var d=db.decks[currentDeckId];if(!d)return;
+  var dd=document.getElementById('deckDefaultDisplay');if(dd)d.defaultDisplayMode=dd.value;
+  var dr=document.getElementById('deckDefaultReview');if(dr)d.defaultReviewMode=dr.value;
+  saveDeckData(currentDeckId,d);toast('Defaults saved!');
+}
+
 // ===== CARD MODAL =====
 function addFrontField(value,speaker){
   const wrap=document.getElementById('frontFieldsWrap');

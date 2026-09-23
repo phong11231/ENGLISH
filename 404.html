@@ -74,6 +74,20 @@ if (!_routeId) location.replace(_basePath);
     <button class="btn btn-ghost btn-sm" onclick="exportDeck()">📤 Export</button>
     <button class="btn btn-primary btn-sm" onclick="openCardModal()">+ Add card</button>
   </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;font-size:13px" id="deckDefaultsBar">
+    <span style="opacity:.6;font-weight:600">Defaults:</span>
+    <select id="deckDefaultDisplay" onchange="saveDeckDefaults()" style="padding:5px 8px;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);color:var(--ink);font-size:12px">
+      <option value="voice">🔊 Listen & Answer</option>
+      <option value="voice-repeat">🔁 Listen & Repeat</option>
+      <option value="voice-translate">🌐 Listen & Translate</option>
+      <option value="show_text">📝 Show Text</option>
+      <option value="quiz">🎯 Quiz</option>
+    </select>
+    <select id="deckDefaultReview" onchange="saveDeckDefaults()" style="padding:5px 8px;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);color:var(--ink);font-size:12px">
+      <option value="flip">🔄 Flip card</option>
+      <option value="type">⌨️ Type answer</option>
+    </select>
+  </div>
   <div id="tagFilterWrap"></div>
   <div class="card-browser-header">
     <div class="search-box"><input type="text" placeholder="Search cards..." id="cardSearch" oninput="filterCards()"></div>
@@ -387,7 +401,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="/ENGLISH/js/fm-shared.js?v=25"></script>
+<script src="/ENGLISH/js/fm-shared.js?v=26"></script>
 <script>
 (function(){
   if (_isDeckRoute) {
@@ -401,6 +415,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
       }
       _deckLoaded = true;
       currentDeckId = deckId;
+      loadDeckDefaults();
       document.title = 'FlashMind — ' + db.decks[deckId].name;
       document.getElementById('browserDeckName').textContent = db.decks[deckId].name;
       activeTagFilter = null;
