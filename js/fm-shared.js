@@ -406,7 +406,8 @@ function deleteDeck(id){
 // ===== DECK DEFAULTS =====
 function loadDeckDefaults(){
   var d=db.decks[currentDeckId];if(!d)return;
-  var dd=document.getElementById('deckDefaultDisplay');if(dd)dd.value=d.defaultDisplayMode||'voice';
+  var _dm=d.defaultDisplayMode||'voice';if(_dm==='show_text')_dm='text';
+  var dd=document.getElementById('deckDefaultDisplay');if(dd)dd.value=_dm;
   var dr=document.getElementById('deckDefaultReview');if(dr)dr.value=d.defaultReviewMode||'flip';
 }
 function saveDeckDefaults(){
@@ -558,7 +559,8 @@ function openCardModal(cardId){
     setFrontFields(['']);document.getElementById('cardBackInput').value='';
     var _deck=db.decks[currentDeckId];
     document.getElementById('cardReviewMode').value=(_deck&&_deck.defaultReviewMode)||'flip';
-    document.getElementById('cardDisplayMode').value=(_deck&&_deck.defaultDisplayMode)||'voice';
+    var _ddm=(_deck&&_deck.defaultDisplayMode)||'voice';if(_ddm==='show_text')_ddm='text';
+    document.getElementById('cardDisplayMode').value=_ddm;
     onDisplayModeChange();
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
     document.getElementById('cardYoutubeUrl').value='';document.getElementById('cardDriveUrl').value='';document.getElementById('cardYtStart').value='';document.getElementById('cardYtEnd').value='';
