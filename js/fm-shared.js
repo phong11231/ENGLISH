@@ -719,6 +719,7 @@ function renderCardBrowser(){
         <td style="white-space:nowrap">
           <button class="card-edit-btn" onclick="openCardModal('${c.id}')" title="Edit">✏️</button>
           <button class="card-edit-btn" onclick="toggleSuspend('${c.id}')" title="${c.suspended?'Unsuspend':'Suspend'}">${c.suspended?'👁':'⏸'}</button>
+          <button class="card-edit-btn" onclick="copyCardToDeck('${c.id}')" title="Copy to deck">📋</button>
           <button class="card-edit-btn" onclick="deleteCard('${c.id}')" title="Delete" style="color:var(--red)">🗑️</button>
         </td></tr>`;
     }).join('')}</tbody></table></div>`;
@@ -737,6 +738,31 @@ function deleteCard(cardId){
   if(!confirm('Delete this card?'))return;
   const deck=db.decks[currentDeckId];deck.cards=deck.cards.filter(c=>c.id!==cardId);
   saveDeckData(currentDeckId,deck);renderCardBrowser();toast('Deleted');
+}
+
+function copyCardToDeck(cardId,move){
+  const srcDeck=db.decks[currentDeckId];
+  const card=srcDeck.cards.find(c=>c.id===cardId);if(!card)return;
+  const otherDecks=Object.entries(db.decks).filter(([id])=>id!==currentDeckId);
+  if(otherDecks.length===0){toast('No other decks');return;}
+  const opts=otherDecks.map(([id,d])=>'<option value="'+id+'">'+esc(d.emoji||'📖')+' '+esc(d.name)+'</option>').join('');
+  const action=move?'Move':'Copy';
+  const html='<div style="padding:16px"><h3 style="margin-bottom:12px">'+action+' card to:</h3><select id="_copyTarget" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);font-size:14px">'+opts+'</select><div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end"><button class="btn btn-ghost" onclick="this.closest(\'.modal-overlay\').classList.remove(\'active\')">Cancel</button><button class="btn btn-primary" onclick="_doCopyCard(\''+cardId+'\','+!!move+')">'+action+'</button></div></div>';
+  var modal=document.getElementById('_copyModal');
+  if(!modal){modal=document.createElement('div');modal.id='_copyModal';modal.className='modal-overlay';modal.innerHTML='<div class="modal" style="max-width:360px"></div>';document.body.appendChild(modal);}
+  modal.querySelector('.modal').innerHTML=html;modal.classList.add('active');
+}
+function _doCopyCard(cardId,move){
+  const targetId=document.getElementById('_copyTarget').value;
+  const srcDeck=db.decks[currentDeckId];const targetDeck=db.decks[targetId];
+  const card=srcDeck.cards.find(c=>c.id===cardId);if(!card||!targetDeck)return;
+  const newCard=JSON.parse(JSON.stringify(card));
+  if(!move)newCard.id=crypto.randomUUID();
+  targetDeck.cards.push(newCard);saveDeckData(targetId,targetDeck);
+  if(move){srcDeck.cards=srcDeck.cards.filter(c=>c.id!==cardId);saveDeckData(currentDeckId,srcDeck);}
+  document.getElementById('_copyModal').classList.remove('active');
+  renderCardBrowser();renderDecks();
+  toast((move?'Moved':'Copied')+' to '+targetDeck.name);
 }
 
 // ===== BULK ADD =====
