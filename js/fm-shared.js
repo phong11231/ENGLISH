@@ -7,7 +7,7 @@ firebase.initializeApp({apiKey:"AIzaSyD7UXDjRS0NaT1OYRBvpxqpirZz3SQYVyc",authDom
 const auth = firebase.auth(), firestore = firebase.firestore();
 const dataApp = firebase.initializeApp({apiKey:"AIzaSyA6Qyt5t5Ik0ek29gNUeNCUe4cYP6TfITM",databaseURL:"https://flashmind-data-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"flashmind-data"},'data');
 const rtdb = dataApp.database();
-let currentUser = null, unsubDecks = null, lastUserId = null;
+let currentUser = null, unsubDecks = null, lastUserId = null, _skipNextListener = false;
 function stripUndef(obj){if(obj===null||obj===undefined)return null;if(Array.isArray(obj))return obj.map(stripUndef);if(typeof obj==='object'){var r={};for(var k in obj){if(obj.hasOwnProperty(k)&&obj[k]!==undefined)r[k]=stripUndef(obj[k]);}return r;}return obj;}
 
 // ===== DATA =====
@@ -138,9 +138,10 @@ async function mergeAndLoadCloud(){
       for(const did of migratedIds){
         const dd=stripUndef(local.decks[did]);
         console.log('[Migration] Writing deck: '+did+' name='+(dd&&dd.name)+' cards='+(dd&&dd.cards&&dd.cards.length));
-        await rtdbUser().child('decks/'+did).set(dd);
+        await ref.child('decks/'+did).set(dd);
       }
-      await rtdbUser().child('_migrated').set(true);
+      await ref.child('_migrated').set(true);
+      _skipNextListener=true;
       console.log('[Migration] Done! Total decks in local: '+Object.keys(local.decks).length);
     }catch(e){console.error('[Migration] Firestore read error:',e);}
   }
@@ -172,6 +173,7 @@ async function mergeAndLoadCloud(){
   if(unsubDecks)unsubDecks();
   const decksRef=ref.child('decks');
   const onDecksValue=decksRef.on('value',s=>{
+    if(_skipNextListener){_skipNextListener=false;console.log('[RTDB listener] skipped (migration just ran)');saveLocal();renderCurrentView();return;}
     const val=s.val()||{};
     console.log('[RTDB listener] received '+Object.keys(val).length+' decks: '+Object.keys(val).join(', '));
     const merged={};
