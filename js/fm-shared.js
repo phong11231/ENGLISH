@@ -648,6 +648,7 @@ function renderCardBrowser(){
   const search=(document.getElementById('cardSearch')?.value||'').toLowerCase();
   let filtered=cards.filter(c=>c.front.toLowerCase().includes(search)||c.back.toLowerCase().includes(search)||(c.cardName||'').toLowerCase().includes(search));
   if(activeTagFilter)filtered=filtered.filter(c=>(c.tags||[]).includes(activeTagFilter));
+  filtered.sort((a,b)=>(b.created||0)-(a.created||0));
   const wrap=document.getElementById('cardTableWrap');
   if(filtered.length===0){
     wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">📝</div><h3>${cards.length===0?'No cards yet':'No results'}</h3><p>${cards.length===0?'Add your first card':'Try different keywords'}</p>${cards.length===0?'<button class="btn btn-primary" onclick="openCardModal()">+ Add card</button>':''}</div>`;
