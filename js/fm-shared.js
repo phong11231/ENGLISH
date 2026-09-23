@@ -122,6 +122,18 @@ async function mergeAndLoadCloud(){
   const cloudDecks=cloud.decks||{};
   const cloudSettings=cloud.settings||{};
   const cloudLogs=cloud.reviewLog||{};
+  // One-time migrate from Firestore if RTDB empty
+  if(Object.keys(cloudDecks).length===0){
+    try{
+      const fsSnap=await decksCol().get();
+      fsSnap.forEach(d=>{local.decks[d.id]=d.data();});
+      const fsUser=await userDoc().get();
+      if(fsUser.exists){const fs=fsUser.data().settings||{};local.settings.totalXp=Math.max(local.settings.totalXp||0,fs.totalXp||0);if(fs.streakDays){if(!local.settings.streakDays)local.settings.streakDays={};for(const[day,count]of Object.entries(fs.streakDays)){local.settings.streakDays[day]=Math.max(local.settings.streakDays[day]||0,count);}}}
+      const fsLogs=await reviewLogCol().orderBy('date','desc').limit(500).get();
+      fsLogs.forEach(d=>local.reviewLog.push(d.data()));
+      console.log('[Migration] Firestore->RTDB: '+Object.keys(local.decks).length+' decks');
+    }catch(e){console.error('[Migration] Firestore read error:',e);}
+  }
   // Merge local decks -> RTDB
   const updates={};
   for(const[id,deck]of Object.entries(local.decks)){
@@ -2755,7 +2767,10 @@ async function pushDecksToAll(){
 async function loadSharedDecks(){
   try{
     const snap=await rtdb.ref('sharedDecks').once('value');
-    const val=snap.val();
+    let val=snap.val();
+    if(!val){
+      try{const fsSnap=await firestore.collection('sharedDecks').get();if(!fsSnap.empty){val={};fsSnap.forEach(d=>{val[d.id]=d.data();});await rtdb.ref('sharedDecks').set(stripUndef(val));console.log('[Migration] sharedDecks Firestore->RTDB: '+Object.keys(val).length);}}catch(e){console.error('[Migration] sharedDecks error:',e);}
+    }
     if(!val)return;
     const sharedIds=new Set(Object.keys(val));
     for(const id of Object.keys(db.decks)){
