@@ -133,18 +133,19 @@ async function mergeAndLoadCloud(){
       if(fsUser.exists){const fs=fsUser.data().settings||{};local.settings.totalXp=Math.max(local.settings.totalXp||0,fs.totalXp||0);if(fs.streakDays){if(!local.settings.streakDays)local.settings.streakDays={};for(const[day,count]of Object.entries(fs.streakDays)){local.settings.streakDays[day]=Math.max(local.settings.streakDays[day]||0,count);}}}
       const fsLogs=await reviewLogCol().orderBy('date','desc').limit(500).get();
       fsLogs.forEach(d=>local.reviewLog.push(d.data()));
-      console.log('[Migration] Read '+migratedIds.length+' decks from Firestore: '+migratedIds.join(', '));
-      // Write each deck individually to RTDB
-      for(const did of migratedIds){
-        const dd=stripUndef(local.decks[did]);
-        console.log('[Migration] Writing deck: '+did+' name='+(dd&&dd.name)+' cards='+(dd&&dd.cards&&dd.cards.length));
-        await ref.child('decks/'+did).set(dd);
-      }
+      console.log('[Migration] Read '+migratedIds.length+' decks from Firestore');
+      // Write ALL decks at once to RTDB
+      const allDecks=stripUndef(local.decks);
+      console.log('[Migration] Writing '+Object.keys(allDecks).length+' decks to RTDB...');
+      try{await ref.child('decks').set(allDecks);}catch(we){console.error('[Migration] WRITE ERROR:',we);alert('Migration write failed: '+we.message);return;}
+      // Verify write
+      const verifySnap=await ref.child('decks').once('value');
+      const verifyVal=verifySnap.val()||{};
+      console.log('[Migration] Verify: RTDB has '+Object.keys(verifyVal).length+' decks after write');
+      if(Object.keys(verifyVal).length<migratedIds.length){console.error('[Migration] VERIFY FAILED! Expected '+migratedIds.length+' got '+Object.keys(verifyVal).length);alert('Migration verify failed! RTDB has '+Object.keys(verifyVal).length+' decks, expected '+migratedIds.length);}
       await ref.child('_migrated').set(true);
-      console.log('[Migration] Done! Total decks in local: '+Object.keys(local.decks).length);
-      // After migration: save all data locally, no listener needed this session
+      console.log('[Migration] Done!');
       db.decks=local.decks;
-      db.settings.totalXp=Math.max(db.settings.totalXp||0,cloudSettings.totalXp||0);
       saveLocal();renderCurrentView();
       await loadSharedDecks();
       return;
