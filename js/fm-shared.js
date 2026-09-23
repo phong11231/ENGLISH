@@ -2716,9 +2716,16 @@ async function loadSharedDecks(){
       delete data.sharedBy;delete data.sharedAt;
       data._shared=true;
       const existing=db.decks[id];
-      if(existing){data.defaultDisplayMode=existing.defaultDisplayMode;data.defaultReviewMode=existing.defaultReviewMode;}
+      if(existing){
+        data.defaultDisplayMode=existing.defaultDisplayMode;
+        data.defaultReviewMode=existing.defaultReviewMode;
+        const existingMap={};(existing.cards||[]).forEach(c=>{existingMap[c.id]=c;});
+        (data.cards||[]).forEach(c=>{var ec=existingMap[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;}});
+        const sharedCardIds=new Set((data.cards||[]).map(c=>c.id));
+        const userCards=(existing.cards||[]).filter(c=>!sharedCardIds.has(c.id));
+        data.cards=(data.cards||[]).concat(userCards);
+      }
       db.decks[id]=data;
-      saveDeckData(id,data);
       count++;
     }
     if(count>0){saveLocal();renderCurrentView();}
