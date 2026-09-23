@@ -2277,7 +2277,8 @@ function renderStreakWidget(){
     const isToday=d.toDateString()===today.toDateString();
     weekHTML+='<div class="streak-day'+(isActive?' active':'')+(isToday?' today':'')+'"><span class="streak-day-name">'+dayNames[i]+'</span><div class="streak-day-dot"></div></div>';
   }
-  document.getElementById('streakWidget').innerHTML=
+  var sw=document.getElementById('streakWidget');if(!sw)return;
+  sw.innerHTML=
     '<div class="streak-widget">'+
     '<div class="streak-widget-top">'+
     '<div class="streak-widget-fire">🔥</div>'+
