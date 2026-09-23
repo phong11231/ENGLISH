@@ -25,8 +25,9 @@ if (_routeId && _routeId.indexOf('.html') >= 0) {
   } else if (_routeId === 'stats.html') { location.replace(_basePath+'stats/');
   } else { location.replace(_basePath); }
 }
-var _isDeckRoute = _routeId && !_routeAction && _routeId.indexOf('.html') < 0;
+var _isDeckRoute = _routeId && !_routeAction && _routeId.indexOf('.html') < 0 && _routeId !== 'quizy';
 var _isReviewRoute = _routeId && _routeAction === 'review';
+var _isQuizyRoute = _routeId === 'quizy';
 if (!_routeId) location.replace(_basePath);
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -41,6 +42,7 @@ if (!_routeId) location.replace(_basePath);
     <button class="nav-btn" onclick="showView('decks')" title="Decks" id="navDecks">📚</button>
     <button class="nav-btn" onclick="showView('review')" title="Review" id="navReview">🔄</button>
     <button class="nav-btn" onclick="showView('quiz')" title="Quiz" id="navQuiz">🎯</button>
+    <button class="nav-btn" onclick="location.href=_basePath+'quizy'" title="Quizy" id="navQuizy">⚡</button>
     <button class="nav-btn" onclick="showView('stats')" title="Stats" id="navStats">📊</button>
     <button class="nav-btn" onclick="toggleTheme()" title="Theme" id="navTheme">🌙</button>
     <button class="nav-btn" onclick="openAuthModal()" title="Sign in" id="navLogin">👤</button>
@@ -463,6 +465,43 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
       updateStreakUI();
       showCurrentCard();
       document.title = 'FlashMind — ' + db.decks[_deckId].name;
+    };
+  } else if (_isQuizyRoute) {
+    document.getElementById('viewReview').classList.add('active');
+    window._isQuizyMode = true;
+    var _quizyStarted = false;
+    window.pageRender = function(){
+      var deckIds = Object.keys(db.decks);
+      if(deckIds.length === 0) return;
+      if(_quizyStarted) return;
+      _quizyStarted = true;
+      currentDeckId = deckIds[0];
+      var allCards = [];
+      deckIds.forEach(function(id){
+        getDeckCards(id).filter(function(c){return !c.suspended && c.front && c.back;}).forEach(function(c){
+          c._deckId = id;
+          allCards.push(c);
+        });
+      });
+      if(allCards.length === 0){
+        toast('No cards to review!');
+        location.href = _basePath;
+        return;
+      }
+      reviewQueue = allCards.slice();
+      for(var i=reviewQueue.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=reviewQueue[i];reviewQueue[i]=reviewQueue[j];reviewQueue[j]=tmp;}
+      reviewIndex = 0;
+      undoStack = [];
+      streak=0;bestStreak=0;sessionXp=0;sessionCorrect=0;sessionTotal=0;
+      var fabEl=document.getElementById('fabBtn');
+      if(fabEl) fabEl.style.display='none';
+      document.getElementById('reviewDone').style.display='none';
+      document.getElementById('undoBtn').style.display='none';
+      document.getElementById('reviewDeckName').textContent = 'Quizy — All Decks';
+      initSpeedBtn();
+      updateStreakUI();
+      showCurrentCard();
+      document.title = 'FlashMind — Quizy';
     };
   }
   if(typeof pageRender === 'function') pageRender();
