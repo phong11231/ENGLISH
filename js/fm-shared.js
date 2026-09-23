@@ -153,7 +153,8 @@ async function mergeAndLoadCloud(){
   const newLogs=local.reviewLog.filter(e=>!existingDates.has(e.date+'_'+e.cardId));
   newLogs.forEach(e=>{updates['reviewLog/'+ref.child('reviewLog').push().key]=e;});
   if(Object.keys(updates).length>0)await ref.update(stripUndef(updates));
-  // Load cloud decks into local
+  // Load all decks (migrated + cloud) into db
+  for(const[id,deck]of Object.entries(local.decks)){db.decks[id]=deck;}
   for(const[id,deck]of Object.entries(cloudDecks)){db.decks[id]=deck;}
   // Load cloud review logs (latest 500)
   const logEntries=Object.values(cloudLogs);
