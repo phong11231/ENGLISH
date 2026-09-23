@@ -453,9 +453,12 @@ function saveDeck(){
 function deleteDeck(id){
   var deck=db.decks[id];if(!deck)return;
   if(deck._shared&&!isAdmin){
-    if(!confirm('Remove "'+deck.name+'" from your list? You can get it back by syncing.'))return;
-    getSubDecks(id).forEach(([subId])=>{delete db.decks[subId];deleteDeckData(subId);});
+    if(!confirm('Remove "'+deck.name+'" from your list?'))return;
+    if(!db.settings.dismissedShared)db.settings.dismissedShared=[];
+    if(!db.settings.dismissedShared.includes(id))db.settings.dismissedShared.push(id);
+    getSubDecks(id).forEach(([subId])=>{if(!db.settings.dismissedShared.includes(subId))db.settings.dismissedShared.push(subId);delete db.decks[subId];deleteDeckData(subId);});
     delete db.decks[id];deleteDeckData(id);
+    if(currentUser)rtdbUser().child('settings/dismissedShared').set(db.settings.dismissedShared).catch(console.error);
     renderDecks();toast('Removed');return;
   }
   if(!confirm('Delete "'+deck.name+'" and everything inside?'))return;
@@ -2817,12 +2820,14 @@ async function loadSharedDecks(){
       try{const fsSnap=await firestore.collection('sharedDecks').get();if(!fsSnap.empty){val={};fsSnap.forEach(d=>{val[d.id]=d.data();});await rtdb.ref('sharedDecks').set(stripUndef(val));console.log('[Migration] sharedDecks Firestore->RTDB: '+Object.keys(val).length);}}catch(e){console.error('[Migration] sharedDecks error:',e);}
     }
     if(!val)return;
+    const dismissed=new Set(db.settings.dismissedShared||[]);
     const sharedIds=new Set(Object.keys(val));
     for(const id of Object.keys(db.decks)){
       if(db.decks[id]._shared&&!sharedIds.has(id)){delete db.decks[id];deleteDeckData(id);}
     }
     let count=0;
     for(const[id,raw] of Object.entries(val)){
+      if(dismissed.has(id))continue;
       const data=Object.assign({},raw);
       delete data.sharedBy;delete data.sharedAt;
       data._shared=true;
