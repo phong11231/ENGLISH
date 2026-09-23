@@ -1982,6 +1982,20 @@ function showDialogueAnswer(){
 
 function normalize(s){return s.trim().toLowerCase().replace(/\s+/g,' ');}
 
+function diffWords(typed,answer){
+  const tw=typed.trim().split(/\s+/),aw=answer.trim().split(/\s+/);
+  let html='';
+  const max=Math.max(tw.length,aw.length);
+  for(let i=0;i<max;i++){
+    const t=(tw[i]||'').toLowerCase(),a=(aw[i]||'').toLowerCase();
+    if(i>0)html+=' ';
+    if(!tw[i]){html+='<span style="color:var(--green);font-weight:700;text-decoration:underline">'+esc(aw[i])+'</span>';}
+    else if(!aw[i]){html+='<span style="color:var(--red);text-decoration:line-through;opacity:.6">'+esc(tw[i])+'</span>';}
+    else if(t===a){html+='<span style="color:var(--green);font-weight:600">'+esc(aw[i])+'</span>';}
+    else{html+='<span style="color:var(--red);font-weight:700;text-decoration:line-through">'+esc(tw[i])+'</span> <span style="color:var(--green);font-weight:700">'+esc(aw[i])+'</span>';}
+  }
+  return html;
+}
 function checkTypedAnswer(){
   const card=reviewQueue[reviewIndex];const typed=document.getElementById('typeAnswerInput').value;
   const correct=normalize(card.back)===normalize(typed);
@@ -1995,7 +2009,7 @@ function checkTypedAnswer(){
     document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
   } else {
     input.className='type-answer-input wrong';result.className='type-answer-result wrong';
-    result.innerHTML='✗ Wrong — Answer: <strong>'+esc(card.back)+'</strong>';result.style.display='block';
+    result.innerHTML='✗ Wrong<div style="margin-top:8px;font-size:15px;line-height:1.6">'+diffWords(typed,card.back)+'</div>';result.style.display='block';
     document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
   }
 }
