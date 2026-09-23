@@ -543,8 +543,9 @@ function openCardModal(cardId){
     document.getElementById('cardNameInput').value='';
     document.getElementById('cardDefinitionInput').value='';
     setFrontFields(['']);document.getElementById('cardBackInput').value='';
-    document.getElementById('cardReviewMode').value='flip';
-    document.getElementById('cardDisplayMode').value='voice';
+    var _deck=db.decks[currentDeckId];
+    document.getElementById('cardReviewMode').value=(_deck&&_deck.defaultReviewMode)||'flip';
+    document.getElementById('cardDisplayMode').value=(_deck&&_deck.defaultDisplayMode)||'voice';
     onDisplayModeChange();
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
     document.getElementById('cardYoutubeUrl').value='';document.getElementById('cardDriveUrl').value='';document.getElementById('cardYtStart').value='';document.getElementById('cardYtEnd').value='';
@@ -565,6 +566,8 @@ function saveCard(){
 
   const cardReviewMode=document.getElementById('cardReviewMode').value;
   const cardDisplayMode=document.getElementById('cardDisplayMode').value;
+  deck.defaultReviewMode=cardReviewMode;
+  deck.defaultDisplayMode=cardDisplayMode;
   const ytUrl=document.getElementById('cardYoutubeUrl').value.trim();
   const ytStart=document.getElementById('cardYtStart').value?parseFloat(document.getElementById('cardYtStart').value):null;
   const ytEnd=document.getElementById('cardYtEnd').value?parseFloat(document.getElementById('cardYtEnd').value):null;
@@ -676,7 +679,7 @@ function deleteCard(cardId){
 }
 
 // ===== BULK ADD =====
-function openBulkAddModal(){if(!requireAuth())return;document.getElementById('bulkInput').value='';document.getElementById('bulkTagsInput').value='';document.getElementById('bulkModal').classList.add('active');}
+function openBulkAddModal(){if(!requireAuth())return;document.getElementById('bulkInput').value='';document.getElementById('bulkTagsInput').value='';var _d=db.decks[currentDeckId];if(_d&&_d.defaultReviewMode)document.getElementById('bulkReviewMode').value=_d.defaultReviewMode;document.getElementById('bulkModal').classList.add('active');}
 function closeBulkModal(){document.getElementById('bulkModal').classList.remove('active');}
 
 function saveBulkCards(){
