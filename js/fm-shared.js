@@ -98,11 +98,8 @@ var _lastVisSync=0;
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&currentUser){
     var now=Date.now();
-    if(now-_lastVisSync<5000)return;
+    if(now-_lastVisSync<60000)return;
     _lastVisSync=now;
-    if(unsubDecks)unsubDecks();
-    unsubDecks=decksCol().onSnapshot(s=>{db.decks={};s.forEach(d=>{db.decks[d.id]=d.data();});saveLocal();renderCurrentView();});
-    reviewLogCol().orderBy('date','desc').limit(5000).get().then(ls=>{db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();renderCurrentView();});
     userDoc().get().then(doc=>{if(doc.exists){const cs=doc.data().settings||{};db.settings.totalXp=Math.max(db.settings.totalXp||0,cs.totalXp||0);if(cs.streakDays){if(!db.settings.streakDays)db.settings.streakDays={};for(const[day,count]of Object.entries(cs.streakDays)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}}saveLocal();renderCurrentView();}});
   }
 });
@@ -118,7 +115,7 @@ async function mergeAndLoadCloud(){
   const snap=await decksCol().get(); const cloudIds=new Set();
   snap.forEach(d=>cloudIds.add(d.id));
   for(const[id,deck]of Object.entries(local.decks)){if(!cloudIds.has(id))await decksCol().doc(id).set(deck);}
-  const existingLogs=await reviewLogCol().orderBy('date','desc').limit(5000).get();
+  const existingLogs=await reviewLogCol().orderBy('date','desc').limit(500).get();
   const existingDates=new Set();existingLogs.forEach(d=>{const e=d.data();existingDates.add(e.date+'_'+e.cardId);});
   const newLogs=local.reviewLog.filter(e=>!existingDates.has(e.date+'_'+e.cardId));
   if(newLogs.length>0){const b=firestore.batch();newLogs.forEach(e=>b.set(reviewLogCol().doc(),e));await b.commit();}
@@ -134,8 +131,18 @@ async function mergeAndLoadCloud(){
   }
   await userDoc().set({settings:{totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20}},{merge:true});
   if(unsubDecks)unsubDecks();
-  unsubDecks=decksCol().onSnapshot(s=>{db.decks={};s.forEach(d=>{db.decks[d.id]=d.data();});saveLocal();renderCurrentView();});
-  const ls=await reviewLogCol().orderBy('date','desc').limit(5000).get();
+  unsubDecks=decksCol().onSnapshot(s=>{
+    s.docChanges().forEach(ch=>{
+      if(ch.type==='removed'){delete db.decks[ch.doc.id];}
+      else{
+        var nd=ch.doc.data(),ex=db.decks[ch.doc.id];
+        if(ex&&ex._shared){nd.defaultDisplayMode=ex.defaultDisplayMode;nd.defaultReviewMode=ex.defaultReviewMode;var em={};(ex.cards||[]).forEach(c=>{em[c.id]=c;});(nd.cards||[]).forEach(c=>{var ec=em[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;}});var si=new Set((nd.cards||[]).map(c=>c.id));var uc=(ex.cards||[]).filter(c=>!si.has(c.id));nd.cards=(nd.cards||[]).concat(uc);}
+        db.decks[ch.doc.id]=nd;
+      }
+    });
+    saveLocal();renderCurrentView();
+  });
+  const ls=await reviewLogCol().orderBy('date','desc').limit(500).get();
   db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();renderCurrentView();
   await loadSharedDecks();
 }
