@@ -134,6 +134,8 @@ async function mergeAndLoadCloud(){
       const fsLogs=await reviewLogCol().orderBy('date','desc').limit(500).get();
       fsLogs.forEach(d=>local.reviewLog.push(d.data()));
       console.log('[Migration] Read '+migratedIds.length+' decks from Firestore');
+      // Remove _shared flag from migrated decks so loadSharedDecks won't delete them
+      for(const did of migratedIds){if(local.decks[did]&&local.decks[did]._shared)delete local.decks[did]._shared;}
       // Write ALL decks at once to RTDB
       const allDecks=stripUndef(local.decks);
       console.log('[Migration] Writing '+Object.keys(allDecks).length+' decks to RTDB...');
