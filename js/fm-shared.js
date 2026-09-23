@@ -5,6 +5,8 @@ function _nav(path){ return _basePath + path; }
 // ===== FIREBASE =====
 firebase.initializeApp({apiKey:"AIzaSyD7UXDjRS0NaT1OYRBvpxqpirZz3SQYVyc",authDomain:"flashmind-8b1bc.firebaseapp.com",projectId:"flashmind-8b1bc",storageBucket:"flashmind-8b1bc.firebasestorage.app",messagingSenderId:"482268690491",appId:"1:482268690491:web:2c53f56d0bdf8d30c7c41e"});
 const auth = firebase.auth(), firestore = firebase.firestore();
+const dataApp = firebase.initializeApp({apiKey:"AIzaSyA6Qyt5t5Ik0ek29gNUeNCUe4cYP6TfITM",databaseURL:"https://flashmind-data-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"flashmind-data"},'data');
+const rtdb = dataApp.database();
 let currentUser = null, unsubDecks = null, lastUserId = null;
 
 // ===== DATA =====
@@ -100,56 +102,78 @@ document.addEventListener('visibilitychange',()=>{
     var now=Date.now();
     if(now-_lastVisSync<60000)return;
     _lastVisSync=now;
-    userDoc().get().then(doc=>{if(doc.exists){const cs=doc.data().settings||{};db.settings.totalXp=Math.max(db.settings.totalXp||0,cs.totalXp||0);if(cs.streakDays){if(!db.settings.streakDays)db.settings.streakDays={};for(const[day,count]of Object.entries(cs.streakDays)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}}saveLocal();renderCurrentView();}});
+    rtdbUser().child('settings').once('value').then(s=>{const cs=s.val()||{};db.settings.totalXp=Math.max(db.settings.totalXp||0,cs.totalXp||0);if(cs.streakDays){if(!db.settings.streakDays)db.settings.streakDays={};for(const[day,count]of Object.entries(cs.streakDays)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}}saveLocal();renderCurrentView();});
   }
 });
 function userDoc(){return firestore.collection('users').doc(currentUser.uid);}
 function decksCol(){return userDoc().collection('decks');}
 function reviewLogCol(){return userDoc().collection('reviewLog');}
+function rtdbUser(){return rtdb.ref('users/'+currentUser.uid);}
 
 async function mergeAndLoadCloud(){
   const switchedUser=(lastUserId&&lastUserId!==currentUser.uid);
   lastUserId=currentUser.uid;
   if(switchedUser){db.decks={};db.reviewLog=[];db.settings={dailyGoal:20,leechThreshold:8};saveLocal();}
   const local=JSON.parse(JSON.stringify(db));
-  const snap=await decksCol().get(); const cloudIds=new Set();
-  snap.forEach(d=>cloudIds.add(d.id));
-  for(const[id,deck]of Object.entries(local.decks)){if(!cloudIds.has(id))await decksCol().doc(id).set(deck);}
-  const existingLogs=await reviewLogCol().orderBy('date','desc').limit(500).get();
-  const existingDates=new Set();existingLogs.forEach(d=>{const e=d.data();existingDates.add(e.date+'_'+e.cardId);});
-  const newLogs=local.reviewLog.filter(e=>!existingDates.has(e.date+'_'+e.cardId));
-  if(newLogs.length>0){const b=firestore.batch();newLogs.forEach(e=>b.set(reviewLogCol().doc(),e));await b.commit();}
-  // Sync settings (streak, XP)
-  const cloudSettings=await userDoc().get();
-  if(cloudSettings.exists){
-    const cs=cloudSettings.data().settings||{};
-    db.settings.totalXp=Math.max(db.settings.totalXp||0,cs.totalXp||0);
-    if(cs.streakDays){
-      if(!db.settings.streakDays)db.settings.streakDays={};
-      for(const[day,count]of Object.entries(cs.streakDays)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}
-    }
+  const ref=rtdbUser();
+  const snap=await ref.once('value');
+  const cloud=snap.val()||{};
+  const cloudDecks=cloud.decks||{};
+  const cloudSettings=cloud.settings||{};
+  const cloudLogs=cloud.reviewLog||{};
+  // Merge local decks -> RTDB
+  const updates={};
+  for(const[id,deck]of Object.entries(local.decks)){
+    if(!cloudDecks[id])updates['decks/'+id]=deck;
   }
-  await userDoc().set({settings:{totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20}},{merge:true});
+  // Merge settings
+  db.settings.totalXp=Math.max(db.settings.totalXp||0,cloudSettings.totalXp||0);
+  if(cloudSettings.streakDays){
+    if(!db.settings.streakDays)db.settings.streakDays={};
+    for(const[day,count]of Object.entries(cloudSettings.streakDays)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}
+  }
+  updates['settings']={totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20,leechThreshold:db.settings.leechThreshold||8};
+  // Merge review logs
+  const existingDates=new Set();
+  Object.values(cloudLogs).forEach(e=>{existingDates.add(e.date+'_'+e.cardId);});
+  const newLogs=local.reviewLog.filter(e=>!existingDates.has(e.date+'_'+e.cardId));
+  newLogs.forEach(e=>{updates['reviewLog/'+ref.child('reviewLog').push().key]=e;});
+  if(Object.keys(updates).length>0)await ref.update(updates);
+  // Load cloud decks into local
+  for(const[id,deck]of Object.entries(cloudDecks)){db.decks[id]=deck;}
+  // Load cloud review logs (latest 500)
+  const logEntries=Object.values(cloudLogs);
+  logEntries.sort((a,b)=>(a.date||0)-(b.date||0));
+  db.reviewLog=logEntries.slice(-500);
+  // Listen for realtime changes
   if(unsubDecks)unsubDecks();
-  unsubDecks=decksCol().onSnapshot(s=>{
-    s.docChanges().forEach(ch=>{
-      if(ch.type==='removed'){delete db.decks[ch.doc.id];}
-      else{
-        var nd=ch.doc.data(),ex=db.decks[ch.doc.id];
-        if(ex&&ex._shared){nd.defaultDisplayMode=ex.defaultDisplayMode;nd.defaultReviewMode=ex.defaultReviewMode;var em={};(ex.cards||[]).forEach(c=>{em[c.id]=c;});(nd.cards||[]).forEach(c=>{var ec=em[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;}});var si=new Set((nd.cards||[]).map(c=>c.id));var uc=(ex.cards||[]).filter(c=>!si.has(c.id));nd.cards=(nd.cards||[]).concat(uc);}
-        db.decks[ch.doc.id]=nd;
+  const decksRef=ref.child('decks');
+  const onDecksValue=decksRef.on('value',s=>{
+    const val=s.val()||{};
+    const merged={};
+    for(const[id,nd]of Object.entries(val)){
+      var ex=db.decks[id];
+      if(ex&&ex._shared){
+        nd.defaultDisplayMode=ex.defaultDisplayMode;nd.defaultReviewMode=ex.defaultReviewMode;
+        var em={};(ex.cards||[]).forEach(c=>{em[c.id]=c;});
+        (nd.cards||[]).forEach(c=>{var ec=em[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;}});
+        var si=new Set((nd.cards||[]).map(c=>c.id));var uc=(ex.cards||[]).filter(c=>!si.has(c.id));nd.cards=(nd.cards||[]).concat(uc);
       }
-    });
+      merged[id]=nd;
+    }
+    // Keep local-only decks not yet synced
+    for(const[id,d]of Object.entries(db.decks)){if(!merged[id])merged[id]=d;}
+    db.decks=merged;
     saveLocal();renderCurrentView();
   });
-  const ls=await reviewLogCol().orderBy('date','desc').limit(500).get();
-  db.reviewLog=[];ls.forEach(d=>db.reviewLog.push(d.data()));db.reviewLog.reverse();saveLocal();renderCurrentView();
+  unsubDecks=()=>decksRef.off('value',onDecksValue);
+  saveLocal();renderCurrentView();
   await loadSharedDecks();
 }
 async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}await mergeAndLoadCloud();toggleUserMenu();}
-function saveDeckData(id,data){saveLocal();if(currentUser){decksCol().doc(id).set(data).catch(console.error);if(data._shared&&isAdmin)firestore.collection('sharedDecks').doc(id).set(Object.assign({},data,{sharedBy:currentUser.uid,sharedAt:Date.now()})).catch(console.error);}}
-function deleteDeckData(id){saveLocal();if(currentUser)decksCol().doc(id).delete().catch(console.error);}
-function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)reviewLogCol().add(entry).catch(console.error);}
+function saveDeckData(id,data){saveLocal();if(currentUser){rtdbUser().child('decks/'+id).set(data).catch(console.error);if(data._shared&&isAdmin)rtdb.ref('sharedDecks/'+id).set(Object.assign({},data,{sharedBy:currentUser.uid,sharedAt:Date.now()})).catch(console.error);}}
+function deleteDeckData(id){saveLocal();if(currentUser)rtdbUser().child('decks/'+id).remove().catch(console.error);}
+function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)rtdbUser().child('reviewLog').push(entry).catch(console.error);}
 
 // ===== SM-2 =====
 function newCardData(){return{id:crypto.randomUUID(),cardName:'',front:'',fronts:[],back:'',definition:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,driveUrl:'',cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
@@ -406,7 +430,7 @@ function deleteDeck(id){
   const wasShared=deck._shared;
   getSubDecks(id).forEach(([subId])=>deleteDeck(subId));
   delete db.decks[id];deleteDeckData(id);
-  if(wasShared&&isAdmin&&typeof firestore!=='undefined'){firestore.collection('sharedDecks').doc(id).delete().catch(console.error);}
+  if(wasShared&&isAdmin){rtdb.ref('sharedDecks/'+id).remove().catch(console.error);}
   renderDecks();toast('Deleted');
 }
 
@@ -781,8 +805,9 @@ function restoreBackup(){
         db=data;if(!db.reviewLog)db.reviewLog=[];if(!db.settings)db.settings={dailyGoal:20,leechThreshold:8};
         saveLocal();
         if(currentUser){
-          Object.entries(db.decks).forEach(function(e){decksCol().doc(e[0]).set(e[1]).catch(console.error);});
-          userDoc().set({settings:db.settings},{merge:true}).catch(console.error);
+          var restoreData={decks:{},settings:db.settings};
+          Object.entries(db.decks).forEach(function(e){restoreData.decks[e[0]]=e[1];});
+          rtdbUser().update(restoreData).catch(console.error);
         }
         renderCurrentView();toast('Backup restored! '+Object.keys(db.decks).length+' decks loaded');
       }catch(e){toast('Error reading file: '+e.message);}
@@ -2192,7 +2217,7 @@ function answerCard(quality){
   if(!db.settings.totalXp)db.settings.totalXp=0;
   db.settings.totalXp+=getXpForQuality(quality)*getMultiplier();
   saveLocal();
-  if(currentUser)userDoc().set({settings:{totalXp:db.settings.totalXp,streakDays:db.settings.streakDays,dailyGoal:db.settings.dailyGoal||20}},{merge:true}).catch(console.error);
+  if(currentUser)rtdbUser().child('settings').update({totalXp:db.settings.totalXp,streakDays:db.settings.streakDays,dailyGoal:db.settings.dailyGoal||20}).catch(console.error);
 
   if(quality===0){const ri=Math.min(reviewQueue.length,reviewIndex+3+Math.floor(Math.random()*3));reviewQueue.splice(ri,0,card);}
   reviewIndex++;
@@ -2717,32 +2742,26 @@ async function pushDecksToAll(){
   if(deckKeys.length===0){toast('No decks to push');return;}
   if(!confirm('Push all your decks ('+deckKeys.length+') to every user?'))return;
   try{
-    const batch=firestore.batch();
-    const sharedRef=firestore.collection('sharedDecks');
-    const existing=await sharedRef.get();
-    existing.forEach(d=>batch.delete(d.ref));
+    const sharedData={};
     for(const[id,deck] of Object.entries(db.decks)){
-      batch.set(sharedRef.doc(id),Object.assign({},deck,{sharedBy:currentUser.uid,sharedAt:Date.now()}));
+      sharedData[id]=Object.assign({},deck,{sharedBy:currentUser.uid,sharedAt:Date.now()});
     }
-    await batch.commit();
+    await rtdb.ref('sharedDecks').set(sharedData);
     toast('Pushed '+deckKeys.length+' decks to all users!');
   }catch(e){console.error(e);toast('Push failed: '+e.message);}
 }
 async function loadSharedDecks(){
   try{
-    const snap=await firestore.collection('sharedDecks').get();
-    if(snap.empty)return;
-    // Remove old shared decks from user
-    const sharedIds=new Set();
-    snap.forEach(d=>sharedIds.add(d.id));
+    const snap=await rtdb.ref('sharedDecks').once('value');
+    const val=snap.val();
+    if(!val)return;
+    const sharedIds=new Set(Object.keys(val));
     for(const id of Object.keys(db.decks)){
       if(db.decks[id]._shared&&!sharedIds.has(id)){delete db.decks[id];deleteDeckData(id);}
     }
-    // Add/replace with admin's version
     let count=0;
-    for(const doc of snap.docs){
-      const id=doc.id;
-      const data=doc.data();
+    for(const[id,raw] of Object.entries(val)){
+      const data=Object.assign({},raw);
       delete data.sharedBy;delete data.sharedAt;
       data._shared=true;
       const existing=db.decks[id];
@@ -2759,7 +2778,7 @@ async function loadSharedDecks(){
       count++;
     }
     if(count>0){saveLocal();renderCurrentView();}
-  }catch(e){console.error('[SharedDecks] error:',e.code,e.message);}
+  }catch(e){console.error('[SharedDecks] error:',e.code||'',e.message);}
 }
 updateAdminUI();
 
