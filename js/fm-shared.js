@@ -173,6 +173,7 @@ async function mergeAndLoadCloud(){
   const decksRef=ref.child('decks');
   const onDecksValue=decksRef.on('value',s=>{
     const val=s.val()||{};
+    console.log('[RTDB listener] received '+Object.keys(val).length+' decks: '+Object.keys(val).join(', '));
     const merged={};
     for(const[id,nd]of Object.entries(val)){
       var ex=db.decks[id];
@@ -187,6 +188,7 @@ async function mergeAndLoadCloud(){
     // Keep local-only decks not yet synced
     for(const[id,d]of Object.entries(db.decks)){if(!merged[id])merged[id]=d;}
     db.decks=merged;
+    console.log('[RTDB listener] final db.decks: '+Object.keys(db.decks).length+' -> '+Object.keys(db.decks).map(id=>(db.decks[id].name||id)).join(', '));
     saveLocal();renderCurrentView();
   });
   unsubDecks=()=>decksRef.off('value',onDecksValue);
