@@ -53,6 +53,7 @@ if (!_routeId) location.replace(_basePath);
     <div class="user-menu-name" id="userName"></div>
     <button class="user-menu-item" onclick="syncToCloud()">☁️ Sync to cloud</button>
     <button class="user-menu-item" onclick="exportAllData()">📤 Export data</button>
+    <button class="user-menu-item" onclick="restoreBackup()">📥 Restore backup</button>
     <button class="user-menu-item" onclick="openAdminModal()">🔑 Admin</button>
     <button class="user-menu-item" id="adminPushBtn" onclick="pushDecksToAll()" style="display:none">📢 Push decks to all users</button>
     <button class="user-menu-item danger" onclick="signOutUser()">🚪 Sign out</button>
@@ -401,7 +402,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="/ENGLISH/js/fm-shared.js?v=32"></script>
+<script src="/ENGLISH/js/fm-shared.js?v=33"></script>
 <script>
 (function(){
   if (_isDeckRoute) {

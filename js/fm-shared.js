@@ -768,6 +768,29 @@ function exportAllData(){
   downloadFile('flashmind_backup.json',data,'application/json');
   toggleUserMenu();
 }
+function restoreBackup(){
+  const input=document.createElement('input');input.type='file';input.accept='.json';
+  input.onchange=function(){
+    const file=input.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=function(){
+      try{
+        const data=JSON.parse(reader.result);
+        if(!data.decks){toast('Invalid backup file');return;}
+        if(!confirm('Restore backup? This will replace ALL current data with the backup.'))return;
+        db=data;if(!db.reviewLog)db.reviewLog=[];if(!db.settings)db.settings={dailyGoal:20,leechThreshold:8};
+        saveLocal();
+        if(currentUser){
+          Object.entries(db.decks).forEach(function(e){decksCol().doc(e[0]).set(e[1]).catch(console.error);});
+          userDoc().set({settings:db.settings},{merge:true}).catch(console.error);
+        }
+        renderCurrentView();toast('Backup restored! '+Object.keys(db.decks).length+' decks loaded');
+      }catch(e){toast('Error reading file: '+e.message);}
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
 
 function downloadFile(name,content,type){
   const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);
