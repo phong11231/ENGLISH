@@ -2709,6 +2709,8 @@ async function loadSharedDecks(){
       const data=doc.data();
       delete data.sharedBy;delete data.sharedAt;
       data._shared=true;
+      const existing=db.decks[id];
+      if(existing){data.defaultDisplayMode=existing.defaultDisplayMode;data.defaultReviewMode=existing.defaultReviewMode;}
       db.decks[id]=data;
       saveDeckData(id,data);
       count++;
