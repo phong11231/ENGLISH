@@ -127,7 +127,7 @@ async function mergeAndLoadCloud(){
   if(!cloud._migrated){
     try{
       const fsSnap=await decksCol().get();
-      fsSnap.forEach(d=>{if(!local.decks[d.id]&&!cloudDecks[d.id])local.decks[d.id]=d.data();});
+      fsSnap.forEach(d=>{local.decks[d.id]=local.decks[d.id]||d.data();});
       const fsUser=await userDoc().get();
       if(fsUser.exists){const fs=fsUser.data().settings||{};local.settings.totalXp=Math.max(local.settings.totalXp||0,fs.totalXp||0);if(fs.streakDays){if(!local.settings.streakDays)local.settings.streakDays={};for(const[day,count]of Object.entries(fs.streakDays)){local.settings.streakDays[day]=Math.max(local.settings.streakDays[day]||0,count);}}}
       const fsLogs=await reviewLogCol().orderBy('date','desc').limit(500).get();
@@ -136,9 +136,9 @@ async function mergeAndLoadCloud(){
       console.log('[Migration] Firestore->RTDB: '+Object.keys(local.decks).length+' decks');
     }catch(e){console.error('[Migration] Firestore read error:',e);}
   }
-  // Merge local decks -> RTDB
+  // Merge ALL local decks -> RTDB (overwrite to ensure migrated decks persist)
   for(const[id,deck]of Object.entries(local.decks)){
-    if(!cloudDecks[id])updates['decks/'+id]=deck;
+    updates['decks/'+id]=deck;
   }
   // Merge settings
   db.settings.totalXp=Math.max(db.settings.totalXp||0,cloudSettings.totalXp||0);
