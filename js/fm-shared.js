@@ -122,15 +122,16 @@ async function mergeAndLoadCloud(){
   const cloudDecks=cloud.decks||{};
   const cloudSettings=cloud.settings||{};
   const cloudLogs=cloud.reviewLog||{};
-  // One-time migrate from Firestore if RTDB empty
-  if(Object.keys(cloudDecks).length===0){
+  // One-time migrate from Firestore if not done yet
+  if(!cloud._migrated){
     try{
       const fsSnap=await decksCol().get();
-      fsSnap.forEach(d=>{local.decks[d.id]=d.data();});
+      fsSnap.forEach(d=>{if(!local.decks[d.id]&&!cloudDecks[d.id])local.decks[d.id]=d.data();});
       const fsUser=await userDoc().get();
       if(fsUser.exists){const fs=fsUser.data().settings||{};local.settings.totalXp=Math.max(local.settings.totalXp||0,fs.totalXp||0);if(fs.streakDays){if(!local.settings.streakDays)local.settings.streakDays={};for(const[day,count]of Object.entries(fs.streakDays)){local.settings.streakDays[day]=Math.max(local.settings.streakDays[day]||0,count);}}}
       const fsLogs=await reviewLogCol().orderBy('date','desc').limit(500).get();
       fsLogs.forEach(d=>local.reviewLog.push(d.data()));
+      updates['_migrated']=true;
       console.log('[Migration] Firestore->RTDB: '+Object.keys(local.decks).length+' decks');
     }catch(e){console.error('[Migration] Firestore read error:',e);}
   }
