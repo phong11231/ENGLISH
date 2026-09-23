@@ -876,8 +876,8 @@ function toggleSleepDrill(){
   var btn=document.getElementById('sleepDrillBtn');
   if(btn){
     btn.textContent=sleepDrillOn?'🔄 Speed Drill: ON':'🔄 Speed Drill: OFF';
-    btn.style.color=sleepDrillOn?'#22c55e':'rgba(255,255,255,0.5)';
-    btn.style.borderColor=sleepDrillOn?'#22c55e':'rgba(255,255,255,0.15)';
+    btn.style.color=sleepDrillOn?'var(--green)':'var(--ink-dim,rgba(255,255,255,0.5))';
+    btn.style.borderColor=sleepDrillOn?'var(--green)':'var(--line,rgba(255,255,255,0.15))';
   }
   updateDrillInfo();
 }
@@ -2557,7 +2557,7 @@ function showQuizQuestion(){
     voiceBtnEl.innerHTML='';
   }
   const optWrap=document.getElementById('quizOptions');
-  optWrap.innerHTML=q.options.map((o,i)=>'<button class="quiz-option" onclick="quizAnswer('+i+')" id="quizOpt'+i+'" style="padding:14px 20px;border-radius:var(--r-md);background:var(--glass);border:1px solid var(--glass-border);color:#fff;font-size:15px;cursor:pointer;text-align:left;transition:.2s">'+esc(o.back.replace(/<[^>]*>/g,''))+'</button>').join('');
+  optWrap.innerHTML=q.options.map((o,i)=>'<button class="quiz-option" onclick="quizAnswer('+i+')" id="quizOpt'+i+'" style="padding:14px 20px;border-radius:var(--r-md);background:var(--glass);border:1px solid var(--glass-border);color:var(--ink);font-size:15px;cursor:pointer;text-align:left;transition:.2s">'+esc(o.back.replace(/<[^>]*>/g,''))+'</button>').join('');
 }
 function quizSpeak(){
   const q=quizCards[quizIndex];
@@ -2568,13 +2568,15 @@ function quizAnswer(idx){
   quizAnswered=true;
   const q=quizCards[quizIndex];
   const correct=q.correctIdx;
-  document.getElementById('quizOpt'+correct).style.background='rgba(34,197,94,.3)';
-  document.getElementById('quizOpt'+correct).style.borderColor='#22c55e';
+  document.getElementById('quizOpt'+correct).style.background='var(--green-bg,rgba(34,197,94,.15))';
+  document.getElementById('quizOpt'+correct).style.borderColor='var(--green)';
+  document.getElementById('quizOpt'+correct).style.color='var(--green)';
   if(idx===correct){
     quizCorrect++;
   } else {
-    document.getElementById('quizOpt'+idx).style.background='rgba(239,68,68,.3)';
-    document.getElementById('quizOpt'+idx).style.borderColor='#ef4444';
+    document.getElementById('quizOpt'+idx).style.background='var(--red-bg,rgba(239,68,68,.15))';
+    document.getElementById('quizOpt'+idx).style.borderColor='var(--red)';
+    document.getElementById('quizOpt'+idx).style.color='var(--red)';
   }
   setTimeout(()=>{quizIndex++;showQuizQuestion();},1200);
 }
@@ -2600,7 +2602,7 @@ function showUploadProgress(pct,name){
   if(!bar){
     bar=document.createElement('div');bar.id='uploadProgressBar';
     bar.style.cssText='position:fixed;top:0;left:0;width:100%;z-index:99999;background:rgba(0,0,0,0.7);padding:8px 16px;color:#fff;font-size:14px;display:flex;align-items:center;gap:10px';
-    bar.innerHTML='<span id="uploadProgressText"></span><div style="flex:1;height:8px;background:#333;border-radius:4px;overflow:hidden"><div id="uploadProgressFill" style="height:100%;background:#4ade80;border-radius:4px;transition:width 0.2s"></div></div><span id="uploadProgressPct"></span>';
+    bar.innerHTML='<span id="uploadProgressText"></span><div style="flex:1;height:8px;background:rgba(255,255,255,.2);border-radius:4px;overflow:hidden"><div id="uploadProgressFill" style="height:100%;background:var(--green,#4ade80);border-radius:4px;transition:width 0.2s"></div></div><span id="uploadProgressPct"></span>';
     document.body.appendChild(bar);
   }
   bar.style.display='flex';
