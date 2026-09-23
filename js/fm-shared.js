@@ -8,6 +8,7 @@ const auth = firebase.auth(), firestore = firebase.firestore();
 const dataApp = firebase.initializeApp({apiKey:"AIzaSyA6Qyt5t5Ik0ek29gNUeNCUe4cYP6TfITM",databaseURL:"https://flashmind-data-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"flashmind-data"},'data');
 const rtdb = dataApp.database();
 let currentUser = null, unsubDecks = null, lastUserId = null;
+function stripUndef(obj){if(obj===null||obj===undefined)return null;if(Array.isArray(obj))return obj.map(stripUndef);if(typeof obj==='object'){var r={};for(var k in obj){if(obj.hasOwnProperty(k)&&obj[k]!==undefined)r[k]=stripUndef(obj[k]);}return r;}return obj;}
 
 // ===== DATA =====
 let db = { decks:{}, reviewLog:[], settings:{ dailyGoal:20, leechThreshold:8 } };
@@ -138,7 +139,7 @@ async function mergeAndLoadCloud(){
   Object.values(cloudLogs).forEach(e=>{existingDates.add(e.date+'_'+e.cardId);});
   const newLogs=local.reviewLog.filter(e=>!existingDates.has(e.date+'_'+e.cardId));
   newLogs.forEach(e=>{updates['reviewLog/'+ref.child('reviewLog').push().key]=e;});
-  if(Object.keys(updates).length>0)await ref.update(updates);
+  if(Object.keys(updates).length>0)await ref.update(stripUndef(updates));
   // Load cloud decks into local
   for(const[id,deck]of Object.entries(cloudDecks)){db.decks[id]=deck;}
   // Load cloud review logs (latest 500)
@@ -171,9 +172,9 @@ async function mergeAndLoadCloud(){
   await loadSharedDecks();
 }
 async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}await mergeAndLoadCloud();toggleUserMenu();}
-function saveDeckData(id,data){saveLocal();if(currentUser){rtdbUser().child('decks/'+id).set(data).catch(console.error);if(data._shared&&isAdmin)rtdb.ref('sharedDecks/'+id).set(Object.assign({},data,{sharedBy:currentUser.uid,sharedAt:Date.now()})).catch(console.error);}}
+function saveDeckData(id,data){saveLocal();if(currentUser){rtdbUser().child('decks/'+id).set(stripUndef(data)).catch(console.error);if(data._shared&&isAdmin)rtdb.ref('sharedDecks/'+id).set(stripUndef(Object.assign({},data,{sharedBy:currentUser.uid,sharedAt:Date.now()}))).catch(console.error);}}
 function deleteDeckData(id){saveLocal();if(currentUser)rtdbUser().child('decks/'+id).remove().catch(console.error);}
-function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)rtdbUser().child('reviewLog').push(entry).catch(console.error);}
+function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)rtdbUser().child('reviewLog').push(stripUndef(entry)).catch(console.error);}
 
 // ===== SM-2 =====
 function newCardData(){return{id:crypto.randomUUID(),cardName:'',front:'',fronts:[],back:'',definition:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,driveUrl:'',cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
@@ -807,7 +808,7 @@ function restoreBackup(){
         if(currentUser){
           var restoreData={decks:{},settings:db.settings};
           Object.entries(db.decks).forEach(function(e){restoreData.decks[e[0]]=e[1];});
-          rtdbUser().update(restoreData).catch(console.error);
+          rtdbUser().update(stripUndef(restoreData)).catch(console.error);
         }
         renderCurrentView();toast('Backup restored! '+Object.keys(db.decks).length+' decks loaded');
       }catch(e){toast('Error reading file: '+e.message);}
@@ -2746,7 +2747,7 @@ async function pushDecksToAll(){
     for(const[id,deck] of Object.entries(db.decks)){
       sharedData[id]=Object.assign({},deck,{sharedBy:currentUser.uid,sharedAt:Date.now()});
     }
-    await rtdb.ref('sharedDecks').set(sharedData);
+    await rtdb.ref('sharedDecks').set(stripUndef(sharedData));
     toast('Pushed '+deckKeys.length+' decks to all users!');
   }catch(e){console.error(e);toast('Push failed: '+e.message);}
 }
