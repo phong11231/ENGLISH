@@ -2500,6 +2500,12 @@ document.addEventListener('keydown',e=>{
     if(document.getElementById('reviewActions').style.display==='flex'){
       if(e.key==='1')answerCard(0);if(e.key==='2')answerCard(1);if(e.key==='3')answerCard(2);if(e.key==='4')answerCard(3);
     }
+    return;
+  }
+  if(e.code==='KeyP'&&e.shiftKey){
+    var cm=document.getElementById('cardModal');
+    if(cm&&cm.classList.contains('active')){e.preventDefault();saveCard();}
+    else if(currentDeckId&&e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'){e.preventDefault();openCardModal();}
   }
 });
 
