@@ -122,6 +122,7 @@ async function mergeAndLoadCloud(){
   const cloudDecks=cloud.decks||{};
   const cloudSettings=cloud.settings||{};
   const cloudLogs=cloud.reviewLog||{};
+  const updates={};
   // One-time migrate from Firestore if not done yet
   if(!cloud._migrated){
     try{
@@ -136,7 +137,6 @@ async function mergeAndLoadCloud(){
     }catch(e){console.error('[Migration] Firestore read error:',e);}
   }
   // Merge local decks -> RTDB
-  const updates={};
   for(const[id,deck]of Object.entries(local.decks)){
     if(!cloudDecks[id])updates['decks/'+id]=deck;
   }
