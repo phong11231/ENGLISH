@@ -1514,12 +1514,14 @@ function showCurrentCard(){
       if(frontText){
         const wordCount=frontText.split(/\s+/).filter(Boolean).length;
         const dictBtn=document.createElement('button');dictBtn.className='yt-video-btn';
+        var isVi=/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(frontText);
         if(wordCount<=1){
           dictBtn.innerHTML='📖 Cambridge';
           dictBtn.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(frontText.toLowerCase()),'_blank');};
         } else {
           dictBtn.innerHTML='🌐 Google Translate';
-          dictBtn.onclick=function(){window.open('https://translate.google.com.vn/?sl=en&tl=vi&text='+encodeURIComponent(frontText)+'&op=translate','_blank');};
+          var sl=isVi?'vi':'en',tl=isVi?'en':'vi';
+          dictBtn.onclick=function(){window.open('https://translate.google.com.vn/?sl='+sl+'&tl='+tl+'&text='+encodeURIComponent(frontText)+'&op=translate','_blank');};
         }
         linkWrap.appendChild(dictBtn);
       }
