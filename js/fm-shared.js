@@ -1508,20 +1508,21 @@ function showCurrentCard(){
   const oldLinkBtns=backFaceEl.querySelector('.card-link-btns');if(oldLinkBtns)oldLinkBtns.remove();
   {
     const frontText=(card.front||'').replace(/<[^>]*>/g,'').trim();
-    if(frontText||card.cakeUrl){
+    const backText=(card.back||'').replace(/<[^>]*>/g,'').trim();
+    var _viRe=/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+    var lookupText=_viRe.test(frontText)?backText:frontText;
+    if(lookupText||card.cakeUrl){
       const linkWrap=document.createElement('div');linkWrap.className='card-link-btns';linkWrap.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;z-index:2;position:relative;justify-content:center';
       linkWrap.onclick=function(ev){ev.stopPropagation();};
-      if(frontText){
-        const wordCount=frontText.split(/\s+/).filter(Boolean).length;
+      if(lookupText){
+        const wordCount=lookupText.split(/\s+/).filter(Boolean).length;
         const dictBtn=document.createElement('button');dictBtn.className='yt-video-btn';
-        var isVi=/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(frontText);
         if(wordCount<=1){
           dictBtn.innerHTML='📖 Cambridge';
-          dictBtn.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(frontText.toLowerCase()),'_blank');};
+          dictBtn.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(lookupText.toLowerCase()),'_blank');};
         } else {
           dictBtn.innerHTML='🌐 Google Translate';
-          var sl=isVi?'vi':'en',tl=isVi?'en':'vi';
-          dictBtn.onclick=function(){window.open('https://translate.google.com.vn/?sl='+sl+'&tl='+tl+'&text='+encodeURIComponent(frontText)+'&op=translate','_blank');};
+          dictBtn.onclick=function(){window.open('https://translate.google.com.vn/?sl=en&tl=vi&text='+encodeURIComponent(lookupText)+'&op=translate','_blank');};
         }
         linkWrap.appendChild(dictBtn);
       }
