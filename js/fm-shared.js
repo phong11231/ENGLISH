@@ -1512,9 +1512,15 @@ function showCurrentCard(){
       const linkWrap=document.createElement('div');linkWrap.className='card-link-btns';linkWrap.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;z-index:2;position:relative;justify-content:center';
       linkWrap.onclick=function(ev){ev.stopPropagation();};
       if(frontText){
+        const wordCount=frontText.split(/\s+/).filter(Boolean).length;
         const dictBtn=document.createElement('button');dictBtn.className='yt-video-btn';
-        dictBtn.innerHTML='📖 Dictionary';
-        dictBtn.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(frontText.toLowerCase()),'_blank');};
+        if(wordCount<=1){
+          dictBtn.innerHTML='📖 Cambridge';
+          dictBtn.onclick=function(){window.open('https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(frontText.toLowerCase()),'_blank');};
+        } else {
+          dictBtn.innerHTML='🌐 Google Translate';
+          dictBtn.onclick=function(){window.open('https://translate.google.com.vn/?sl=en&tl=vi&text='+encodeURIComponent(frontText)+'&op=translate','_blank');};
+        }
         linkWrap.appendChild(dictBtn);
       }
       if(card.cakeUrl){
