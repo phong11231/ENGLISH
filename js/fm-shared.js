@@ -1562,6 +1562,7 @@ function showCurrentCard(){
     if(hint)hint.style.display='none';
     typeWrap.style.display='block';btnCheck.style.display='block';btnNext.style.display='none';
     typeInput.value='';typeInput.className='type-answer-input';typeResult.className='type-answer-result';typeResult.style.display='none';
+    typeInput.setAttribute('name','fm_'+Date.now());
     setTimeout(()=>typeInput.focus(),100);
   } else {
     document.getElementById('flashcard').onclick=flipCard;
