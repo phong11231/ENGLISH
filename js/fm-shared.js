@@ -2162,11 +2162,7 @@ function checkTypedAnswer(){
   const correctEn=normalize(card.back)===normalize(typed);
   const input=document.getElementById('typeAnswerInput'),result=document.getElementById('typeAnswerResult');
   const viInput=document.getElementById('typeAnswerViInput'),viResult=document.getElementById('typeAnswerViResult');
-  var correctVi=true;
-  if(card.backVi){
-    correctVi=normalize(card.backVi)===normalize(viInput.value);
-  }
-  const correct=correctEn&&correctVi;
+  const correct=correctEn;
   document.getElementById('flashcard').classList.add('flipped');
   speakText(card.back);
   if(correctEn){
@@ -2177,12 +2173,13 @@ function checkTypedAnswer(){
     result.innerHTML='✗ Wrong<div style="margin-top:8px;font-size:15px;line-height:1.6">'+diffWords(typed,card.back)+'</div>';result.style.display='block';
   }
   if(card.backVi){
-    if(correctVi){
+    var viMatch=normalize(card.backVi)===normalize(viInput.value);
+    if(viMatch){
       viInput.className='type-answer-input correct';viResult.className='type-answer-result correct';
-      viResult.textContent='✓ Correct!';viResult.style.display='block';
+      viResult.textContent='✓ Khớp!';viResult.style.display='block';
     } else {
-      viInput.className='type-answer-input wrong';viResult.className='type-answer-result wrong';
-      viResult.innerHTML='✗ Wrong<div style="margin-top:8px;font-size:15px;line-height:1.6">'+diffWords(viInput.value,card.backVi)+'</div>';viResult.style.display='block';
+      viInput.className='type-answer-input';viResult.className='type-answer-result';
+      viResult.innerHTML='<div style="font-size:14px;opacity:.8">Đáp án: <b>'+esc(card.backVi)+'</b></div><div style="margin-top:6px;font-size:13px;line-height:1.6">'+diffWords(viInput.value,card.backVi)+'</div>';viResult.style.display='block';
     }
   }
   if(correct){answerCard(2);window._typeAnswered=true;}
