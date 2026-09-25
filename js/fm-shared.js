@@ -163,7 +163,11 @@ async function mergeAndLoadCloud(){
     if(!db.settings.streakDays)db.settings.streakDays={};
     for(const[day,count]of Object.entries(cloudSettings.streakDays)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}
   }
-  updates['settings']={totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20,leechThreshold:db.settings.leechThreshold||8};
+  if(cloudSettings.dismissedShared&&cloudSettings.dismissedShared.length>0){
+    if(!db.settings.dismissedShared)db.settings.dismissedShared=[];
+    cloudSettings.dismissedShared.forEach(id=>{if(!db.settings.dismissedShared.includes(id))db.settings.dismissedShared.push(id);});
+  }
+  updates['settings']={totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20,leechThreshold:db.settings.leechThreshold||8,dismissedShared:db.settings.dismissedShared||[]};
   // Merge review logs
   const existingDates=new Set();
   Object.values(cloudLogs).forEach(e=>{existingDates.add(e.date+'_'+e.cardId);});
