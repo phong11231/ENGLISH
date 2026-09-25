@@ -2777,7 +2777,7 @@ function showQuizResult(){
 
 // ===== ADMIN =====
 let isAdmin=localStorage.getItem('flashmind_admin')==='true';
-function updateAdminUI(){var ap=document.getElementById('adminPushBtn');if(ap)ap.style.display=isAdmin?'block':'none';var ub=document.getElementById('btnUploadAudio');if(ub)ub.style.display=isAdmin?'inline-block':'none';var ak=document.getElementById('aiKeyGroup');if(ak)ak.style.display=isAdmin?'block':'none';var bs=document.getElementById('btnBulkSwap');if(bs)bs.style.display=isAdmin?'inline-block':'none';var bm=document.getElementById('btnBulkMode');if(bm)bm.style.display=isAdmin?'inline-block':'none';}
+function updateAdminUI(){var ap=document.getElementById('adminPushBtn');if(ap)ap.style.display=isAdmin?'block':'none';var ub=document.getElementById('btnUploadAudio');if(ub)ub.style.display=isAdmin?'inline-block':'none';var ak=document.getElementById('aiKeyGroup');if(ak)ak.style.display=isAdmin?'block':'none';var bs=document.getElementById('btnBulkSwap');if(bs)bs.style.display=isAdmin?'inline-block':'none';}
 
 function bulkSwapFrontBack(){
   if(!isAdmin||!currentDeckId)return;
@@ -2794,7 +2794,7 @@ function bulkSwapFrontBack(){
   toast('Swapped '+count+' cards!');
 }
 
-function openBulkModeModal(){if(!isAdmin||!currentDeckId)return;document.getElementById('bulkModeReview').value='';document.getElementById('bulkModeDisplay').value='';document.getElementById('bulkModeModal').classList.add('active');}
+function openBulkModeModal(){if(!currentDeckId)return;document.getElementById('bulkModeReview').value='';document.getElementById('bulkModeDisplay').value='';document.getElementById('bulkModeModal').classList.add('active');}
 function closeBulkModeModal(){document.getElementById('bulkModeModal').classList.remove('active');}
 function applyBulkMode(){
   var deck=db.decks[currentDeckId];if(!deck||!deck.cards)return;
