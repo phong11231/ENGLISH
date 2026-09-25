@@ -2777,7 +2777,40 @@ function showQuizResult(){
 
 // ===== ADMIN =====
 let isAdmin=localStorage.getItem('flashmind_admin')==='true';
-function updateAdminUI(){var ap=document.getElementById('adminPushBtn');if(ap)ap.style.display=isAdmin?'block':'none';var ub=document.getElementById('btnUploadAudio');if(ub)ub.style.display=isAdmin?'inline-block':'none';var ak=document.getElementById('aiKeyGroup');if(ak)ak.style.display=isAdmin?'block':'none';}
+function updateAdminUI(){var ap=document.getElementById('adminPushBtn');if(ap)ap.style.display=isAdmin?'block':'none';var ub=document.getElementById('btnUploadAudio');if(ub)ub.style.display=isAdmin?'inline-block':'none';var ak=document.getElementById('aiKeyGroup');if(ak)ak.style.display=isAdmin?'block':'none';var bs=document.getElementById('btnBulkSwap');if(bs)bs.style.display=isAdmin?'inline-block':'none';var bm=document.getElementById('btnBulkMode');if(bm)bm.style.display=isAdmin?'inline-block':'none';}
+
+function bulkSwapFrontBack(){
+  if(!isAdmin||!currentDeckId)return;
+  var deck=db.decks[currentDeckId];if(!deck||!deck.cards)return;
+  var count=deck.cards.length;
+  if(!confirm('Swap '+count+' cards:\n• front (VN) → backVi\n• back (EN) → front\n• back giữ nguyên\n\nContinue?'))return;
+  deck.cards.forEach(function(c){
+    var oldFront=c.front||'';
+    c.backVi=oldFront;
+    c.front=c.back||'';
+    if(c.fronts&&c.fronts.length>0){c.fronts=[c.front];}
+  });
+  saveDeckData(currentDeckId,deck);renderCardBrowser();
+  toast('Swapped '+count+' cards!');
+}
+
+function openBulkModeModal(){if(!isAdmin||!currentDeckId)return;document.getElementById('bulkModeReview').value='';document.getElementById('bulkModeDisplay').value='';document.getElementById('bulkModeModal').classList.add('active');}
+function closeBulkModeModal(){document.getElementById('bulkModeModal').classList.remove('active');}
+function applyBulkMode(){
+  var deck=db.decks[currentDeckId];if(!deck||!deck.cards)return;
+  var rm=document.getElementById('bulkModeReview').value;
+  var dm=document.getElementById('bulkModeDisplay').value;
+  if(!rm&&!dm){toast('Chọn ít nhất 1 mode');return;}
+  var count=deck.cards.length;
+  deck.cards.forEach(function(c){
+    if(rm)c.reviewMode=rm;
+    if(dm)c.displayMode=dm;
+  });
+  if(rm)deck.defaultReviewMode=rm;
+  if(dm)deck.defaultDisplayMode=dm;
+  saveDeckData(currentDeckId,deck);closeBulkModeModal();renderCardBrowser();
+  toast('Updated '+count+' cards!');
+}
 
 var AUDIO_WORKER='https://flashmind-audio.yosua-4131.workers.dev';
 function getAdminKey(){var k=localStorage.getItem('flashmind_admin_key');if(!k){k=prompt('Enter admin key for audio upload:');if(k)localStorage.setItem('flashmind_admin_key',k);}return k;}

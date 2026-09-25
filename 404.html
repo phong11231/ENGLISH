@@ -74,6 +74,8 @@ if (!_routeId) location.replace(_basePath);
     <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📥 Import</button>
     <button class="btn btn-ghost btn-sm" onclick="exportDeck()">📤 Export</button>
     <button class="btn btn-primary btn-sm" onclick="openCardModal()" title="Shift+P">+ Add card <kbd style="font-size:10px;opacity:.7;margin-left:4px;padding:1px 5px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15)">⇧P</kbd></button>
+    <button class="btn btn-ghost btn-sm" id="btnBulkSwap" onclick="bulkSwapFrontBack()" style="display:none">🔄 Swap F↔B</button>
+    <button class="btn btn-ghost btn-sm" id="btnBulkMode" onclick="openBulkModeModal()" style="display:none">⚙ Bulk Mode</button>
   </div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;font-size:13px" id="deckDefaultsBar">
     <span style="opacity:.6;font-weight:600">Defaults:</span>
@@ -245,6 +247,33 @@ if (!_routeId) location.replace(_basePath);
   </div>
 </div>
 
+<!-- BULK MODE MODAL -->
+<div class="modal-overlay" id="bulkModeModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><h2>Bulk Change Mode</h2><button class="modal-close" onclick="closeBulkModeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Review Mode</label>
+        <select id="bulkModeReview">
+          <option value="">-- Không đổi --</option>
+          <option value="flip">🔄 Flip card</option>
+          <option value="type">⌨️ Type answer</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Display Mode</label>
+        <select id="bulkModeDisplay">
+          <option value="">-- Không đổi --</option>
+          <option value="voice">🔊 Listen & Answer</option>
+          <option value="voice-repeat">🔁 Listen & Repeat</option>
+          <option value="voice-translate">🌐 Listen & Translate</option>
+          <option value="text">📝 Show Text</option>
+          <option value="dialogue">🗣 Dialogue</option>
+        </select>
+      </div>
+      <div class="form-actions"><button class="btn btn-ghost" onclick="closeBulkModeModal()">Cancel</button><button class="btn btn-primary" onclick="applyBulkMode()">Apply All</button></div>
+    </div>
+  </div>
+</div>
+
 <!-- IMPORT MODAL -->
 <div class="modal-overlay" id="importModal">
   <div class="modal">
@@ -406,7 +435,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="/ENGLISH/js/fm-shared.js?v=54"></script>
+<script src="/ENGLISH/js/fm-shared.js?v=55"></script>
 <script>
 (function(){
   if (_isDeckRoute) {
