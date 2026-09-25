@@ -617,6 +617,7 @@ function openCardModal(cardId){
     document.getElementById('cardYtStart').value=card.ytStart!=null?card.ytStart:'';
     document.getElementById('cardYtEnd').value=card.ytEnd!=null?card.ytEnd:'';
     document.getElementById('cardCakeUrl').value=card.cakeUrl||'';
+    document.getElementById('cardBackViInput').value=card.backVi||'';
   } else {
     document.getElementById('cardModalTitle').textContent='Add New Card';
     document.getElementById('saveCardBtn').textContent='Save card';
@@ -631,6 +632,7 @@ function openCardModal(cardId){
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
     document.getElementById('cardYoutubeUrl').value='';document.getElementById('cardDriveUrl').value='';document.getElementById('cardYtStart').value='';document.getElementById('cardYtEnd').value='';
     document.getElementById('cardCakeUrl').value='';
+    document.getElementById('cardBackViInput').value='';
   }
   document.getElementById('cardModal').classList.add('active');
   setTimeout(()=>(document.getElementById('cardTypeSelect').value==='cloze'?document.getElementById('clozeInput'):document.querySelector('#frontFieldsWrap .front-input')).focus(),100);
@@ -656,6 +658,7 @@ function saveCard(){
   const cakeUrl=document.getElementById('cardCakeUrl').value.trim();
   const cardName=document.getElementById('cardNameInput').value.trim();
   const definition=document.getElementById('cardDefinitionInput').value.trim();
+  const backVi=document.getElementById('cardBackViInput').value.trim();
   if(type==='cloze'){
     const text=document.getElementById('clozeInput').value.trim();
     if(!text||!text.includes('{{c')){toast('Need at least 1 {{c1::...}}');return;}
@@ -682,9 +685,9 @@ function saveCard(){
     const front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;toast('Updated!');
+      card.front=front;card.fronts=fronts;card.back=back;card.backVi=backVi;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;toast('Updated!');
     } else {
-      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;deck.cards.push(card);
+      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.backVi=backVi;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;deck.cards.push(card);
       if(type==='reversed'){const rc=newCardData();rc.front=back;rc.fronts=[back];rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;rc.cakeUrl=cakeUrl;rc.cardName=cardName;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
       else toast('Card added!');
     }
@@ -1566,12 +1569,19 @@ function showCurrentCard(){
 
   const hint=document.querySelector('.flashcard-hint');
   const typeWrap=document.getElementById('typeAnswerWrap'),btnCheck=document.getElementById('btnCheckAnswer'),btnNext=document.getElementById('btnNextCard'),typeInput=document.getElementById('typeAnswerInput'),typeResult=document.getElementById('typeAnswerResult');
+  const typeViInput=document.getElementById('typeAnswerViInput'),typeViResult=document.getElementById('typeAnswerViResult');
   if(reviewMode==='type'){
     document.getElementById('flashcard').onclick=null;
     if(hint)hint.style.display='none';
     typeWrap.style.display='block';btnCheck.style.display='block';btnNext.style.display='none';
     typeInput.value='';typeInput.className='type-answer-input';typeResult.className='type-answer-result';typeResult.style.display='none';
     typeInput.setAttribute('name','fm_'+Date.now());
+    if(card.backVi){
+      typeViInput.style.display='block';typeViInput.value='';typeViInput.className='type-answer-input';
+      typeViResult.style.display='none';typeViResult.className='type-answer-result';
+    } else {
+      typeViInput.style.display='none';typeViResult.style.display='none';
+    }
     setTimeout(()=>typeInput.focus(),100);
   } else {
     document.getElementById('flashcard').onclick=flipCard;
@@ -2143,20 +2153,34 @@ function diffWords(typed,answer){
 }
 function checkTypedAnswer(){
   const card=reviewQueue[reviewIndex];const typed=document.getElementById('typeAnswerInput').value;
-  const correct=normalize(card.back)===normalize(typed);
+  const correctEn=normalize(card.back)===normalize(typed);
   const input=document.getElementById('typeAnswerInput'),result=document.getElementById('typeAnswerResult');
+  const viInput=document.getElementById('typeAnswerViInput'),viResult=document.getElementById('typeAnswerViResult');
+  var correctVi=true;
+  if(card.backVi){
+    correctVi=normalize(card.backVi)===normalize(viInput.value);
+  }
+  const correct=correctEn&&correctVi;
   document.getElementById('flashcard').classList.add('flipped');
   speakText(card.back);
-  if(correct){
+  if(correctEn){
     input.className='type-answer-input correct';result.className='type-answer-result correct';
     result.textContent='✓ Correct!';result.style.display='block';
-    answerCard(2);window._typeAnswered=true;
-    document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
   } else {
     input.className='type-answer-input wrong';result.className='type-answer-result wrong';
     result.innerHTML='✗ Wrong<div style="margin-top:8px;font-size:15px;line-height:1.6">'+diffWords(typed,card.back)+'</div>';result.style.display='block';
-    document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
   }
+  if(card.backVi){
+    if(correctVi){
+      viInput.className='type-answer-input correct';viResult.className='type-answer-result correct';
+      viResult.textContent='✓ Correct!';viResult.style.display='block';
+    } else {
+      viInput.className='type-answer-input wrong';viResult.className='type-answer-result wrong';
+      viResult.innerHTML='✗ Wrong<div style="margin-top:8px;font-size:15px;line-height:1.6">'+diffWords(viInput.value,card.backVi)+'</div>';viResult.style.display='block';
+    }
+  }
+  if(correct){answerCard(2);window._typeAnswered=true;}
+  document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
 }
 function nextAfterType(){if(!window._typeAnswered)answerCard(0);window._typeAnswered=false;showCurrentCard();}
 
@@ -2618,9 +2642,13 @@ document.addEventListener('keydown',e=>{
   var vr=document.getElementById('viewReview');
   if(vr&&vr.classList.contains('active')){
     if(e.code==='KeyP'&&e.shiftKey){e.preventDefault();stopAllAudio();var c=reviewQueue[reviewIndex];if(c){var fc=document.getElementById('flashcard');if(fc&&fc.classList.contains('flipped'))speakText(c.back);else speakText(c.displayMode&&c.displayMode.startsWith('voice')?c.front:c.back);}return;}
-    if(e.target.id==='typeAnswerInput'&&e.key==='Enter'){e.preventDefault();
+    if((e.target.id==='typeAnswerInput'||e.target.id==='typeAnswerViInput')&&e.key==='Enter'){e.preventDefault();
       const bc=document.getElementById('btnCheckAnswer'),bn=document.getElementById('btnNextCard');
-      if(bc.style.display!=='none')checkTypedAnswer();else if(bn.style.display!=='none')nextAfterType();return;}
+      if(bc.style.display!=='none'){
+        var viIn=document.getElementById('typeAnswerViInput');
+        if(e.target.id==='typeAnswerInput'&&viIn.style.display!=='none'){viIn.focus();return;}
+        checkTypedAnswer();
+      } else if(bn.style.display!=='none')nextAfterType();return;}
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
     if(e.code==='Space'){e.preventDefault();flipCard();}
     if(e.key==='z'&&(e.ctrlKey||e.metaKey)){e.preventDefault();undoAnswer();}

@@ -146,7 +146,9 @@ if (!_routeId) location.replace(_basePath);
     </div>
     <div class="type-answer-wrap" id="typeAnswerWrap" style="display:none">
       <input type="text" class="type-answer-input" id="typeAnswerInput" placeholder="Type your answer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" name="fm_answer_nonce">
+      <input type="text" class="type-answer-input" id="typeAnswerViInput" placeholder="Nhập nghĩa tiếng Việt..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" name="fm_vi_nonce" style="display:none;margin-top:8px">
       <div class="type-answer-result" id="typeAnswerResult"></div>
+      <div class="type-answer-result" id="typeAnswerViResult" style="display:none"></div>
     </div>
     <button class="btn-check-answer" id="btnCheckAnswer" style="display:none" onclick="checkTypedAnswer()">Check (Enter)</button>
     <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Next card → (Enter)</button>
@@ -192,6 +194,7 @@ if (!_routeId) location.replace(_basePath);
           <button type="button" class="btn btn-ghost btn-sm" onclick="addFrontField()" style="margin-top:6px" id="addFrontBtn">+ Add dialogue line</button>
         </div>
         <div class="form-group"><label>Back (answer)</label><textarea id="cardBackInput" placeholder="Enter answer, meaning..." rows="3"></textarea></div>
+        <div class="form-group"><label>Nghĩa tiếng Việt <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional, dùng cho Type Answer</span></label><input type="text" id="cardBackViInput" placeholder="e.g. Anh ấy không yêu gia đình mình"></div>
         <div class="form-group"><label>Definition <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span></label><textarea id="cardDefinitionInput" placeholder="e.g. nghĩa tiếng Việt, explanation..." rows="2"></textarea></div>
       </div>
       <div id="clozeFields" style="display:none">
@@ -403,7 +406,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="/ENGLISH/js/fm-shared.js?v=52"></script>
+<script src="/ENGLISH/js/fm-shared.js?v=53"></script>
 <script>
 (function(){
   if (_isDeckRoute) {
