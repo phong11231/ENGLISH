@@ -644,6 +644,7 @@ function openCardModal(cardId){
 function closeCardModal(){destroyYtPlayer();document.getElementById('ytPreviewWrap').style.display='none';document.getElementById('cardModal').classList.remove('active');}
 
 function parseTags(str){return str.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean);}
+function ensurePunctuation(s){if(!s)return s;s=s.trim();if(!s)return s;var last=s[s.length-1];if(/[.!?。…]/.test(last))return s;return s+'.';}
 
 function saveCard(){
   const type=document.getElementById('cardTypeSelect').value;
@@ -686,12 +687,13 @@ function saveCard(){
       if(fronts.length<2){toast('Quiz needs at least 2 answer options');return;}
       if(!back){toast('Please tick the correct answer');return;}
     } else if(fronts.length===0||(fronts.length===1&&!back)){toast('Enter both front and back');return;}
-    const front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
+    var front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
+    front=ensurePunctuation(front);var _back=ensurePunctuation(back);var _backVi=ensurePunctuation(backVi);
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
-      card.front=front;card.fronts=fronts;card.back=back;card.backVi=backVi;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;toast('Updated!');
+      card.front=front;card.fronts=fronts;card.back=_back;card.backVi=_backVi;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;toast('Updated!');
     } else {
-      const card=newCardData();card.front=front;card.fronts=fronts;card.back=back;card.backVi=backVi;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;deck.cards.push(card);
+      const card=newCardData();card.front=front;card.fronts=fronts;card.back=_back;card.backVi=_backVi;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;deck.cards.push(card);
       if(type==='reversed'){const rc=newCardData();rc.front=back;rc.fronts=[back];rc.back=front;rc.type='reversed';rc.tags=tags;rc.reviewMode=cardReviewMode;rc.displayMode=cardDisplayMode;rc.youtubeUrl=ytUrl;rc.ytStart=ytStart;rc.ytEnd=ytEnd;rc.cakeUrl=cakeUrl;rc.cardName=cardName;deck.cards.push(rc);toast('Added 2 cards (original + reversed)!');}
       else toast('Card added!');
     }
@@ -2777,7 +2779,7 @@ function showQuizResult(){
 
 // ===== ADMIN =====
 let isAdmin=localStorage.getItem('flashmind_admin')==='true';
-function updateAdminUI(){var ap=document.getElementById('adminPushBtn');if(ap)ap.style.display=isAdmin?'block':'none';var ub=document.getElementById('btnUploadAudio');if(ub)ub.style.display=isAdmin?'inline-block':'none';var ak=document.getElementById('aiKeyGroup');if(ak)ak.style.display=isAdmin?'block':'none';var bs=document.getElementById('btnBulkSwap');if(bs)bs.style.display=isAdmin?'inline-block':'none';}
+function updateAdminUI(){var ap=document.getElementById('adminPushBtn');if(ap)ap.style.display=isAdmin?'block':'none';var ub=document.getElementById('btnUploadAudio');if(ub)ub.style.display=isAdmin?'inline-block':'none';var ak=document.getElementById('aiKeyGroup');if(ak)ak.style.display=isAdmin?'block':'none';var bs=document.getElementById('btnBulkSwap');if(bs)bs.style.display=isAdmin?'inline-block':'none';var bp=document.getElementById('btnBulkPunct');if(bp)bp.style.display=isAdmin?'inline-block':'none';}
 
 function bulkSwapFrontBack(){
   if(!isAdmin||!currentDeckId)return;
@@ -2792,6 +2794,18 @@ function bulkSwapFrontBack(){
   });
   saveDeckData(currentDeckId,deck);renderCardBrowser();
   toast('Swapped '+count+' cards!');
+}
+
+function bulkAddPunctuation(){
+  if(!isAdmin||!currentDeckId)return;
+  var deck=db.decks[currentDeckId];if(!deck||!deck.cards)return;
+  var changed=0;
+  deck.cards.forEach(function(c){
+    var nf=ensurePunctuation(c.front);var nb=ensurePunctuation(c.back);var nv=ensurePunctuation(c.backVi);
+    if(nf!==c.front||nb!==c.back||nv!==(c.backVi||'')){changed++;c.front=nf;c.back=nb;if(c.backVi||nv)c.backVi=nv;}
+  });
+  saveDeckData(currentDeckId,deck);renderCardBrowser();
+  toast('Added punctuation to '+changed+' cards!');
 }
 
 function openBulkModeModal(){if(!currentDeckId)return;document.getElementById('bulkModeReview').value='';document.getElementById('bulkModeDisplay').value='';document.getElementById('bulkModeModal').classList.add('active');}
