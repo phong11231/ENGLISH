@@ -2238,6 +2238,7 @@ function toggleSpeechRec(){
 }
 function checkSpokenAnswer(){
   var card=reviewQueue[reviewIndex];var spoken=document.getElementById('speakTranscript').textContent.trim();
+  if(!spoken||spoken==='Đang chờ giọng nói...'||spoken==='Không nghe được. Thử lại.'){toast('Chưa nghe được gì. Bấm 🎤 nói lại.');return;}
   var correct=normalize(card.back)===normalize(spoken);
   var result=document.getElementById('speakResult');
   document.getElementById('flashcard').classList.add('flipped');
@@ -2249,7 +2250,8 @@ function checkSpokenAnswer(){
   } else {
     document.getElementById('speakTranscript').className='type-answer-input wrong';
     result.className='type-answer-result wrong';
-    result.innerHTML='✗ Wrong<div style="margin-top:8px;font-size:15px;line-height:1.6">'+diffWords(spoken,card.back)+'</div>';result.style.display='block';
+    result.innerHTML='<div style="margin-bottom:8px"><b>Mày nói:</b> '+esc(spoken)+'</div><div style="margin-bottom:8px"><b>Đáp án:</b> '+esc(card.back)+'</div><div style="font-size:15px;line-height:1.6">'+diffWords(spoken,card.back)+'</div>';
+    result.style.display='block';
   }
   document.getElementById('btnCheckSpeak').style.display='none';document.getElementById('btnNextCard').style.display='block';
 }
