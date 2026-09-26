@@ -1613,7 +1613,7 @@ function showCurrentCard(){
     } else {
       document.getElementById('btnMic').textContent='🎤 Tap to speak';document.getElementById('btnMic').className='btn btn-primary';
       document.getElementById('speakTranscript').style.display='none';document.getElementById('speakTranscript').textContent='';
-      setTimeout(toggleSpeechRec,300);
+      setTimeout(toggleSpeechRec,800);
     }
   } else {
     document.getElementById('flashcard').onclick=flipCard;
@@ -2216,6 +2216,7 @@ var _micStream=null;
 var _recRestartDelay=100;
 var _recResultOffset=0;
 var _speechPaused=false;
+window.addEventListener('beforeunload',function(){_killSpeechRec();_releaseMic();});
 function _keepMicWarm(){
   if(_micStream)return Promise.resolve();
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return Promise.resolve();
