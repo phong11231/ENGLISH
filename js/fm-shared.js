@@ -2153,7 +2153,7 @@ function showDialogueAnswer(){
   document.getElementById('reviewActions').style.display='flex';
 }
 
-function normalize(s){return s.trim().toLowerCase().replace(/\s+/g,' ');}
+function normalize(s){return s.trim().toLowerCase().replace(/[.,!?;:'"()\-]/g,'').replace(/\s+/g,' ');}
 
 function diffWords(typed,answer){
   var tw=typed.trim().split(/\s+/).filter(Boolean),aw=answer.trim().split(/\s+/).filter(Boolean);
@@ -2199,47 +2199,60 @@ function nextAfterType(){if(!window._typeAnswered)answerCard(0);window._typeAnsw
 
 // ===== SPEAK MODE =====
 var _SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
+function _killSpeechRec(){
+  if(window._speechRec){try{window._speechRec.onresult=null;window._speechRec.onend=null;window._speechRec.onerror=null;window._speechRec.abort();}catch(e){}window._speechRec=null;}
+  window._speechRecActive=false;
+}
 function toggleSpeechRec(){
-  if(!_SpeechRec){toast('Browser không hỗ trợ Speech Recognition. Dùng Chrome trên máy tính.');return;}
-  if(window._speechRec&&window._speechRecActive){window._speechRec.stop();return;}
-  var rec=new _SpeechRec();
-  rec.lang='en-US';rec.interimResults=true;rec.continuous=true;rec.maxAlternatives=1;
-  window._speechRec=rec;window._speechRecActive=true;window._speechFinal='';
-  var micBtn=document.getElementById('btnMic');
-  micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
-  var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='Đang chờ giọng nói...';transcript.className='type-answer-input';
-  rec.onresult=function(e){
-    var interim='',final='';
-    for(var i=0;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}
-    window._speechFinal=final;
-    transcript.textContent=final||(interim?interim+'...':'Đang chờ giọng nói...');
-  };
-  rec.onend=function(){
-    window._speechRecActive=false;
-    micBtn.style.animation='';
-    var txt=(window._speechFinal||'').trim();
-    if(txt){
-      micBtn.innerHTML='🎤 Nói lại';micBtn.className='btn btn-ghost';
-      transcript.textContent=txt;
-      document.getElementById('btnCheckSpeak').style.display='block';
-    } else {
+  if(!_SpeechRec){toast('Browser khong ho tro Speech Recognition. Dung Chrome.');return;}
+  if(window._speechRecActive){_killSpeechRec();var mb=document.getElementById('btnMic');mb.innerHTML='🎤 Tap to speak';mb.className='btn btn-primary';mb.style.animation='';return;}
+  _killSpeechRec();
+  setTimeout(function(){
+    var rec=new _SpeechRec();
+    rec.lang='en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=5;
+    window._speechRec=rec;window._speechRecActive=true;window._speechFinal='';window._speechAlts=[];
+    var micBtn=document.getElementById('btnMic');
+    micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
+    var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Nói đi...';transcript.className='type-answer-input';
+    rec.onresult=function(e){
+      var interim='',final='';var alts=[];
+      for(var i=0;i<e.results.length;i++){
+        if(e.results[i].isFinal){final+=e.results[i][0].transcript;for(var a=0;a<e.results[i].length;a++)alts.push({text:e.results[i][a].transcript,conf:e.results[i][a].confidence});}
+        else interim+=e.results[i][0].transcript;
+      }
+      window._speechFinal=final;window._speechAlts=alts;
+      transcript.textContent=final||('💬 '+interim+'...');
+    };
+    rec.onend=function(){
+      window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';
+      var txt=(window._speechFinal||'').trim();
+      if(txt){
+        micBtn.innerHTML='🎤 Nói lại';micBtn.className='btn btn-ghost';
+        transcript.textContent=txt;
+        document.getElementById('btnCheckSpeak').style.display='block';
+      } else {
+        micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';
+        transcript.textContent='Không nghe được. Nói to hơn rồi thử lại.';
+      }
+    };
+    rec.onerror=function(e){
+      window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';
       micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';
-      transcript.textContent='Không nghe được. Thử lại.';
-    }
-  };
-  rec.onerror=function(e){
-    window._speechRecActive=false;micBtn.style.animation='';
-    micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';
-    if(e.error==='not-allowed')toast('Cho phép mic trong trình duyệt nhé!');
-    else if(e.error==='no-speech')transcript.textContent='Không nghe thấy giọng nói. Thử lại.';
-    else if(e.error!=='aborted')toast('Mic error: '+e.error);
-  };
-  try{rec.start();}catch(ex){toast('Không khởi động được mic: '+ex.message);}
+      if(e.error==='not-allowed')toast('Cho phép mic trong trình duyệt nhé!');
+      else if(e.error==='no-speech')transcript.textContent='Không nghe thấy. Nói to hơn rồi thử lại.';
+      else if(e.error!=='aborted')toast('Mic error: '+e.error);
+    };
+    try{rec.start();}catch(ex){toast('Không khởi động được mic: '+ex.message);window._speechRecActive=false;window._speechRec=null;}
+  },200);
 }
 function checkSpokenAnswer(){
-  var card=reviewQueue[reviewIndex];var spoken=document.getElementById('speakTranscript').textContent.trim();
-  if(!spoken||spoken==='Đang chờ giọng nói...'||spoken==='Không nghe được. Thử lại.'){toast('Chưa nghe được gì. Bấm 🎤 nói lại.');return;}
-  var correct=normalize(card.back)===normalize(spoken);
+  var card=reviewQueue[reviewIndex];var spoken=(window._speechFinal||'').trim();
+  if(!spoken){toast('Chưa nghe được gì. Bấm 🎤 nói lại.');return;}
+  var spokenClean=normalize(spoken);var answerClean=normalize(card.back);
+  var correct=spokenClean===answerClean;
+  if(!correct&&window._speechAlts&&window._speechAlts.length>1){
+    for(var i=1;i<window._speechAlts.length;i++){if(normalize(window._speechAlts[i].text)===answerClean){correct=true;spoken=window._speechAlts[i].text;break;}}
+  }
   var result=document.getElementById('speakResult');
   document.getElementById('flashcard').classList.add('flipped');
   speakText(card.back);
