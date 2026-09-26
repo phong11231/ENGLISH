@@ -1602,6 +1602,7 @@ function showCurrentCard(){
     document.getElementById('btnMic').textContent='🎤 Tap to speak';document.getElementById('btnMic').className='btn btn-primary';
     document.getElementById('speakTranscript').style.display='none';document.getElementById('speakTranscript').textContent='';
     document.getElementById('speakResult').style.display='none';
+    btnCheckSpeak.style.display='block';btnCheckSpeak.disabled=true;btnCheckSpeak.style.opacity='0.4';
   } else {
     document.getElementById('flashcard').onclick=flipCard;
     if(hint){hint.style.display='';hint.textContent=isDialogue?'Listening... tap to skip':'Tap to see answer · Space';}
@@ -2238,7 +2239,7 @@ function _startSpeechRec(){
       micBtn.innerHTML='🎤 Nói lại';micBtn.className='btn btn-ghost';
       transcript.textContent=txt;
       window._speechFinal=txt;
-      setTimeout(checkSpokenAnswer,100);
+      var cb=document.getElementById('btnCheckSpeak');cb.style.display='block';cb.disabled=false;cb.style.opacity='1';
     } else if(!hadResult&&_speechRetry<3&&window._speechRecActive){
       _speechRetry++;
       setTimeout(_startSpeechRec,300);
