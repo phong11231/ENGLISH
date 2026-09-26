@@ -159,9 +159,9 @@ if (!_routeId) location.replace(_basePath);
     <div class="type-answer-wrap" id="speakAnswerWrap" style="display:none">
       <button class="btn btn-primary" id="btnMic" onclick="toggleSpeechRec()" style="font-size:18px;padding:12px 32px;border-radius:50px">🎤 Tap to speak</button>
       <div class="type-answer-input" id="speakTranscript" style="display:none;margin-top:10px;min-height:40px;text-align:center"></div>
+      <button class="btn-check-answer" id="btnCheckSpeak" style="display:none;margin-top:10px;font-size:18px;padding:12px 0;width:100%" onclick="checkSpokenAnswer()">✓ Check</button>
       <div class="type-answer-result" id="speakResult" style="display:none"></div>
     </div>
-    <button class="btn-check-answer" id="btnCheckSpeak" style="display:none" onclick="checkSpokenAnswer()">Check</button>
     <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Next card → (Enter)</button>
     <div class="review-done" id="reviewDone" style="display:none">
       <div class="done-icon">🎉</div>
