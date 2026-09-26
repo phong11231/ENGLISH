@@ -1580,7 +1580,7 @@ function showCurrentCard(){
   const speakWrap=document.getElementById('speakAnswerWrap'),btnCheckSpeak=document.getElementById('btnCheckSpeak');
   // Reset all mode UIs
   typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
-  speakWrap.style.display='none';btnCheckSpeak.style.display='none';
+  speakWrap.style.display='none';
   _killSpeechRec();
   if(reviewMode==='type'){
     document.getElementById('flashcard').onclick=null;
