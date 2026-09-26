@@ -2203,6 +2203,10 @@ function _killSpeechRec(){
   if(window._speechRec){try{window._speechRec.onresult=null;window._speechRec.onend=null;window._speechRec.onerror=null;window._speechRec.abort();}catch(e){}window._speechRec=null;}
   window._speechRecActive=false;
 }
+function _ensureMicPermission(cb){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){cb();return;}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){stream.getTracks().forEach(function(t){t.stop();});cb();}).catch(function(err){toast('Cho phép mic nhé! '+err.message);});
+}
 function toggleSpeechRec(){
   if(!_SpeechRec){toast('Browser khong ho tro Speech Recognition. Dung Chrome.');return;}
   if(window._speechRecActive){_killSpeechRec();var mb=document.getElementById('btnMic');mb.innerHTML='🎤 Tap to speak';mb.className='btn btn-primary';mb.style.animation='';return;}
@@ -2213,7 +2217,9 @@ function toggleSpeechRec(){
   document.getElementById('flashcard').classList.remove('flipped');
   var micBtn=document.getElementById('btnMic');
   micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
-  var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Nói đi...';transcript.className='type-answer-input';
+  var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Xin quyền mic...';transcript.className='type-answer-input';
+  _ensureMicPermission(function(){
+  transcript.textContent='🎙️ Nói đi...';
   setTimeout(function(){
     var rec=new _SpeechRec();
     rec.lang='en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=5;
@@ -2254,6 +2260,7 @@ function toggleSpeechRec(){
       micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';
     }
   },300);
+  });
 }
 function checkSpokenAnswer(){
   var card=reviewQueue[reviewIndex];var spoken=(window._speechFinal||'').trim();
