@@ -1572,14 +1572,20 @@ function showCurrentCard(){
   reviewMode=card.reviewMode||'flip';
   document.getElementById('modeFlip').classList.toggle('active',reviewMode==='flip');
   document.getElementById('modeType').classList.toggle('active',reviewMode==='type');
+  var msEl=document.getElementById('modeSpeak');if(msEl)msEl.classList.toggle('active',reviewMode==='speak');
 
   const hint=document.querySelector('.flashcard-hint');
   const typeWrap=document.getElementById('typeAnswerWrap'),btnCheck=document.getElementById('btnCheckAnswer'),btnNext=document.getElementById('btnNextCard'),typeInput=document.getElementById('typeAnswerInput'),typeResult=document.getElementById('typeAnswerResult');
   const typeViInput=document.getElementById('typeAnswerViInput'),typeViResult=document.getElementById('typeAnswerViResult');
+  const speakWrap=document.getElementById('speakAnswerWrap'),btnCheckSpeak=document.getElementById('btnCheckSpeak');
+  // Reset all mode UIs
+  typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
+  speakWrap.style.display='none';btnCheckSpeak.style.display='none';
+  if(window._speechRec){try{window._speechRec.abort();}catch(e){}}
   if(reviewMode==='type'){
     document.getElementById('flashcard').onclick=null;
     if(hint)hint.style.display='none';
-    typeWrap.style.display='block';btnCheck.style.display='block';btnNext.style.display='none';
+    typeWrap.style.display='block';btnCheck.style.display='block';
     typeInput.value='';typeInput.className='type-answer-input';typeResult.className='type-answer-result';typeResult.style.display='none';
     typeInput.setAttribute('name','fm_'+Date.now());
     if(card.backVi){
@@ -1589,10 +1595,16 @@ function showCurrentCard(){
       typeViInput.style.display='none';typeViResult.style.display='none';
     }
     setTimeout(()=>typeInput.focus(),100);
+  } else if(reviewMode==='speak'){
+    document.getElementById('flashcard').onclick=null;
+    if(hint)hint.style.display='none';
+    speakWrap.style.display='block';
+    document.getElementById('btnMic').textContent='🎤 Tap to speak';document.getElementById('btnMic').className='btn btn-primary';
+    document.getElementById('speakTranscript').style.display='none';document.getElementById('speakTranscript').textContent='';
+    document.getElementById('speakResult').style.display='none';
   } else {
     document.getElementById('flashcard').onclick=flipCard;
     if(hint){hint.style.display='';hint.textContent=isDialogue?'Listening... tap to skip':'Tap to see answer · Space';}
-    typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
   }
   updateReviewProgress();
 }
@@ -2184,6 +2196,38 @@ function checkTypedAnswer(){
   document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
 }
 function nextAfterType(){if(!window._typeAnswered)answerCard(0);window._typeAnswered=false;showCurrentCard();}
+
+// ===== SPEAK MODE =====
+var _SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
+function toggleSpeechRec(){
+  if(!_SpeechRec){toast('Browser không hỗ trợ Speech Recognition. Dùng Chrome.');return;}
+  if(window._speechRec&&window._speechRecActive){window._speechRec.abort();window._speechRecActive=false;document.getElementById('btnMic').textContent='🎤 Tap to speak';document.getElementById('btnMic').className='btn btn-primary';return;}
+  var rec=new _SpeechRec();rec.lang='en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
+  window._speechRec=rec;window._speechRecActive=true;
+  document.getElementById('btnMic').textContent='🔴 Listening...';document.getElementById('btnMic').className='btn btn-primary';document.getElementById('btnMic').style.animation='pulse 1s infinite';
+  var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='...';
+  rec.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;transcript.textContent=t;};
+  rec.onend=function(){window._speechRecActive=false;document.getElementById('btnMic').textContent='🎤 Tap again';document.getElementById('btnMic').className='btn btn-ghost';document.getElementById('btnMic').style.animation='';document.getElementById('btnCheckSpeak').style.display='block';};
+  rec.onerror=function(e){window._speechRecActive=false;document.getElementById('btnMic').textContent='🎤 Tap to speak';document.getElementById('btnMic').className='btn btn-primary';document.getElementById('btnMic').style.animation='';if(e.error!=='aborted')toast('Mic error: '+e.error);};
+  rec.start();
+}
+function checkSpokenAnswer(){
+  var card=reviewQueue[reviewIndex];var spoken=document.getElementById('speakTranscript').textContent.trim();
+  var correct=normalize(card.back)===normalize(spoken);
+  var result=document.getElementById('speakResult');
+  document.getElementById('flashcard').classList.add('flipped');
+  speakText(card.back);
+  if(correct){
+    document.getElementById('speakTranscript').className='type-answer-input correct';
+    result.className='type-answer-result correct';result.textContent='✓ Correct!';result.style.display='block';
+    answerCard(2);window._typeAnswered=true;
+  } else {
+    document.getElementById('speakTranscript').className='type-answer-input wrong';
+    result.className='type-answer-result wrong';
+    result.innerHTML='✗ Wrong<div style="margin-top:8px;font-size:15px;line-height:1.6">'+diffWords(spoken,card.back)+'</div>';result.style.display='block';
+  }
+  document.getElementById('btnCheckSpeak').style.display='none';document.getElementById('btnNextCard').style.display='block';
+}
 
 // ===== STREAK + XP SYSTEM =====
 let streak=0,bestStreak=0,sessionXp=0,sessionCorrect=0,sessionTotal=0;

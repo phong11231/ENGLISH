@@ -90,6 +90,7 @@ if (!_routeId) location.replace(_basePath);
     <select id="deckDefaultReview" onchange="saveDeckDefaults()" style="padding:5px 8px;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);color:var(--ink);font-size:12px">
       <option value="flip">🔄 Flip card</option>
       <option value="type">⌨️ Type answer</option>
+      <option value="speak">🎤 Speak</option>
     </select>
   </div>
   <div id="tagFilterWrap"></div>
@@ -115,6 +116,7 @@ if (!_routeId) location.replace(_basePath);
       <div class="mode-toggle" id="modeIndicator" style="pointer-events:none;margin-bottom:0;flex:none">
         <button id="modeFlip">🔄 Flip card</button>
         <button id="modeType">⌨️ Type answer</button>
+        <button id="modeSpeak">🎤 Speak</button>
       </div>
       <div class="review-counts" style="display:flex;gap:8px;font-size:12px;flex:none">
         <span class="cnt-new" id="cntNew">0 new</span>
@@ -154,6 +156,12 @@ if (!_routeId) location.replace(_basePath);
       <div class="type-answer-result" id="typeAnswerViResult" style="display:none"></div>
     </div>
     <button class="btn-check-answer" id="btnCheckAnswer" style="display:none" onclick="checkTypedAnswer()">Check (Enter)</button>
+    <div class="type-answer-wrap" id="speakAnswerWrap" style="display:none">
+      <button class="btn btn-primary" id="btnMic" onclick="toggleSpeechRec()" style="font-size:18px;padding:12px 32px;border-radius:50px">🎤 Tap to speak</button>
+      <div class="type-answer-input" id="speakTranscript" style="display:none;margin-top:10px;min-height:40px;text-align:center"></div>
+      <div class="type-answer-result" id="speakResult" style="display:none"></div>
+    </div>
+    <button class="btn-check-answer" id="btnCheckSpeak" style="display:none" onclick="checkSpokenAnswer()">Check</button>
     <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Next card → (Enter)</button>
     <div class="review-done" id="reviewDone" style="display:none">
       <div class="done-icon">🎉</div>
@@ -208,6 +216,7 @@ if (!_routeId) location.replace(_basePath);
         <select id="cardReviewMode">
           <option value="flip">🔄 Flip card — Self-evaluate</option>
           <option value="type">⌨️ Type answer — Auto-graded</option>
+          <option value="speak">🎤 Speak — Nói đáp án</option>
         </select>
       </div>
       <div class="form-group"><label>🎬 YouTube Video (optional)</label><input type="text" id="cardYoutubeUrl" placeholder="e.g. https://youtube.com/watch?v=..."></div>
@@ -258,6 +267,7 @@ if (!_routeId) location.replace(_basePath);
           <option value="">-- Không đổi --</option>
           <option value="flip">🔄 Flip card</option>
           <option value="type">⌨️ Type answer</option>
+          <option value="speak">🎤 Speak</option>
         </select>
       </div>
       <div class="form-group"><label>Display Mode</label>
@@ -436,7 +446,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="/ENGLISH/js/fm-shared.js?v=59"></script>
+<script src="/ENGLISH/js/fm-shared.js?v=60"></script>
 <script>
 (function(){
   if (_isDeckRoute) {
