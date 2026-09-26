@@ -2144,17 +2144,15 @@ function showDialogueAnswer(){
 function normalize(s){return s.trim().toLowerCase().replace(/\s+/g,' ');}
 
 function diffWords(typed,answer){
-  const tw=typed.trim().split(/\s+/),aw=answer.trim().split(/\s+/);
-  let html='';
-  const max=Math.max(tw.length,aw.length);
-  for(let i=0;i<max;i++){
-    const t=(tw[i]||'').toLowerCase(),a=(aw[i]||'').toLowerCase();
-    if(i>0)html+=' ';
-    if(!tw[i]){html+='<span style="color:var(--green);font-weight:700;text-decoration:underline">'+esc(aw[i])+'</span>';}
-    else if(!aw[i]){html+='<span style="color:var(--red);text-decoration:line-through;opacity:.6">'+esc(tw[i])+'</span>';}
-    else if(t===a){html+='<span style="color:var(--green);font-weight:600">'+esc(aw[i])+'</span>';}
-    else{html+='<span style="color:var(--red);font-weight:700;text-decoration:line-through">'+esc(tw[i])+'</span> <span style="color:var(--green);font-weight:700">'+esc(aw[i])+'</span>';}
-  }
+  var tw=typed.trim().split(/\s+/).filter(Boolean),aw=answer.trim().split(/\s+/).filter(Boolean);
+  var m=tw.length,n=aw.length;
+  var dp=[];for(var i=0;i<=m;i++){dp[i]=[];for(var j=0;j<=n;j++)dp[i][j]=0;}
+  for(i=1;i<=m;i++)for(j=1;j<=n;j++){if(tw[i-1].toLowerCase()===aw[j-1].toLowerCase())dp[i][j]=dp[i-1][j-1]+1;else dp[i][j]=Math.max(dp[i-1][j],dp[i][j-1]);}
+  var ops=[];i=m;j=n;
+  while(i>0||j>0){if(i>0&&j>0&&tw[i-1].toLowerCase()===aw[j-1].toLowerCase()){ops.push({type:'same',word:aw[i-1]});i--;j--;}else if(j>0&&(i===0||dp[i][j-1]>=dp[i-1][j])){ops.push({type:'add',word:aw[j-1]});j--;}else{ops.push({type:'del',word:tw[i-1]});i--;}}
+  ops.reverse();
+  var html='';
+  ops.forEach(function(o,idx){if(idx>0)html+=' ';if(o.type==='same')html+='<span style="color:var(--green);font-weight:600">'+esc(o.word)+'</span>';else if(o.type==='add')html+='<span style="color:var(--green);font-weight:700;text-decoration:underline">'+esc(o.word)+'</span>';else html+='<span style="color:var(--red);font-weight:700;text-decoration:line-through;opacity:.6">'+esc(o.word)+'</span>';});
   return html;
 }
 function checkTypedAnswer(){
