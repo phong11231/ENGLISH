@@ -2217,7 +2217,7 @@ function _startSpeechRec(){
   else transcript.textContent='🎙️ Đang nghe lại (lần '+(_speechRetry+1)+')...';
   var rec=new _SpeechRec();
   rec.lang='en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=5;
-  window._speechFinal='';window._speechAlts=[];
+  window._speechFinal='';window._speechAlts=[];window._speechInterim='';
   var hadResult=false;
   rec.onresult=function(e){
     hadResult=true;
@@ -2227,11 +2227,12 @@ function _startSpeechRec(){
       else interim+=e.results[i][0].transcript;
     }
     window._speechFinal=final;window._speechAlts=alts;
+    if(interim)window._speechInterim=interim;
     transcript.textContent=final||('💬 '+interim+'...');
   };
   rec.onend=function(){
     window._speechRec=null;
-    var txt=(window._speechFinal||'').trim();
+    var txt=(window._speechFinal||window._speechInterim||'').trim();
     if(txt){
       window._speechRecActive=false;_speechRetry=0;micBtn.style.animation='';
       micBtn.innerHTML='🎤 Nói lại';micBtn.className='btn btn-ghost';
@@ -2280,7 +2281,7 @@ function toggleSpeechRec(){
   _ensureMicPermission(function(){_startSpeechRec();});
 }
 function checkSpokenAnswer(){
-  var card=reviewQueue[reviewIndex];var spoken=(window._speechFinal||'').trim();
+  var card=reviewQueue[reviewIndex];var spoken=(window._speechFinal||window._speechInterim||'').trim();
   if(!spoken){toast('Chưa nghe được gì. Bấm 🎤 nói lại.');return;}
   var spokenClean=normalize(spoken);var answerClean=normalize(card.back);
   var correct=spokenClean===answerClean;
