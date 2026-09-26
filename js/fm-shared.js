@@ -2200,24 +2200,27 @@ function nextAfterType(){if(!window._typeAnswered)answerCard(0);window._typeAnsw
 // ===== SPEAK MODE =====
 var _SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
 function _killSpeechRec(){
-  if(window._speechRec){try{window._speechRec.onresult=null;window._speechRec.onend=null;window._speechRec.onerror=null;window._speechRec.abort();}catch(e){}window._speechRec=null;}
+  if(window._speechRec){try{window._speechRec.onresult=null;window._speechRec.onend=null;window._speechRec.onerror=null;window._speechRec.abort();}catch(e){console.log('[SPEAK] kill error:',e);}window._speechRec=null;}
   window._speechRecActive=false;
 }
 function toggleSpeechRec(){
   if(!_SpeechRec){toast('Browser khong ho tro Speech Recognition. Dung Chrome.');return;}
+  console.log('[SPEAK] toggle called, active=',window._speechRecActive,'rec=',!!window._speechRec);
   if(window._speechRecActive){_killSpeechRec();var mb=document.getElementById('btnMic');mb.innerHTML='🎤 Tap to speak';mb.className='btn btn-primary';mb.style.animation='';return;}
   _killSpeechRec();
+  stopAllAudio();
   document.getElementById('speakResult').style.display='none';
   document.getElementById('btnCheckSpeak').style.display='none';
-  document.getElementById('btnNextCard').style.display='none';
+  var micBtn=document.getElementById('btnMic');
+  micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
+  var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Nói đi...';transcript.className='type-answer-input';
   setTimeout(function(){
+    console.log('[SPEAK] creating new SpeechRecognition');
     var rec=new _SpeechRec();
     rec.lang='en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=5;
-    window._speechRec=rec;window._speechRecActive=true;window._speechFinal='';window._speechAlts=[];
-    var micBtn=document.getElementById('btnMic');
-    micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
-    var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Nói đi...';transcript.className='type-answer-input';
+    window._speechFinal='';window._speechAlts=[];
     rec.onresult=function(e){
+      console.log('[SPEAK] onresult',e.results.length,'results');
       var interim='',final='';var alts=[];
       for(var i=0;i<e.results.length;i++){
         if(e.results[i].isFinal){final+=e.results[i][0].transcript;for(var a=0;a<e.results[i].length;a++)alts.push({text:e.results[i][a].transcript,conf:e.results[i][a].confidence});}
@@ -2227,6 +2230,7 @@ function toggleSpeechRec(){
       transcript.textContent=final||('💬 '+interim+'...');
     };
     rec.onend=function(){
+      console.log('[SPEAK] onend, final="'+window._speechFinal+'"');
       window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';
       var txt=(window._speechFinal||'').trim();
       if(txt){
@@ -2239,14 +2243,23 @@ function toggleSpeechRec(){
       }
     };
     rec.onerror=function(e){
+      console.log('[SPEAK] onerror:',e.error);
       window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';
       micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';
       if(e.error==='not-allowed')toast('Cho phép mic trong trình duyệt nhé!');
       else if(e.error==='no-speech')transcript.textContent='Không nghe thấy. Nói to hơn rồi thử lại.';
-      else if(e.error!=='aborted')toast('Mic error: '+e.error);
+      else if(e.error!=='aborted'){transcript.textContent='Lỗi mic: '+e.error+'. Thử lại.';console.error('[SPEAK] error:',e.error);}
     };
-    try{rec.start();}catch(ex){toast('Không khởi động được mic: '+ex.message);window._speechRecActive=false;window._speechRec=null;}
-  },200);
+    try{
+      rec.start();
+      window._speechRec=rec;window._speechRecActive=true;
+      console.log('[SPEAK] started OK');
+    }catch(ex){
+      console.error('[SPEAK] start failed:',ex);
+      toast('Không khởi động được mic: '+ex.message);
+      micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';
+    }
+  },300);
 }
 function checkSpokenAnswer(){
   var card=reviewQueue[reviewIndex];var spoken=(window._speechFinal||'').trim();
