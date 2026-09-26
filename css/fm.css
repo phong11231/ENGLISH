@@ -532,6 +532,7 @@ select option{background:#fff;color:#222}
 .btn-check-answer,.btn-next-card{width:100%;max-width:560px;padding:12px;border-radius:14px;font-weight:700;font-size:15px;transition:all .25s ease;margin-bottom:6px}
 .btn-check-answer{background:var(--primary);color:#fff;box-shadow:var(--shadow-sm)}
 .btn-check-answer:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+@media(max-width:768px){#speakAnswerWrap{display:flex;flex-direction:column;align-items:center}#speakAnswerWrap>.btn-check-speak-mobile{order:0;width:100%;font-size:17px;padding:14px}#speakAnswerWrap>#btnMic{order:2}#speakAnswerWrap>#speakTranscript{order:1}#speakAnswerWrap>#speakResult{order:3}}
 .btn-next-card{background:var(--glass);color:var(--primary-light);border:2px solid var(--primary)}
 .btn-next-card:hover{background:var(--primary-bg)}
 
