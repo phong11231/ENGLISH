@@ -2237,7 +2237,8 @@ function _startSpeechRec(){
       window._speechRecActive=false;_speechRetry=0;micBtn.style.animation='';
       micBtn.innerHTML='🎤 Nói lại';micBtn.className='btn btn-ghost';
       transcript.textContent=txt;
-      document.getElementById('btnCheckSpeak').style.display='block';
+      window._speechFinal=txt;
+      setTimeout(checkSpokenAnswer,100);
     } else if(!hadResult&&_speechRetry<3&&window._speechRecActive){
       _speechRetry++;
       setTimeout(_startSpeechRec,300);
