@@ -1602,7 +1602,7 @@ function showCurrentCard(){
     document.getElementById('btnMic').textContent='🎤 Tap to speak';document.getElementById('btnMic').className='btn btn-primary';
     document.getElementById('speakTranscript').style.display='none';document.getElementById('speakTranscript').textContent='';
     document.getElementById('speakResult').style.display='none';
-    btnCheckSpeak.disabled=true;btnCheckSpeak.style.opacity='0.4';
+    btnCheckSpeak.disabled=false;btnCheckSpeak.style.opacity='1';
     setTimeout(toggleSpeechRec,500);
   } else {
     document.getElementById('flashcard').onclick=flipCard;
@@ -2240,7 +2240,6 @@ function _startSpeechRec(){
       micBtn.innerHTML='🎤 Nói lại';micBtn.className='btn btn-ghost';
       transcript.textContent=txt;
       window._speechFinal=txt;
-      var cb=document.getElementById('btnCheckSpeak');cb.disabled=false;cb.style.opacity='1';
     } else if(!hadResult&&_speechRetry<3&&window._speechRecActive){
       _speechRetry++;
       setTimeout(_startSpeechRec,300);
@@ -2276,7 +2275,6 @@ function toggleSpeechRec(){
   _killSpeechRec();_speechRetry=0;
   stopAllAudio();
   document.getElementById('speakResult').style.display='none';
-  document.getElementById('btnCheckSpeak').disabled=true;document.getElementById('btnCheckSpeak').style.opacity='0.4';
   document.getElementById('flashcard').classList.remove('flipped');
   var micBtn=document.getElementById('btnMic');
   micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
@@ -2284,8 +2282,8 @@ function toggleSpeechRec(){
   _ensureMicPermission(function(){_startSpeechRec();});
 }
 function checkSpokenAnswer(){
+  _killSpeechRec();
   var card=reviewQueue[reviewIndex];var spoken=(window._speechFinal||window._speechInterim||'').trim();
-  if(!spoken){toast('Chưa nghe được gì. Bấm 🎤 nói lại.');return;}
   var spokenClean=normalize(spoken);var answerClean=normalize(card.back);
   var correct=spokenClean===answerClean;
   if(!correct&&window._speechAlts&&window._speechAlts.length>1){
@@ -2303,7 +2301,7 @@ function checkSpokenAnswer(){
     result.innerHTML='<div style="margin-bottom:8px"><b>Mày nói:</b> '+esc(spoken)+'</div><div style="margin-bottom:8px"><b>Đáp án:</b> '+esc(card.back)+'</div><div style="font-size:15px;line-height:1.6">'+diffWords(spoken,card.back)+'</div>';
     result.style.display='block';
   }
-  document.getElementById('btnCheckSpeak').disabled=true;document.getElementById('btnCheckSpeak').style.opacity='0.4';document.getElementById('btnNextCard').style.display='block';
+  document.getElementById('btnNextCard').style.display='block';
 }
 
 // ===== STREAK + XP SYSTEM =====
