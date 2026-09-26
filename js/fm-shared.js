@@ -1603,13 +1603,11 @@ function showCurrentCard(){
     speakWrap.style.display='block';
     document.getElementById('speakResult').style.display='none';
     btnCheckSpeak.disabled=false;btnCheckSpeak.style.opacity='1';
-    _resetSpeechText();_recResultOffset=0;
+    _advanceOffset();
     if(window._speechRec&&window._speechRecActive){
-      _speechPaused=false;
       var micBtn=document.getElementById('btnMic');
       micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.style.animation='pulse 1s infinite';
       var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Nói đi...';transcript.className='type-answer-input';
-      try{window._speechRec.start();}catch(e){}
     } else {
       document.getElementById('btnMic').textContent='🎤 Tap to speak';document.getElementById('btnMic').className='btn btn-primary';
       document.getElementById('speakTranscript').style.display='none';document.getElementById('speakTranscript').textContent='';
@@ -2213,9 +2211,8 @@ function nextAfterType(){if(!window._typeAnswered)answerCard(0);window._typeAnsw
 // ===== SPEAK MODE =====
 var _SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
 var _micStream=null;
-var _recRestartDelay=100;
 var _recResultOffset=0;
-var _speechPaused=false;
+var _recTotalResults=0;
 window.addEventListener('beforeunload',function(){_killSpeechRec();_releaseMic();});
 function _keepMicWarm(){
   if(_micStream)return Promise.resolve();
@@ -2227,30 +2224,24 @@ function _releaseMic(){
 }
 function _killSpeechRec(){
   if(window._speechRec){try{window._speechRec.onresult=null;window._speechRec.onend=null;window._speechRec.onerror=null;window._speechRec.abort();}catch(e){}window._speechRec=null;}
-  window._speechRecActive=false;_recRestartDelay=100;_recResultOffset=0;_speechPaused=false;
+  window._speechRecActive=false;_recResultOffset=0;_recTotalResults=0;
 }
 function _resetSpeechText(){
   window._speechFinal='';window._speechAlts=[];window._speechInterim='';
 }
-function _restartExistingRec(){
-  var rec=window._speechRec;
-  if(!rec||!window._speechRecActive)return;
-  _resetSpeechText();_recResultOffset=0;
-  try{rec.stop();}catch(e){}
+function _advanceOffset(){
+  _recResultOffset=_recTotalResults;
+  _resetSpeechText();
 }
-function _startSpeechRec(){
+function _ensureSpeechRec(){
+  if(window._speechRec&&window._speechRecActive)return;
+  if(window._speechRec){try{window._speechRec.abort();}catch(e){}}
   var micBtn=document.getElementById('btnMic');
   var transcript=document.getElementById('speakTranscript');
-  transcript.textContent='🎙️ Nói đi...';
-  _resetSpeechText();_recResultOffset=0;
-  if(window._speechRec&&window._speechRecActive){
-    try{window._speechRec.stop();}catch(e){}
-    return;
-  }
-  if(window._speechRec){try{window._speechRec.abort();}catch(e){}}
   var rec=new _SpeechRec();
   rec.lang='en-US';rec.interimResults=true;rec.continuous=true;rec.maxAlternatives=5;
   rec.onresult=function(e){
+    _recTotalResults=e.results.length;
     var interim='',final='';var alts=[];
     for(var i=_recResultOffset;i<e.results.length;i++){
       if(e.results[i].isFinal){final+=e.results[i][0].transcript;for(var a=0;a<e.results[i].length;a++)alts.push({text:e.results[i][a].transcript,conf:e.results[i][a].confidence});}
@@ -2258,23 +2249,21 @@ function _startSpeechRec(){
     }
     if(final){window._speechFinal=final;window._speechAlts=alts;}
     if(interim)window._speechInterim=interim;
-    transcript.textContent=final||(interim?'💬 '+interim+'...':'🎙️ Nói đi...');
+    if(transcript)transcript.textContent=final||(interim?'💬 '+interim+'...':'🎙️ Nói đi...');
   };
   rec.onend=function(){
-    if(_speechPaused&&window._speechRecActive&&window._speechRec===rec)return;
     if(window._speechRecActive&&window._speechRec===rec){
-      _recResultOffset=0;
+      _recResultOffset=0;_recTotalResults=0;
       setTimeout(function(){
-        if(!window._speechRecActive||window._speechRec!==rec||_speechPaused)return;
-        try{rec.start();_recRestartDelay=100;}catch(e){
-          _recRestartDelay=Math.min(_recRestartDelay*2,3000);
+        if(!window._speechRecActive||window._speechRec!==rec)return;
+        try{rec.start();}catch(e){
           setTimeout(function(){
-            if(!window._speechRecActive||window._speechRec!==rec||_speechPaused)return;
-            try{rec.start();_recRestartDelay=100;}catch(e2){
-              window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';
-              micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';
+            if(!window._speechRecActive||window._speechRec!==rec)return;
+            try{rec.start();}catch(e2){
+              window._speechRecActive=false;window._speechRec=null;
+              if(micBtn){micBtn.style.animation='';micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';}
             }
-          },_recRestartDelay);
+          },500);
         }
       },100);
       return;
@@ -2283,19 +2272,15 @@ function _startSpeechRec(){
   };
   rec.onerror=function(e){
     if(e.error==='no-speech'||e.error==='aborted')return;
-    if(e.error==='audio-capture'){
-      _releaseMic();
-      _keepMicWarm();
-      return;
-    }
-    if(e.error==='not-allowed'){window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';toast('Cho phép mic trong trình duyệt nhé!');}
+    if(e.error==='audio-capture'){_releaseMic();_keepMicWarm();return;}
+    if(e.error==='not-allowed'){window._speechRecActive=false;window._speechRec=null;if(micBtn){micBtn.style.animation='';micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';}toast('Cho phép mic trong trình duyệt nhé!');}
   };
   try{
     rec.start();
-    window._speechRec=rec;window._speechRecActive=true;_recRestartDelay=100;
+    window._speechRec=rec;window._speechRecActive=true;_recResultOffset=0;_recTotalResults=0;
   }catch(ex){
     toast('Mic lỗi: '+ex.message);
-    micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';
+    if(micBtn){micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';}
   }
 }
 function toggleSpeechRec(){
@@ -2308,12 +2293,10 @@ function toggleSpeechRec(){
   var micBtn=document.getElementById('btnMic');
   micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
   var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Đang mở mic...';transcript.className='type-answer-input';
-  _speechPaused=false;
-  _keepMicWarm().then(function(){_startSpeechRec();}).catch(function(err){toast('Cho phép mic nhé! '+err.message);micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';});
+  _resetSpeechText();
+  _keepMicWarm().then(function(){_ensureSpeechRec();}).catch(function(err){toast('Cho phép mic nhé! '+err.message);micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';});
 }
 function checkSpokenAnswer(){
-  _speechPaused=true;
-  if(window._speechRec){try{window._speechRec.stop();}catch(e){}}
   var card=reviewQueue[reviewIndex];var spoken=(window._speechFinal||window._speechInterim||'').trim();
   var spokenClean=normalize(spoken);var answerClean=normalize(card.back);
   var correct=spokenClean===answerClean;
@@ -2332,6 +2315,7 @@ function checkSpokenAnswer(){
     result.innerHTML='<div style="margin-bottom:8px"><b>Mày nói:</b> '+esc(spoken)+'</div><div style="margin-bottom:8px"><b>Đáp án:</b> '+esc(card.back)+'</div><div style="font-size:15px;line-height:1.6">'+diffWords(spoken,card.back)+'</div>';
     result.style.display='block';
   }
+  _advanceOffset();
   document.getElementById('btnNextCard').style.display='block';
 }
 
