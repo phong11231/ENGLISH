@@ -1603,6 +1603,7 @@ function showCurrentCard(){
     document.getElementById('speakTranscript').style.display='none';document.getElementById('speakTranscript').textContent='';
     document.getElementById('speakResult').style.display='none';
     btnCheckSpeak.disabled=true;btnCheckSpeak.style.opacity='0.4';
+    setTimeout(toggleSpeechRec,500);
   } else {
     document.getElementById('flashcard').onclick=flipCard;
     if(hint){hint.style.display='';hint.textContent=isDialogue?'Listening... tap to skip':'Tap to see answer · Space';}
