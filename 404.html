@@ -157,9 +157,11 @@ if (!_routeId) location.replace(_basePath);
     </div>
     <button class="btn-check-answer" id="btnCheckAnswer" style="display:none" onclick="checkTypedAnswer()">Check (Enter)</button>
     <div class="type-answer-wrap" id="speakAnswerWrap" style="display:none">
-      <button class="btn btn-primary" id="btnMic" onclick="toggleSpeechRec()" style="font-size:18px;padding:12px 32px;border-radius:50px">🎤 Tap to speak</button>
+      <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" id="btnMic" onclick="toggleSpeechRec()" style="font-size:18px;padding:12px 32px;border-radius:50px">🎤 Tap to speak</button>
+        <button class="btn btn-primary" id="btnCheckSpeak" onclick="checkSpokenAnswer()" style="font-size:18px;padding:12px 32px;border-radius:50px;opacity:0.4" disabled>✓ Check</button>
+      </div>
       <div class="type-answer-input" id="speakTranscript" style="display:none;margin-top:10px;min-height:40px;text-align:center"></div>
-      <button class="btn-check-answer" id="btnCheckSpeak" style="display:none;margin-top:10px;font-size:18px;padding:12px 0;width:100%" onclick="checkSpokenAnswer()">✓ Check</button>
       <div class="type-answer-result" id="speakResult" style="display:none"></div>
     </div>
     <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Next card → (Enter)</button>

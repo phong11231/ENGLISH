@@ -1602,7 +1602,7 @@ function showCurrentCard(){
     document.getElementById('btnMic').textContent='🎤 Tap to speak';document.getElementById('btnMic').className='btn btn-primary';
     document.getElementById('speakTranscript').style.display='none';document.getElementById('speakTranscript').textContent='';
     document.getElementById('speakResult').style.display='none';
-    btnCheckSpeak.style.display='block';btnCheckSpeak.disabled=true;btnCheckSpeak.style.opacity='0.4';
+    btnCheckSpeak.disabled=true;btnCheckSpeak.style.opacity='0.4';
   } else {
     document.getElementById('flashcard').onclick=flipCard;
     if(hint){hint.style.display='';hint.textContent=isDialogue?'Listening... tap to skip':'Tap to see answer · Space';}
@@ -2239,7 +2239,7 @@ function _startSpeechRec(){
       micBtn.innerHTML='🎤 Nói lại';micBtn.className='btn btn-ghost';
       transcript.textContent=txt;
       window._speechFinal=txt;
-      var cb=document.getElementById('btnCheckSpeak');cb.style.display='block';cb.disabled=false;cb.style.opacity='1';
+      var cb=document.getElementById('btnCheckSpeak');cb.disabled=false;cb.style.opacity='1';
     } else if(!hadResult&&_speechRetry<3&&window._speechRecActive){
       _speechRetry++;
       setTimeout(_startSpeechRec,300);
@@ -2275,7 +2275,7 @@ function toggleSpeechRec(){
   _killSpeechRec();_speechRetry=0;
   stopAllAudio();
   document.getElementById('speakResult').style.display='none';
-  document.getElementById('btnCheckSpeak').style.display='none';
+  document.getElementById('btnCheckSpeak').disabled=true;document.getElementById('btnCheckSpeak').style.opacity='0.4';
   document.getElementById('flashcard').classList.remove('flipped');
   var micBtn=document.getElementById('btnMic');
   micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
@@ -2302,7 +2302,7 @@ function checkSpokenAnswer(){
     result.innerHTML='<div style="margin-bottom:8px"><b>Mày nói:</b> '+esc(spoken)+'</div><div style="margin-bottom:8px"><b>Đáp án:</b> '+esc(card.back)+'</div><div style="font-size:15px;line-height:1.6">'+diffWords(spoken,card.back)+'</div>';
     result.style.display='block';
   }
-  document.getElementById('btnCheckSpeak').style.display='none';document.getElementById('btnNextCard').style.display='block';
+  document.getElementById('btnCheckSpeak').disabled=true;document.getElementById('btnCheckSpeak').style.opacity='0.4';document.getElementById('btnNextCard').style.display='block';
 }
 
 // ===== STREAK + XP SYSTEM =====
