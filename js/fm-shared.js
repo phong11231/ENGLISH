@@ -1190,7 +1190,7 @@ function stopAllAudio(){
   window._dialoguePlaying=false;
   destroyYtPlayer();
 }
-function exitReview(){stopAllAudio();cleanupDialogueLayout();var did=currentDeckId;reviewQueue=[];currentDeckId=null;if(window._isQuizyMode)location.href=_basePath;else if(did)location.href=_basePath+did;else location.href=_basePath;}
+function exitReview(){stopAllAudio();_killSpeechRec();_releaseMic();cleanupDialogueLayout();var did=currentDeckId;reviewQueue=[];currentDeckId=null;if(window._isQuizyMode)location.href=_basePath;else if(did)location.href=_basePath+did;else location.href=_basePath;}
 function cleanupDialogueLayout(){
   const outer=document.querySelector('.dialogue-outer-layout');
   if(outer){
@@ -1382,6 +1382,8 @@ function showCurrentCard(){
     document.getElementById('typeAnswerWrap').style.display='none';
     document.getElementById('btnCheckAnswer').style.display='none';
     document.getElementById('btnNextCard').style.display='none';
+    document.getElementById('speakAnswerWrap').style.display='none';
+    _killSpeechRec();_releaseMic();
     document.getElementById('reviewDone').style.display='block';
     document.getElementById('doneStats').innerHTML=
       '<div class="done-stat"><div class="done-stat-value xp">'+sessionXp+'</div><div class="done-stat-label">XP earned</div></div>'+
