@@ -1581,7 +1581,7 @@ function showCurrentCard(){
   // Reset all mode UIs
   typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
   speakWrap.style.display='none';btnCheckSpeak.style.display='none';
-  if(window._speechRec){try{window._speechRec.abort();}catch(e){}}
+  _killSpeechRec();
   if(reviewMode==='type'){
     document.getElementById('flashcard').onclick=null;
     if(hint)hint.style.display='none';
@@ -2207,6 +2207,9 @@ function toggleSpeechRec(){
   if(!_SpeechRec){toast('Browser khong ho tro Speech Recognition. Dung Chrome.');return;}
   if(window._speechRecActive){_killSpeechRec();var mb=document.getElementById('btnMic');mb.innerHTML='🎤 Tap to speak';mb.className='btn btn-primary';mb.style.animation='';return;}
   _killSpeechRec();
+  document.getElementById('speakResult').style.display='none';
+  document.getElementById('btnCheckSpeak').style.display='none';
+  document.getElementById('btnNextCard').style.display='none';
   setTimeout(function(){
     var rec=new _SpeechRec();
     rec.lang='en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=5;
