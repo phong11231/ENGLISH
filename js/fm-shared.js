@@ -2203,9 +2203,54 @@ function _killSpeechRec(){
   if(window._speechRec){try{window._speechRec.onresult=null;window._speechRec.onend=null;window._speechRec.onerror=null;window._speechRec.abort();}catch(e){}window._speechRec=null;}
   window._speechRecActive=false;
 }
+var _micGranted=false;
 function _ensureMicPermission(cb){
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){cb();return;}
-  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){stream.getTracks().forEach(function(t){t.stop();});cb();}).catch(function(err){toast('Cho phép mic nhé! '+err.message);});
+  if(_micGranted){cb();return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){_micGranted=true;cb();return;}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){stream.getTracks().forEach(function(t){t.stop();});_micGranted=true;setTimeout(cb,500);}).catch(function(err){toast('Cho phép mic nhé! '+err.message);});
+}
+function _startSpeechRec(){
+  var micBtn=document.getElementById('btnMic');
+  var transcript=document.getElementById('speakTranscript');
+  transcript.textContent='🎙️ Nói đi...';
+  var rec=new _SpeechRec();
+  rec.lang='en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=5;
+  window._speechFinal='';window._speechAlts=[];
+  rec.onresult=function(e){
+    var interim='',final='';var alts=[];
+    for(var i=0;i<e.results.length;i++){
+      if(e.results[i].isFinal){final+=e.results[i][0].transcript;for(var a=0;a<e.results[i].length;a++)alts.push({text:e.results[i][a].transcript,conf:e.results[i][a].confidence});}
+      else interim+=e.results[i][0].transcript;
+    }
+    window._speechFinal=final;window._speechAlts=alts;
+    transcript.textContent=final||('💬 '+interim+'...');
+  };
+  rec.onend=function(){
+    window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';
+    var txt=(window._speechFinal||'').trim();
+    if(txt){
+      micBtn.innerHTML='🎤 Nói lại';micBtn.className='btn btn-ghost';
+      transcript.textContent=txt;
+      document.getElementById('btnCheckSpeak').style.display='block';
+    } else {
+      micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';
+      transcript.textContent='Không nghe được. Nói to hơn rồi thử lại.';
+    }
+  };
+  rec.onerror=function(e){
+    window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';
+    micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';
+    if(e.error==='not-allowed'){_micGranted=false;toast('Cho phép mic trong trình duyệt nhé!');}
+    else if(e.error==='no-speech')transcript.textContent='Không nghe thấy. Nói to hơn rồi thử lại.';
+    else if(e.error!=='aborted')transcript.textContent='Lỗi mic: '+e.error+'. Thử lại.';
+  };
+  try{
+    rec.start();
+    window._speechRec=rec;window._speechRecActive=true;
+  }catch(ex){
+    toast('Mic lỗi: '+ex.message);
+    micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';
+  }
 }
 function toggleSpeechRec(){
   if(!_SpeechRec){toast('Browser khong ho tro Speech Recognition. Dung Chrome.');return;}
@@ -2217,50 +2262,8 @@ function toggleSpeechRec(){
   document.getElementById('flashcard').classList.remove('flipped');
   var micBtn=document.getElementById('btnMic');
   micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
-  var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Xin quyền mic...';transcript.className='type-answer-input';
-  _ensureMicPermission(function(){
-  transcript.textContent='🎙️ Nói đi...';
-  setTimeout(function(){
-    var rec=new _SpeechRec();
-    rec.lang='en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=5;
-    window._speechFinal='';window._speechAlts=[];
-    rec.onresult=function(e){
-      var interim='',final='';var alts=[];
-      for(var i=0;i<e.results.length;i++){
-        if(e.results[i].isFinal){final+=e.results[i][0].transcript;for(var a=0;a<e.results[i].length;a++)alts.push({text:e.results[i][a].transcript,conf:e.results[i][a].confidence});}
-        else interim+=e.results[i][0].transcript;
-      }
-      window._speechFinal=final;window._speechAlts=alts;
-      transcript.textContent=final||('💬 '+interim+'...');
-    };
-    rec.onend=function(){
-      window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';
-      var txt=(window._speechFinal||'').trim();
-      if(txt){
-        micBtn.innerHTML='🎤 Nói lại';micBtn.className='btn btn-ghost';
-        transcript.textContent=txt;
-        document.getElementById('btnCheckSpeak').style.display='block';
-      } else {
-        micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';
-        transcript.textContent='Không nghe được. Nói to hơn rồi thử lại.';
-      }
-    };
-    rec.onerror=function(e){
-      window._speechRecActive=false;window._speechRec=null;micBtn.style.animation='';
-      micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';
-      if(e.error==='not-allowed')toast('Cho phép mic trong trình duyệt nhé!');
-      else if(e.error==='no-speech')transcript.textContent='Không nghe thấy. Nói to hơn rồi thử lại.';
-      else if(e.error!=='aborted')transcript.textContent='Lỗi mic: '+e.error+'. Thử lại.';
-    };
-    try{
-      rec.start();
-      window._speechRec=rec;window._speechRecActive=true;
-    }catch(ex){
-      toast('Mic lỗi: '+ex.message);
-      micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';
-    }
-  },300);
-  });
+  var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Đang mở mic...';transcript.className='type-answer-input';
+  _ensureMicPermission(function(){_startSpeechRec();});
 }
 function checkSpokenAnswer(){
   var card=reviewQueue[reviewIndex];var spoken=(window._speechFinal||'').trim();
@@ -2272,7 +2275,6 @@ function checkSpokenAnswer(){
   }
   var result=document.getElementById('speakResult');
   document.getElementById('flashcard').classList.add('flipped');
-  speakText(card.back);
   if(correct){
     document.getElementById('speakTranscript').className='type-answer-input correct';
     result.className='type-answer-result correct';result.textContent='✓ Correct!';result.style.display='block';
