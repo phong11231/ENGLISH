@@ -3323,6 +3323,9 @@ async function loadSharedDecks(){
     if(count>0){saveLocal();renderCurrentView();}
   }catch(e){console.error('[SharedDecks] error:',e.code||'',e.message);}
 }
+function _getGHToken(){try{return localStorage.getItem('_fmGHT')||'';}catch(e){return '';}}
+function _saveGHToken(t){try{localStorage.setItem('_fmGHT',t);}catch(e){}}
+
 function openAdminNotifyModal(){
   if(!isAdmin){toast('Admin required');return;}
   var overlay=document.createElement('div');
@@ -3369,7 +3372,11 @@ async function sendAdminNotify(){
       return;
     }
 
-    var ghToken=prompt('Nhap GitHub Token (fine-grained, quyen Actions) de gui ngay.\nHoac bam Cancel roi vao GitHub Actions chay thu cong.');
+    var ghToken=_getGHToken();
+    if(!ghToken){
+      ghToken=prompt('Nhap GitHub Token (quyen Actions) de gui ngay.\nToken se duoc luu, lan sau khong can nhap lai.\nHoac bam Cancel roi vao GitHub Actions chay thu cong.');
+      if(ghToken)_saveGHToken(ghToken);
+    }
     if(ghToken){
       var resp=await fetch('https://api.github.com/repos/phong11231/ENGLISH/actions/workflows/daily-reminder.yml/dispatches',{
         method:'POST',
