@@ -172,7 +172,7 @@ async function mergeAndLoadCloud(){
     if(!db.settings.deletedCards)db.settings.deletedCards={};
     Object.assign(db.settings.deletedCards,cloudSettings.deletedCards);
   }
-  updates['settings']={totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20,leechThreshold:db.settings.leechThreshold||8,dismissedShared:db.settings.dismissedShared||[],deletedCards:db.settings.deletedCards||{}};
+  updates['settings']={totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20,leechThreshold:db.settings.leechThreshold||8,dismissedShared:db.settings.dismissedShared||[],deletedCards:db.settings.deletedCards||{},studyHours:db.settings.studyHours||{}};
   // Merge review logs
   const existingDates=new Set();
   Object.values(cloudLogs).forEach(e=>{existingDates.add(e.date+'_'+e.cardId);});
@@ -193,13 +193,15 @@ async function mergeAndLoadCloud(){
     const val=s.val()||{};
     console.log('[RTDB listener] received '+Object.keys(val).length+' decks');
     const merged={};
+    var _delCards=db.settings.deletedCards||{};
     for(const[id,nd]of Object.entries(val)){
       var ex=db.decks[id];
       if(ex&&ex._shared){
         nd.defaultDisplayMode=ex.defaultDisplayMode;nd.defaultReviewMode=ex.defaultReviewMode;
         var em={};(ex.cards||[]).forEach(c=>{em[c.id]=c;});
         (nd.cards||[]).forEach(c=>{var ec=em[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
-        var si=new Set((nd.cards||[]).map(c=>c.id));var uc=(ex.cards||[]).filter(c=>!si.has(c.id));nd.cards=(nd.cards||[]).concat(uc);
+        nd.cards=(nd.cards||[]).filter(c=>!_delCards[id+'_'+c.id]);
+        var si=new Set((nd.cards||[]).map(c=>c.id));var uc=(ex.cards||[]).filter(c=>!si.has(c.id)&&!_delCards[id+'_'+c.id]);nd.cards=nd.cards.concat(uc);
       }
       merged[id]=nd;
     }
