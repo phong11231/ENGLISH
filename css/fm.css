@@ -629,16 +629,65 @@ select option{background:#fff;color:#222}
 
 /* RESPONSIVE */
 @media(max-width:640px){
-  .nav{padding:0 16px;height:56px}.nav-brand{font-size:17px}
-  .main{padding:16px 14px 20px;overflow-y:auto}.page-header h1{font-size:24px}
-  .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}.stat-card{padding:12px 14px}.stat-card .stat-value{font-size:22px}
-  #viewDecks.active{height:auto;overflow:visible}.decks-layout{flex-direction:column}.decks-sidebar{position:static;max-height:none}.deck-item .deck-color{width:36px;height:36px;font-size:18px}
-  .flashcard-content{font-size:18px}.review-actions{flex-wrap:wrap}.review-btn{min-width:calc(50% - 5px)}
-  .modal{border-radius:var(--r-lg)}.fab{bottom:16px;right:16px;width:52px;height:52px;border-radius:16px;font-size:24px}
-  .daily-goal-actions{gap:10px}.action-card-icon{width:40px;height:40px;font-size:18px}.action-card-title{font-size:13px}.action-card-sub{font-size:11px}.action-card-arrow{display:none}
+  .nav{padding:0 12px;height:52px;gap:4px}
+  .nav-brand{font-size:16px;gap:6px;flex-shrink:0}
+  .nav-brand span{font-size:20px}
+  .nav-actions{gap:2px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
+  .nav-actions::-webkit-scrollbar{display:none}
+  .nav-btn{width:34px;height:34px;border-radius:10px;font-size:16px;flex-shrink:0}
+  .user-avatar{width:30px;height:30px;border-radius:8px;flex-shrink:0}
+  .user-avatar-initial{width:30px;height:30px;font-size:12px}
+  html,body{height:auto;overflow:auto}
+  .app{height:auto;overflow:visible}
+  html:has(#viewReview.active),html:has(#viewReview.active) body{height:100vh;overflow:hidden}
+  html:has(#viewReview.active) .app{height:100vh;overflow:hidden}
+  .main{padding:12px 16px 20px;overflow-y:visible}.page-header h1{font-size:22px}
+  .page-header p{font-size:13px;margin-top:4px}
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat-card{padding:12px 14px}
+  .stat-card .stat-icon{font-size:22px;margin-bottom:4px}
+  .stat-card .stat-value{font-size:24px}
+  .stat-card .stat-label{font-size:10px}
+  .streak-widget{padding:14px;margin-bottom:12px}
+  .streak-widget-top{gap:12px;margin-bottom:12px}
+  .streak-widget-fire{font-size:36px}
+  .streak-widget-days{font-size:28px}
+  .streak-widget-label{font-size:12px}
+  .streak-widget-xp-val{font-size:18px}
+  .streak-widget-xp-label{font-size:10px}
+  .streak-widget-week{gap:4px}
+  .streak-day{width:32px;height:32px;border-radius:8px;font-size:9px}
+  .streak-day-dot{width:5px;height:5px}
+  .daily-goal{padding:14px 16px;gap:12px;margin-bottom:16px}
+  .goal-ring{width:50px;height:50px;font-size:14px}
+  .daily-goal-actions{flex-direction:column;gap:8px}
+  .daily-goal-actions .action-card{padding:14px 12px;gap:10px}
+  .action-card-icon{width:38px;height:38px;font-size:18px}
+  .action-card-title{font-size:14px}
+  .action-card-sub{font-size:11px}
+  .action-card-arrow{display:none}
+  #viewDecks.active{height:auto;overflow:visible}
+  .decks-layout{flex-direction:column;gap:12px}
+  .decks-main{overflow-y:visible}
+  .decks-sidebar{position:static;max-height:none}
+  .deck-item .deck-color{width:36px;height:36px;font-size:18px}
+  .flashcard-content{font-size:18px}
+  .review-actions{flex-wrap:wrap}
+  .review-btn{min-width:calc(50% - 5px)}
+  .modal{border-radius:var(--r-lg);margin:8px}
+  .modal-overlay{padding:8px}
+  .fab{bottom:16px;right:16px;width:52px;height:52px;border-radius:16px;font-size:24px}
   .card-table{font-size:13px}.card-table th,.card-table td{padding:8px 10px}
   .card-table .card-front-col,.card-table .card-back-col{max-width:120px}
   .review-container{padding:4px 0 0}
+  .app-footer{padding:8px 16px;font-size:12px;gap:6px}
+  .footer-avatar{width:22px;height:22px}
+  .user-menu{right:8px;left:8px;min-width:auto}
+  .toast{font-size:13px;padding:10px 18px;border-radius:12px}
+  .empty-state{padding:40px 16px}
+  .empty-state .empty-icon{font-size:60px;margin-bottom:12px}
+  .empty-state h3{font-size:18px}
+  .empty-state p{font-size:13px}
 }
 .app-footer{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 20px;font-size:13px;color:var(--ink-dim);position:relative;z-index:1;flex-shrink:0}
 .app-footer strong{color:var(--primary-light);font-weight:700}
