@@ -168,7 +168,11 @@ async function mergeAndLoadCloud(){
     if(!db.settings.dismissedShared)db.settings.dismissedShared=[];
     cloudSettings.dismissedShared.forEach(id=>{if(!db.settings.dismissedShared.includes(id))db.settings.dismissedShared.push(id);});
   }
-  updates['settings']={totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20,leechThreshold:db.settings.leechThreshold||8,dismissedShared:db.settings.dismissedShared||[]};
+  if(cloudSettings.deletedCards){
+    if(!db.settings.deletedCards)db.settings.deletedCards={};
+    Object.assign(db.settings.deletedCards,cloudSettings.deletedCards);
+  }
+  updates['settings']={totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20,leechThreshold:db.settings.leechThreshold||8,dismissedShared:db.settings.dismissedShared||[],deletedCards:db.settings.deletedCards||{}};
   // Merge review logs
   const existingDates=new Set();
   Object.values(cloudLogs).forEach(e=>{existingDates.add(e.date+'_'+e.cardId);});
@@ -869,7 +873,11 @@ function deleteCard(cardId){
   if(db.decks[currentDeckId]._shared&&!isAdmin){toast('This is a default deck and cannot be edited');return;}
   if(!confirm('Delete this card?'))return;
   const deck=db.decks[currentDeckId];deck.cards=deck.cards.filter(c=>c.id!==cardId);
-  saveDeckData(currentDeckId,deck);renderCardBrowser();toast('Deleted');
+  if(!db.settings.deletedCards)db.settings.deletedCards={};
+  db.settings.deletedCards[currentDeckId+'_'+cardId]=Date.now();
+  saveDeckData(currentDeckId,deck);saveLocal();
+  if(currentUser)rtdbUser().child('settings/deletedCards').set(db.settings.deletedCards).catch(console.error);
+  renderCardBrowser();toast('Deleted');
 }
 
 function copyCardToDeck(cardId,move){
@@ -3312,10 +3320,12 @@ async function loadSharedDecks(){
         data.defaultDisplayMode=existing.defaultDisplayMode;
         data.defaultReviewMode=existing.defaultReviewMode;
         const existingMap={};(existing.cards||[]).forEach(c=>{existingMap[c.id]=c;});
-        (data.cards||[]).forEach(c=>{var ec=existingMap[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
-        const sharedCardIds=new Set((data.cards||[]).map(c=>c.id));
-        const userCards=(existing.cards||[]).filter(c=>!sharedCardIds.has(c.id));
-        data.cards=(data.cards||[]).concat(userCards);
+        var _delCards=db.settings.deletedCards||{};
+        data.cards=(data.cards||[]).filter(c=>!_delCards[id+'_'+c.id]);
+        data.cards.forEach(c=>{var ec=existingMap[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
+        const sharedCardIds=new Set(data.cards.map(c=>c.id));
+        const userCards=(existing.cards||[]).filter(c=>!sharedCardIds.has(c.id)&&!_delCards[id+'_'+c.id]);
+        data.cards=data.cards.concat(userCards);
       }
       db.decks[id]=data;
       count++;
