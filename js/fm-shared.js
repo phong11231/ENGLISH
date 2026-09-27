@@ -3163,7 +3163,7 @@ function showQuizResult(){
 
 // ===== ADMIN =====
 let isAdmin=localStorage.getItem('flashmind_admin')==='true';
-function updateAdminUI(){var ap=document.getElementById('adminPushBtn');if(ap)ap.style.display=isAdmin?'block':'none';var ub=document.getElementById('btnUploadAudio');if(ub)ub.style.display=isAdmin?'inline-block':'none';var ak=document.getElementById('aiKeyGroup');if(ak)ak.style.display=isAdmin?'block':'none';var bs=document.getElementById('btnBulkSwap');if(bs)bs.style.display=isAdmin?'inline-block':'none';var bp=document.getElementById('btnBulkPunct');if(bp)bp.style.display=isAdmin?'inline-block':'none';}
+function updateAdminUI(){var ap=document.getElementById('adminPushBtn');if(ap)ap.style.display=isAdmin?'block':'none';var ub=document.getElementById('btnUploadAudio');if(ub)ub.style.display=isAdmin?'inline-block':'none';var ak=document.getElementById('aiKeyGroup');if(ak)ak.style.display=isAdmin?'block':'none';var bs=document.getElementById('btnBulkSwap');if(bs)bs.style.display=isAdmin?'inline-block':'none';var bp=document.getElementById('btnBulkPunct');if(bp)bp.style.display=isAdmin?'inline-block':'none';var an=document.getElementById('adminNotifyBtn');if(an)an.style.display=isAdmin?'block':'none';}
 
 function bulkSwapFrontBack(){
   if(!isAdmin||!currentDeckId)return;
@@ -3320,6 +3320,73 @@ async function loadSharedDecks(){
     if(count>0){saveLocal();renderCurrentView();}
   }catch(e){console.error('[SharedDecks] error:',e.code||'',e.message);}
 }
+function openAdminNotifyModal(){
+  if(!isAdmin){toast('Admin required');return;}
+  var overlay=document.createElement('div');
+  overlay.id='adminNotifyModal';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border:1px solid var(--line,#333);border-radius:16px;padding:28px 24px;max-width:440px;width:100%;color:var(--ink,#fff);">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:18px;font-weight:700">📢 Gui thong bao</h3><button onclick="this.closest(\'#adminNotifyModal\').remove()" style="background:none;border:none;color:var(--ink,#fff);font-size:20px;cursor:pointer;opacity:.6">✕</button></div>'+
+    '<div style="margin-bottom:12px"><label style="font-size:13px;opacity:.7;display:block;margin-bottom:4px">Tieu de</label><input id="adminNotifyTitle" value="FlashMind — Nhac hoc" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line,#444);background:var(--glass,#222);color:var(--ink,#fff);font-size:14px;box-sizing:border-box"></div>'+
+    '<div style="margin-bottom:16px"><label style="font-size:13px;opacity:.7;display:block;margin-bottom:4px">Noi dung</label><textarea id="adminNotifyBody" rows="3" placeholder="Nhap noi dung thong bao..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line,#444);background:var(--glass,#222);color:var(--ink,#fff);font-size:14px;resize:vertical;box-sizing:border-box"></textarea></div>'+
+    '<div style="display:flex;gap:10px"><button onclick="sendAdminNotify()" style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--primary,#8b5cf6);color:#fff;font-weight:700;font-size:15px;cursor:pointer">Gui ngay</button><button onclick="this.closest(\'#adminNotifyModal\').remove()" style="padding:10px 20px;border-radius:10px;border:1px solid var(--line,#444);background:transparent;color:var(--ink,#fff);font-size:14px;cursor:pointer;opacity:.7">Huy</button></div>'+
+    '<div id="adminNotifyStatus" style="margin-top:12px;font-size:13px;text-align:center;display:none"></div>'+
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  document.getElementById('adminNotifyBody').focus();
+}
+
+async function sendAdminNotify(){
+  if(!isAdmin||!currentUser){toast('Admin required');return;}
+  var title=document.getElementById('adminNotifyTitle').value.trim()||'FlashMind';
+  var body=document.getElementById('adminNotifyBody').value.trim();
+  if(!body){toast('Nhap noi dung thong bao');return;}
+  var status=document.getElementById('adminNotifyStatus');
+  status.style.display='block';status.textContent='Dang gui...';status.style.color='var(--primary,#8b5cf6)';
+
+  try{
+    var snap=await rtdb.ref('users').once('value');
+    var users=snap.val()||{};
+    var subCount=0;
+    for(var uid in users){
+      if(users[uid].pushSub&&users[uid].pushSub.endpoint) subCount++;
+    }
+
+    await rtdb.ref('adminNotify').push({
+      title:title,body:body,
+      sentBy:currentUser.uid,
+      sentAt:Date.now(),
+      targetCount:subCount,
+      sent:false
+    });
+
+    if(subCount===0){
+      status.textContent='Chua co user nao dang ky thong bao!';status.style.color='#ed8936';
+      return;
+    }
+
+    var ghToken=prompt('Nhap GitHub Token (fine-grained, quyen Actions) de gui ngay.\nHoac bam Cancel roi vao GitHub Actions chay thu cong.');
+    if(ghToken){
+      var resp=await fetch('https://api.github.com/repos/phong11231/ENGLISH/actions/workflows/daily-reminder.yml/dispatches',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+ghToken,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+        body:JSON.stringify({ref:'main',inputs:{message:body,title:title}})
+      });
+      if(resp.ok||resp.status===204){
+        status.textContent='Gui thanh cong! Thong bao den trong 1-2 phut ('+subCount+' user).';status.style.color='#48bb78';
+      } else {
+        status.textContent='GitHub API loi ('+resp.status+'). Vao Actions chay thu cong.';status.style.color='#ed8936';
+      }
+    } else {
+      status.textContent='Da luu! Vao GitHub Actions → Run workflow de gui ('+subCount+' user).';status.style.color='#ed8936';
+    }
+  }catch(e){
+    console.error('[AdminNotify]',e);
+    status.textContent='Loi: '+e.message;status.style.color='#e53e3e';
+  }
+}
+
 updateAdminUI();
 
 // ===== PUSH NOTIFICATION =====
