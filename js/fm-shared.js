@@ -1190,7 +1190,7 @@ function stopAllAudio(){
   window._dialoguePlaying=false;
   destroyYtPlayer();
 }
-function exitReview(){stopAllAudio();_killSpeechRec();_releaseMic();cleanupDialogueLayout();var did=currentDeckId;reviewQueue=[];currentDeckId=null;if(window._isQuizyMode)location.href=_basePath;else if(did)location.href=_basePath+did;else location.href=_basePath;}
+function exitReview(){stopAllAudio();_killSpeechRec();_releaseMic();_killTypeMic();cleanupDialogueLayout();var did=currentDeckId;reviewQueue=[];currentDeckId=null;if(window._isQuizyMode)location.href=_basePath;else if(did)location.href=_basePath+did;else location.href=_basePath;}
 function cleanupDialogueLayout(){
   const outer=document.querySelector('.dialogue-outer-layout');
   if(outer){
@@ -2179,6 +2179,7 @@ function diffWords(typed,answer){
   return html;
 }
 function checkTypedAnswer(){
+  _killTypeMic();
   const card=reviewQueue[reviewIndex];const typed=document.getElementById('typeAnswerInput').value;
   const correctEn=normalize(card.back)===normalize(typed);
   const input=document.getElementById('typeAnswerInput'),result=document.getElementById('typeAnswerResult');
@@ -2207,6 +2208,56 @@ function checkTypedAnswer(){
   document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
 }
 function nextAfterType(){if(!window._typeAnswered)answerCard(0);window._typeAnswered=false;showCurrentCard();}
+
+// ===== TYPE-MIC (noi de dien vao o type) =====
+var _typeMicActive=false;
+var _typeMicRec=null;
+var _typeMicProcessor=null;
+var _typeMicSource=null;
+var _typeMicStream=null;
+function _killTypeMic(){
+  _typeMicActive=false;
+  if(_typeMicProcessor){try{_typeMicProcessor.disconnect();}catch(e){}_typeMicProcessor=null;}
+  if(_typeMicSource){try{_typeMicSource.disconnect();}catch(e){}_typeMicSource=null;}
+  if(_typeMicRec){try{_typeMicRec.remove();}catch(e){}_typeMicRec=null;}
+  if(_typeMicStream){_typeMicStream.getTracks().forEach(function(t){t.stop();});_typeMicStream=null;}
+  var btn=document.getElementById('btnTypeMic');
+  if(btn){btn.style.background='var(--glass)';btn.style.color='var(--primary)';btn.textContent='🎤';btn.style.animation='';}
+}
+function toggleTypeMic(){
+  if(_typeMicActive){_killTypeMic();return;}
+  _killTypeMic();
+  var btn=document.getElementById('btnTypeMic');
+  var input=document.getElementById('typeAnswerInput');
+  if(!btn||!input)return;
+  btn.textContent='⏳';
+  _voskLoadModel().then(function(){
+    _typeMicRec=new _voskModel.KaldiRecognizer(16000);
+    _typeMicRec.on('result',function(msg){
+      var t=(msg.result&&msg.result.text)||'';
+      if(t&&input)input.value=t;
+    });
+    _typeMicRec.on('partialresult',function(msg){
+      var p=(msg.result&&msg.result.partial)||'';
+      if(p&&input)input.value=p;
+    });
+    return navigator.mediaDevices.getUserMedia({audio:{channelCount:1,sampleRate:16000,echoCancellation:true,noiseSuppression:true},video:false});
+  }).then(function(stream){
+    _typeMicStream=stream;
+    _voskAudioCtx=_voskAudioCtx||new (window.AudioContext||window.webkitAudioContext)({sampleRate:16000});
+    if(_voskAudioCtx.state==='suspended')_voskAudioCtx.resume();
+    _typeMicSource=_voskAudioCtx.createMediaStreamSource(stream);
+    _typeMicProcessor=_voskAudioCtx.createScriptProcessor(4096,1,1);
+    _typeMicProcessor.onaudioprocess=function(e){try{_typeMicRec.acceptWaveform(e.inputBuffer);}catch(ex){}};
+    _typeMicSource.connect(_typeMicProcessor);
+    _typeMicProcessor.connect(_voskAudioCtx.destination);
+    _typeMicActive=true;
+    btn.textContent='🔴';btn.style.background='var(--red-bg,#fee)';btn.style.color='var(--red)';btn.style.animation='pulse 1s infinite';
+  }).catch(function(err){
+    toast('Mic lỗi: '+err.message);
+    _killTypeMic();
+  });
+}
 
 // ===== SPEAK MODE (Vosk-browser, local, never blocks) =====
 var _voskModel=null;

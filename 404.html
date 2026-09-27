@@ -150,7 +150,10 @@ if (!_routeId) location.replace(_basePath);
       <button class="review-btn easy" onclick="answerCard(3)">Easy<span class="interval" id="intEasy"></span></button>
     </div>
     <div class="type-answer-wrap" id="typeAnswerWrap" style="display:none">
-      <input type="text" class="type-answer-input" id="typeAnswerInput" placeholder="Type your answer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" name="fm_answer_nonce">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" class="type-answer-input" id="typeAnswerInput" placeholder="Type your answer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" name="fm_answer_nonce" style="flex:1">
+        <button id="btnTypeMic" onclick="toggleTypeMic()" style="width:44px;height:44px;border-radius:50%;border:2px solid var(--primary);background:var(--glass);color:var(--primary);font-size:20px;cursor:pointer;flex-shrink:0;transition:all .2s" title="Nói để điền">🎤</button>
+      </div>
       <input type="text" class="type-answer-input" id="typeAnswerViInput" placeholder="Nhập nghĩa tiếng Việt..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" name="fm_vi_nonce" style="display:none;margin-top:8px">
       <div class="type-answer-result" id="typeAnswerResult"></div>
       <div class="type-answer-result" id="typeAnswerViResult" style="display:none"></div>
