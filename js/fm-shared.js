@@ -89,6 +89,7 @@ auth.onAuthStateChanged(user=>{
     else{if(avImg)avImg.style.display='none';if(avInit){avInit.style.display='flex';avInit.textContent=((user.displayName||user.email||'?')[0]).toUpperCase();}}
     var un=document.getElementById('userName');if(un)un.textContent=user.displayName||user.email;
     mergeAndLoadCloud();
+    initPushNotification();
   } else {
     if(navLogin)navLogin.style.display='flex';
     if(avImg)avImg.style.display='none';if(avInit)avInit.style.display='none';
@@ -3320,6 +3321,77 @@ async function loadSharedDecks(){
   }catch(e){console.error('[SharedDecks] error:',e.code||'',e.message);}
 }
 updateAdminUI();
+
+// ===== PUSH NOTIFICATION =====
+var VAPID_PUBLIC='BLQTjgTjyEiYhU5z7xGW4ZaiGVmFGSwUs0EQ5nsJefKxnNVVcC-CSiVUurUQnPW6zp0vUGiTXh5_8KcONteeczw';
+var _pushAsked=false;
+
+function initPushNotification(){
+  if(!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  navigator.serviceWorker.register(_basePath+'sw.js').then(function(reg){
+    console.log('[SW] registered');
+    if(Notification.permission==='granted'){
+      subscribePush(reg);
+    } else if(Notification.permission!=='denied' && !_pushAsked){
+      setTimeout(function(){ showNotificationPrompt(reg); }, 3000);
+    }
+  }).catch(function(e){ console.error('[SW] register failed:',e); });
+}
+
+function showNotificationPrompt(reg){
+  if(_pushAsked || Notification.permission==='granted') return;
+  _pushAsked=true;
+  var overlay=document.createElement('div');
+  overlay.id='pushPromptOverlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border:1px solid var(--line,#333);border-radius:16px;padding:28px 24px;max-width:360px;width:100%;text-align:center;color:var(--ink,#fff);">'+
+    '<div style="font-size:40px;margin-bottom:12px">🔔</div>'+
+    '<div style="font-size:18px;font-weight:700;margin-bottom:8px">Bat thong bao nhac hoc?</div>'+
+    '<div style="font-size:14px;opacity:.7;margin-bottom:20px;line-height:1.5">FlashMind se nhac ban hoc moi ngay luc 18h neu chua on tap, giup ban giu streak!</div>'+
+    '<div style="display:flex;gap:10px;justify-content:center">'+
+    '<button id="pushAllow" style="padding:10px 24px;border-radius:10px;border:none;background:var(--primary,#8b5cf6);color:#fff;font-weight:700;font-size:15px;cursor:pointer">Cho phep</button>'+
+    '<button id="pushDeny" style="padding:10px 24px;border-radius:10px;border:1px solid var(--line,#444);background:transparent;color:var(--ink,#fff);font-size:15px;cursor:pointer;opacity:.7">De sau</button>'+
+    '</div></div>';
+  document.body.appendChild(overlay);
+  document.getElementById('pushAllow').onclick=function(){
+    overlay.remove();
+    Notification.requestPermission().then(function(perm){
+      if(perm==='granted') subscribePush(reg);
+    });
+  };
+  document.getElementById('pushDeny').onclick=function(){ overlay.remove(); };
+}
+
+function urlBase64ToUint8Array(base64String){
+  var padding='='.repeat((4-base64String.length%4)%4);
+  var base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  var raw=atob(base64);var arr=new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+
+function subscribePush(reg){
+  reg.pushManager.getSubscription().then(function(sub){
+    if(sub){ savePushSub(sub); return; }
+    reg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)
+    }).then(function(sub){
+      savePushSub(sub);
+    }).catch(function(e){ console.error('[Push] subscribe failed:',e); });
+  });
+}
+
+function savePushSub(sub){
+  if(!currentUser) return;
+  var data=sub.toJSON();
+  rtdbUser().child('pushSub').set({
+    endpoint:data.endpoint,
+    keys:data.keys,
+    ua:navigator.userAgent.slice(0,100),
+    updated:Date.now()
+  }).catch(function(e){ console.error('[Push] save sub failed:',e); });
+}
 
 // ===== INIT =====
 loadLocal();

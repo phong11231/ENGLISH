@@ -1,9 +1,9 @@
 {
   "name": "FlashMind — Study Smart",
   "short_name": "FlashMind",
-  "description": "Smart flashcard review with SM-2 algorithm",
+  "description": "Smart flashcard review with FSRS algorithm",
   "start_url": "./",
-  "display": "minimal-ui",
+  "display": "standalone",
   "background_color": "#06061a",
   "theme_color": "#8b5cf6",
   "orientation": "portrait",
