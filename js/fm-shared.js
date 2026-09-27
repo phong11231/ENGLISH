@@ -102,9 +102,10 @@ var _lastVisSync=0;
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&currentUser){
     var now=Date.now();
-    if(now-_lastVisSync<60000)return;
+    if(now-_lastVisSync<300000)return;
     _lastVisSync=now;
-    rtdbUser().child('settings').once('value').then(s=>{const cs=s.val()||{};db.settings.totalXp=Math.max(db.settings.totalXp||0,cs.totalXp||0);if(cs.streakDays){if(!db.settings.streakDays)db.settings.streakDays={};for(const[day,count]of Object.entries(cs.streakDays)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}}saveLocal();renderCurrentView();});
+    rtdbUser().child('settings/totalXp').once('value').then(s=>{var v=s.val()||0;db.settings.totalXp=Math.max(db.settings.totalXp||0,v);});
+    rtdbUser().child('settings/streakDays').once('value').then(s=>{const cs=s.val()||{};if(!db.settings.streakDays)db.settings.streakDays={};for(const[day,count]of Object.entries(cs)){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,count);}saveLocal();renderCurrentView();});
   }
 });
 function userDoc(){return firestore.collection('users').doc(currentUser.uid);}
@@ -172,7 +173,13 @@ async function mergeAndLoadCloud(){
     if(!db.settings.deletedCards)db.settings.deletedCards={};
     Object.assign(db.settings.deletedCards,cloudSettings.deletedCards);
   }
-  updates['settings']={totalXp:db.settings.totalXp||0,streakDays:db.settings.streakDays||{},dailyGoal:db.settings.dailyGoal||20,leechThreshold:db.settings.leechThreshold||8,dismissedShared:db.settings.dismissedShared||[],deletedCards:db.settings.deletedCards||{},studyHours:db.settings.studyHours||{}};
+  updates['settings/totalXp']=db.settings.totalXp||0;
+  updates['settings/streakDays']=db.settings.streakDays||{};
+  updates['settings/dailyGoal']=db.settings.dailyGoal||20;
+  updates['settings/leechThreshold']=db.settings.leechThreshold||8;
+  updates['settings/dismissedShared']=db.settings.dismissedShared||[];
+  updates['settings/deletedCards']=db.settings.deletedCards||{};
+  if(db.settings.studyHours)updates['settings/studyHours']=db.settings.studyHours;
   // Merge review logs
   const existingDates=new Set();
   Object.values(cloudLogs).forEach(e=>{existingDates.add(e.date+'_'+e.cardId);});
@@ -189,32 +196,54 @@ async function mergeAndLoadCloud(){
   // Listen for realtime changes
   if(unsubDecks)unsubDecks();
   const decksRef=ref.child('decks');
-  const onDecksValue=decksRef.on('value',s=>{
-    const val=s.val()||{};
-    console.log('[RTDB listener] received '+Object.keys(val).length+' decks');
-    const merged={};
+  var _listenerRefs=[];
+  const onDeckChanged=decksRef.on('child_changed',s=>{
+    const id=s.key;const nd=s.val();if(!nd)return;
+    if(_skipDeckSync[id]&&Date.now()-_skipDeckSync[id]<3000){delete _skipDeckSync[id];return;}
+    console.log('[RTDB] deck changed:',id);
     var _delCards=db.settings.deletedCards||{};
-    for(const[id,nd]of Object.entries(val)){
-      var ex=db.decks[id];
-      if(ex&&ex._shared){
-        nd.defaultDisplayMode=ex.defaultDisplayMode;nd.defaultReviewMode=ex.defaultReviewMode;
-        var em={};(ex.cards||[]).forEach(c=>{em[c.id]=c;});
-        (nd.cards||[]).forEach(c=>{var ec=em[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
-        nd.cards=(nd.cards||[]).filter(c=>!_delCards[id+'_'+c.id]);
-        var si=new Set((nd.cards||[]).map(c=>c.id));var uc=(ex.cards||[]).filter(c=>!si.has(c.id)&&!_delCards[id+'_'+c.id]);nd.cards=nd.cards.concat(uc);
-      }
-      merged[id]=nd;
+    var ex=db.decks[id];
+    if(ex&&ex._shared){
+      nd.defaultDisplayMode=ex.defaultDisplayMode;nd.defaultReviewMode=ex.defaultReviewMode;
+      var em={};(ex.cards||[]).forEach(c=>{em[c.id]=c;});
+      (nd.cards||[]).forEach(c=>{var ec=em[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
+      nd.cards=(nd.cards||[]).filter(c=>!_delCards[id+'_'+c.id]);
+      var si=new Set((nd.cards||[]).map(c=>c.id));var uc=(ex.cards||[]).filter(c=>!si.has(c.id)&&!_delCards[id+'_'+c.id]);nd.cards=nd.cards.concat(uc);
     }
-    for(const[id,d]of Object.entries(db.decks)){if(!merged[id])merged[id]=d;}
-    db.decks=merged;
+    db.decks[id]=nd;
     saveLocal();renderCurrentView();
   });
-  unsubDecks=()=>decksRef.off('value',onDecksValue);
+  _listenerRefs.push(['child_changed',onDeckChanged]);
+  var _deckListenerReady=false;
+  setTimeout(()=>{_deckListenerReady=true;},3000);
+  const onDeckAdded=decksRef.on('child_added',s=>{
+    if(!_deckListenerReady)return;
+    const id=s.key;if(db.decks[id])return;
+    console.log('[RTDB] deck added:',id);
+    db.decks[id]=s.val();saveLocal();renderCurrentView();
+  });
+  _listenerRefs.push(['child_added',onDeckAdded]);
+  const onDeckRemoved=decksRef.on('child_removed',s=>{
+    const id=s.key;
+    console.log('[RTDB] deck removed:',id);
+    delete db.decks[id];saveLocal();renderCurrentView();
+  });
+  _listenerRefs.push(['child_removed',onDeckRemoved]);
+  unsubDecks=()=>{_listenerRefs.forEach(([ev,fn])=>decksRef.off(ev,fn));};
   saveLocal();renderCurrentView();
   await loadSharedDecks();
 }
 async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}await mergeAndLoadCloud();toggleUserMenu();}
 function saveDeckData(id,data){saveLocal();if(currentUser){rtdbUser().child('decks/'+id).set(stripUndef(data)).catch(console.error);if(data._shared&&isAdmin)rtdb.ref('sharedDecks/'+id).set(stripUndef(Object.assign({},data,{sharedBy:currentUser.uid,sharedAt:Date.now()}))).catch(console.error);}}
+var _skipDeckSync={};
+function saveCardOnly(deckId,cardId){
+  saveLocal();if(!currentUser)return;
+  var deck=db.decks[deckId];if(!deck)return;
+  var idx=deck.cards.findIndex(c=>c.id===cardId);if(idx<0)return;
+  _skipDeckSync[deckId]=Date.now();
+  rtdbUser().child('decks/'+deckId+'/cards/'+idx).set(stripUndef(deck.cards[idx])).catch(console.error);
+  if(deck._shared&&isAdmin){rtdb.ref('sharedDecks/'+deckId+'/cards/'+idx).set(stripUndef(deck.cards[idx])).catch(console.error);}
+}
 function deleteDeckData(id){saveLocal();if(currentUser)rtdbUser().child('decks/'+id).remove().catch(console.error);}
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)rtdbUser().child('reviewLog').push(stripUndef(entry)).catch(console.error);}
 
@@ -867,7 +896,7 @@ function filterCards(){renderCardBrowser();}
 
 function toggleSuspend(cardId){
   const deck=db.decks[currentDeckId];const card=deck.cards.find(c=>c.id===cardId);
-  card.suspended=!card.suspended;saveDeckData(currentDeckId,deck);renderCardBrowser();
+  card.suspended=!card.suspended;saveCardOnly(currentDeckId,cardId);renderCardBrowser();
   toast(card.suspended?'Card suspended':'Card unsuspended');
 }
 
@@ -2687,7 +2716,7 @@ function answerCard(quality){
     fsrs(realCard,quality);Object.assign(card,realCard);
   }
   addReviewLog({date:Date.now(),deckId:currentDeckId,cardId:card.id,quality});
-  saveDeckData(currentDeckId,deck);
+  saveCardOnly(currentDeckId,card.id);
 
   sessionTotal++;
   if(quality>=2){
@@ -2730,7 +2759,7 @@ function undoAnswer(){
   if(realCard)Object.assign(realCard,last.prev);
   reviewIndex=last.index;
   if(last.prevStreak!==undefined){streak=last.prevStreak;sessionXp=last.prevXp;sessionCorrect=last.prevCorrect;sessionTotal--;updateStreakUI();}
-  saveDeckData(currentDeckId,deck);showCurrentCard();toast('Undone');
+  saveCardOnly(currentDeckId,last.cardId);showCurrentCard();toast('Undone');
 }
 
 function updateReviewProgress(){
@@ -3364,12 +3393,8 @@ async function sendAdminNotify(){
   status.style.display='block';status.textContent='Dang gui...';status.style.color='var(--primary,#8b5cf6)';
 
   try{
-    var snap=await rtdb.ref('users').once('value');
-    var users=snap.val()||{};
     var subCount=0;
-    for(var uid in users){
-      if(users[uid].pushSub&&users[uid].pushSub.endpoint) subCount++;
-    }
+    try{var cSnap=await rtdb.ref('_pushSubCount').once('value');subCount=cSnap.val()||0;}catch(e){subCount=1;}
 
     await rtdb.ref('adminNotify').push({
       title:title,body:body,
@@ -3479,6 +3504,8 @@ function savePushSub(sub){
     keys:data.keys,
     ua:navigator.userAgent.slice(0,100),
     updated:Date.now()
+  }).then(function(){
+    rtdb.ref('_pushSubCount').transaction(function(v){return(v||0)+1;});
   }).catch(function(e){ console.error('[Push] save sub failed:',e); });
 }
 
