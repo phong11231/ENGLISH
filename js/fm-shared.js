@@ -1604,7 +1604,7 @@ function showCurrentCard(){
     document.getElementById('speakResult').style.display='none';
     btnCheckSpeak.disabled=false;btnCheckSpeak.style.opacity='1';
     _advanceOffset();
-    if(window._speechRec&&window._speechRecActive){
+    if(_voskActive){
       var micBtn=document.getElementById('btnMic');
       micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.style.animation='pulse 1s infinite';
       var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Nói đi...';transcript.className='type-answer-input';
@@ -2208,93 +2208,182 @@ function checkTypedAnswer(){
 }
 function nextAfterType(){if(!window._typeAnswered)answerCard(0);window._typeAnswered=false;showCurrentCard();}
 
-// ===== SPEAK MODE =====
-var _SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
-var _micStream=null;
-var _recResultOffset=0;
-var _recTotalResults=0;
-window.addEventListener('beforeunload',function(){_killSpeechRec();_releaseMic();});
-function _keepMicWarm(){
-  if(_micStream)return Promise.resolve();
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return Promise.resolve();
-  return navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){_micStream=stream;}).catch(function(){});
+// ===== SPEAK MODE (Vosk-browser, local, never blocks) =====
+var _voskModel=null;
+var _voskRec=null;
+var _voskAudioCtx=null;
+var _voskSource=null;
+var _voskProcessor=null;
+var _voskMicStream=null;
+var _voskActive=false;
+var _voskModelLoading=false;
+var _VOSK_MODEL_URL='https://ccoreilly.github.io/vosk-browser/models/vosk-model-small-en-us-0.15.tar.gz';
+var _VOSK_DB_NAME='flashmind_vosk';
+var _VOSK_DB_STORE='models';
+var _VOSK_DB_KEY='en-us-small';
+
+function _voskOpenDB(){
+  return new Promise(function(resolve,reject){
+    var req=indexedDB.open(_VOSK_DB_NAME,1);
+    req.onupgradeneeded=function(e){e.target.result.createObjectStore(_VOSK_DB_STORE);};
+    req.onsuccess=function(e){resolve(e.target.result);};
+    req.onerror=function(){reject(new Error('IndexedDB error'));};
+  });
 }
-function _releaseMic(){
-  if(_micStream){_micStream.getTracks().forEach(function(t){t.stop();});_micStream=null;}
+function _voskGetCached(){
+  return _voskOpenDB().then(function(db){
+    return new Promise(function(resolve,reject){
+      var tx=db.transaction(_VOSK_DB_STORE,'readonly');
+      var req=tx.objectStore(_VOSK_DB_STORE).get(_VOSK_DB_KEY);
+      req.onsuccess=function(){resolve(req.result||null);};
+      req.onerror=function(){resolve(null);};
+    });
+  }).catch(function(){return null;});
+}
+function _voskSaveCache(blob){
+  return _voskOpenDB().then(function(db){
+    return new Promise(function(resolve,reject){
+      var tx=db.transaction(_VOSK_DB_STORE,'readwrite');
+      tx.objectStore(_VOSK_DB_STORE).put(blob,_VOSK_DB_KEY);
+      tx.oncomplete=function(){resolve();};
+      tx.onerror=function(){resolve();};
+    });
+  }).catch(function(){});
+}
+function _voskDownloadModel(onProgress){
+  return new Promise(function(resolve,reject){
+    var xhr=new XMLHttpRequest();
+    xhr.open('GET',_VOSK_MODEL_URL,true);
+    xhr.responseType='arraybuffer';
+    xhr.onprogress=function(e){
+      if(e.lengthComputable&&onProgress)onProgress(e.loaded,e.total);
+    };
+    xhr.onload=function(){
+      if(xhr.status===200){
+        var blob=new Blob([xhr.response]);
+        _voskSaveCache(blob).then(function(){resolve(blob);});
+      }else reject(new Error('Download failed: '+xhr.status));
+    };
+    xhr.onerror=function(){reject(new Error('Network error'));};
+    xhr.send();
+  });
+}
+function _voskLoadModel(){
+  if(_voskModel)return Promise.resolve(_voskModel);
+  if(_voskModelLoading)return _voskModelLoading;
+  var transcript=document.getElementById('speakTranscript');
+  _voskModelLoading=_voskGetCached().then(function(cached){
+    var modelDataPromise;
+    if(cached){
+      if(transcript)transcript.textContent='⚡ Loading model...';
+      modelDataPromise=Promise.resolve(cached);
+    }else{
+      if(transcript){transcript.style.display='block';transcript.textContent='📥 Downloading speech model (one-time ~40MB)...';}
+      modelDataPromise=_voskDownloadModel(function(loaded,total){
+        var pct=Math.round(loaded/total*100);
+        var mb=(loaded/1048576).toFixed(1);
+        var totalMb=(total/1048576).toFixed(1);
+        if(transcript)transcript.textContent='📥 Downloading... '+pct+'% ('+mb+'/'+totalMb+' MB)';
+      });
+    }
+    return modelDataPromise.then(function(blob){
+      if(transcript)transcript.textContent='⏳ Loading model...';
+      var url=URL.createObjectURL(blob);
+      return window.Vosk.createModel(url).then(function(model){
+        URL.revokeObjectURL(url);
+        _voskModel=model;
+        _voskModelLoading=false;
+        return model;
+      });
+    });
+  }).catch(function(err){
+    _voskModelLoading=false;
+    throw err;
+  });
+  return _voskModelLoading;
 }
 function _killSpeechRec(){
-  if(window._speechRec){try{window._speechRec.onresult=null;window._speechRec.onend=null;window._speechRec.onerror=null;window._speechRec.abort();}catch(e){}window._speechRec=null;}
-  window._speechRecActive=false;_recResultOffset=0;_recTotalResults=0;
+  _voskActive=false;
+  if(_voskProcessor){try{_voskProcessor.disconnect();}catch(e){}_voskProcessor=null;}
+  if(_voskSource){try{_voskSource.disconnect();}catch(e){}_voskSource=null;}
+  if(_voskRec){try{_voskRec.remove();}catch(e){}_voskRec=null;}
+  if(_voskMicStream){_voskMicStream.getTracks().forEach(function(t){t.stop();});_voskMicStream=null;}
+}
+function _releaseMic(){
+  if(_voskMicStream){_voskMicStream.getTracks().forEach(function(t){t.stop();});_voskMicStream=null;}
 }
 function _resetSpeechText(){
   window._speechFinal='';window._speechAlts=[];window._speechInterim='';
 }
 function _advanceOffset(){
-  _recResultOffset=_recTotalResults;
   _resetSpeechText();
-}
-function _ensureSpeechRec(){
-  if(window._speechRec&&window._speechRecActive)return;
-  if(window._speechRec){try{window._speechRec.abort();}catch(e){}}
-  var micBtn=document.getElementById('btnMic');
-  var transcript=document.getElementById('speakTranscript');
-  var rec=new _SpeechRec();
-  rec.lang='en-US';rec.interimResults=true;rec.continuous=true;rec.maxAlternatives=5;
-  rec.onresult=function(e){
-    _recTotalResults=e.results.length;
-    var interim='',final='';var alts=[];
-    for(var i=_recResultOffset;i<e.results.length;i++){
-      if(e.results[i].isFinal){final+=e.results[i][0].transcript;for(var a=0;a<e.results[i].length;a++)alts.push({text:e.results[i][a].transcript,conf:e.results[i][a].confidence});}
-      else interim+=e.results[i][0].transcript;
+  if(_voskRec){
+    try{_voskRec.remove();}catch(e){}
+    _voskRec=new _voskModel.KaldiRecognizer(16000);
+    _voskRec.on('result',function(msg){
+      var t=(msg.result&&msg.result.text)||'';
+      if(t){window._speechFinal=t;window._speechAlts=[{text:t,conf:1}];}
+      var el=document.getElementById('speakTranscript');
+      if(el&&t)el.textContent=t;
+    });
+    _voskRec.on('partialresult',function(msg){
+      var p=(msg.result&&msg.result.partial)||'';
+      if(p)window._speechInterim=p;
+      var el=document.getElementById('speakTranscript');
+      if(el&&p)el.textContent='💬 '+p+'...';
+    });
+    if(_voskProcessor){
+      _voskProcessor.onaudioprocess=function(e){try{_voskRec.acceptWaveform(e.inputBuffer);}catch(ex){}};
     }
-    if(final){window._speechFinal=final;window._speechAlts=alts;}
-    if(interim)window._speechInterim=interim;
-    if(transcript)transcript.textContent=final||(interim?'💬 '+interim+'...':'🎙️ Nói đi...');
-  };
-  rec.onend=function(){
-    if(window._speechRecActive&&window._speechRec===rec){
-      _recResultOffset=0;_recTotalResults=0;
-      setTimeout(function(){
-        if(!window._speechRecActive||window._speechRec!==rec)return;
-        try{rec.start();}catch(e){
-          setTimeout(function(){
-            if(!window._speechRecActive||window._speechRec!==rec)return;
-            try{rec.start();}catch(e2){
-              window._speechRecActive=false;window._speechRec=null;
-              if(micBtn){micBtn.style.animation='';micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';}
-            }
-          },500);
-        }
-      },100);
-      return;
-    }
-    window._speechRec=null;
-  };
-  rec.onerror=function(e){
-    if(e.error==='no-speech'||e.error==='aborted')return;
-    if(e.error==='audio-capture'){_releaseMic();_keepMicWarm();return;}
-    if(e.error==='not-allowed'){window._speechRecActive=false;window._speechRec=null;if(micBtn){micBtn.style.animation='';micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';}toast('Cho phép mic trong trình duyệt nhé!');}
-  };
-  try{
-    rec.start();
-    window._speechRec=rec;window._speechRecActive=true;_recResultOffset=0;_recTotalResults=0;
-  }catch(ex){
-    toast('Mic lỗi: '+ex.message);
-    if(micBtn){micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';}
   }
 }
+function _startVoskListening(){
+  if(!_voskModel)return Promise.reject(new Error('No model'));
+  _voskRec=new _voskModel.KaldiRecognizer(16000);
+  _voskRec.on('result',function(msg){
+    var t=(msg.result&&msg.result.text)||'';
+    if(t){window._speechFinal=t;window._speechAlts=[{text:t,conf:1}];}
+    var el=document.getElementById('speakTranscript');
+    if(el&&t)el.textContent=t;
+  });
+  _voskRec.on('partialresult',function(msg){
+    var p=(msg.result&&msg.result.partial)||'';
+    if(p)window._speechInterim=p;
+    var el=document.getElementById('speakTranscript');
+    if(el&&p)el.textContent='💬 '+p+'...';
+  });
+  return navigator.mediaDevices.getUserMedia({audio:{channelCount:1,sampleRate:16000,echoCancellation:true,noiseSuppression:true},video:false}).then(function(stream){
+    _voskMicStream=stream;
+    _voskAudioCtx=_voskAudioCtx||new (window.AudioContext||window.webkitAudioContext)({sampleRate:16000});
+    if(_voskAudioCtx.state==='suspended')_voskAudioCtx.resume();
+    _voskSource=_voskAudioCtx.createMediaStreamSource(stream);
+    _voskProcessor=_voskAudioCtx.createScriptProcessor(4096,1,1);
+    _voskProcessor.onaudioprocess=function(e){try{_voskRec.acceptWaveform(e.inputBuffer);}catch(ex){}};
+    _voskSource.connect(_voskProcessor);
+    _voskProcessor.connect(_voskAudioCtx.destination);
+    _voskActive=true;
+  });
+}
+window.addEventListener('beforeunload',function(){_killSpeechRec();});
 function toggleSpeechRec(){
-  if(!_SpeechRec){toast('Browser khong ho tro Speech Recognition. Dung Chrome.');return;}
-  if(window._speechRecActive){_killSpeechRec();var mb=document.getElementById('btnMic');mb.innerHTML='🎤 Tap to speak';mb.className='btn btn-primary';mb.style.animation='';return;}
+  if(_voskActive){_killSpeechRec();var mb=document.getElementById('btnMic');mb.innerHTML='🎤 Tap to speak';mb.className='btn btn-primary';mb.style.animation='';return;}
   _killSpeechRec();
   stopAllAudio();
   document.getElementById('speakResult').style.display='none';
   document.getElementById('flashcard').classList.remove('flipped');
   var micBtn=document.getElementById('btnMic');
-  micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.className='btn btn-primary';micBtn.style.animation='pulse 1s infinite';
-  var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.textContent='🎙️ Đang mở mic...';transcript.className='type-answer-input';
+  micBtn.innerHTML='⏳ Loading...';micBtn.className='btn btn-primary';micBtn.style.animation='';
+  var transcript=document.getElementById('speakTranscript');transcript.style.display='block';transcript.className='type-answer-input';
   _resetSpeechText();
-  _keepMicWarm().then(function(){_ensureSpeechRec();}).catch(function(err){toast('Cho phép mic nhé! '+err.message);micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';});
+  _voskLoadModel().then(function(){
+    micBtn.innerHTML='🔴 Đang nghe... (tap để dừng)';micBtn.style.animation='pulse 1s infinite';
+    transcript.textContent='🎙️ Nói đi...';
+    return _startVoskListening();
+  }).catch(function(err){
+    toast('Lỗi: '+err.message);
+    micBtn.innerHTML='🎤 Tap to speak';micBtn.className='btn btn-primary';micBtn.style.animation='';
+    transcript.style.display='none';
+  });
 }
 function checkSpokenAnswer(){
   var card=reviewQueue[reviewIndex];var spoken=(window._speechFinal||window._speechInterim||'').trim();
