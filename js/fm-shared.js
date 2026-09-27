@@ -2265,9 +2265,22 @@ function showDialogueAnswer(){
   document.getElementById('reviewActions').style.display='flex';
 }
 
-function normalize(s){return s.trim().toLowerCase().replace(/[.,!?;:'"()\-]/g,'').replace(/\s+/g,' ');}
+function normalize(s){
+  s=s.trim().toLowerCase().replace(/[.,!?;:'"()\-]/g,'').replace(/\s+/g,' ');
+  s=s.replace(/\bdont\b/g,"do not").replace(/\bdoesnt\b/g,"does not").replace(/\bdidnt\b/g,"did not");
+  s=s.replace(/\bwont\b/g,"will not").replace(/\bcant\b/g,"cannot").replace(/\bcannot\b/g,"can not");
+  s=s.replace(/\bwouldnt\b/g,"would not").replace(/\bcouldnt\b/g,"could not").replace(/\bshouldnt\b/g,"should not");
+  s=s.replace(/\bisnt\b/g,"is not").replace(/\barent\b/g,"are not").replace(/\bwasnt\b/g,"was not").replace(/\bwerent\b/g,"were not");
+  s=s.replace(/\bhasnt\b/g,"has not").replace(/\bhavent\b/g,"have not").replace(/\bhadnt\b/g,"had not");
+  s=s.replace(/\bim\b/g,"i am").replace(/\byoure\b/g,"you are").replace(/\bhes\b/g,"he is").replace(/\bshes\b/g,"she is").replace(/\bwere\b/g,"we are").replace(/\btheyre\b/g,"they are");
+  s=s.replace(/\bive\b/g,"i have").replace(/\byouve\b/g,"you have").replace(/\bweve\b/g,"we have").replace(/\btheyve\b/g,"they have");
+  s=s.replace(/\bill\b/g,"i will").replace(/\byoull\b/g,"you will").replace(/\bhell\b/g,"he will").replace(/\bshell\b/g,"she will").replace(/\bwell\b/g,"we will").replace(/\btheyll\b/g,"they will");
+  s=s.replace(/\blets\b/g,"let us").replace(/\bthats\b/g,"that is").replace(/\bwhats\b/g,"what is").replace(/\bwhos\b/g,"who is");
+  return s;
+}
 
 function diffWords(typed,answer){
+  typed=normalize(typed);answer=normalize(answer);
   var tw=typed.trim().split(/\s+/).filter(Boolean),aw=answer.trim().split(/\s+/).filter(Boolean);
   var m=tw.length,n=aw.length;
   var dp=[];for(var i=0;i<=m;i++){dp[i]=[];for(var j=0;j<=n;j++)dp[i][j]=0;}
