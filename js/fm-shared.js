@@ -2695,14 +2695,17 @@ function answerCard(quality){
     updateStreakUI();
   }
 
-  // Save daily streak to db
+  // Save daily streak + study hour histogram
   const today=new Date().toISOString().slice(0,10);
   if(!db.settings.streakDays)db.settings.streakDays={};
   db.settings.streakDays[today]=(db.settings.streakDays[today]||0)+1;
   if(!db.settings.totalXp)db.settings.totalXp=0;
   db.settings.totalXp+=getXpForQuality(quality)*getMultiplier();
+  if(!db.settings.studyHours)db.settings.studyHours={};
+  var _h=String(new Date().getHours());
+  db.settings.studyHours[_h]=(db.settings.studyHours[_h]||0)+1;
   saveLocal();
-  if(currentUser)rtdbUser().child('settings').update({totalXp:db.settings.totalXp,streakDays:db.settings.streakDays,dailyGoal:db.settings.dailyGoal||20}).catch(console.error);
+  if(currentUser)rtdbUser().child('settings').update({totalXp:db.settings.totalXp,streakDays:db.settings.streakDays,dailyGoal:db.settings.dailyGoal||20,studyHours:db.settings.studyHours}).catch(console.error);
 
   if(quality===0){const ri=Math.min(reviewQueue.length,reviewIndex+3+Math.floor(Math.random()*3));reviewQueue.splice(ri,0,card);}
   reviewIndex++;
