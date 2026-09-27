@@ -193,7 +193,7 @@ async function mergeAndLoadCloud(){
       if(ex&&ex._shared){
         nd.defaultDisplayMode=ex.defaultDisplayMode;nd.defaultReviewMode=ex.defaultReviewMode;
         var em={};(ex.cards||[]).forEach(c=>{em[c.id]=c;});
-        (nd.cards||[]).forEach(c=>{var ec=em[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;}});
+        (nd.cards||[]).forEach(c=>{var ec=em[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
         var si=new Set((nd.cards||[]).map(c=>c.id));var uc=(ex.cards||[]).filter(c=>!si.has(c.id));nd.cards=(nd.cards||[]).concat(uc);
       }
       merged[id]=nd;
@@ -211,32 +211,133 @@ function saveDeckData(id,data){saveLocal();if(currentUser){rtdbUser().child('dec
 function deleteDeckData(id){saveLocal();if(currentUser)rtdbUser().child('decks/'+id).remove().catch(console.error);}
 function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();if(currentUser)rtdbUser().child('reviewLog').push(stripUndef(entry)).catch(console.error);}
 
-// ===== SM-2 =====
-function newCardData(){return{id:crypto.randomUUID(),cardName:'',front:'',fronts:[],back:'',definition:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,driveUrl:'',cakeUrl:'',status:'new',interval:0,ease:2.5,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+// ===== FSRS v5 (Free Spaced Repetition Scheduler) =====
+var FSRS_DECAY=-0.5;
+var FSRS_FACTOR=19/81;
+var FSRS_TARGET_R=0.9;
+var FSRS_W_DEFAULT=[0.4072,1.1829,3.1262,15.4722,7.2102,0.5316,1.0651,0.0589,1.5747,0.1280,1.0507,29.8148,0.2800,0.2093,2.7849,0.5188,0.8511,2.5790,0.0990];
 
-function sm2(card,quality){
-  const now=Date.now(),DAY=86400000; card.lastReview=now;
-  if(quality===0){card.status='learning';card.interval=0;card.reps=0;card.lapses++;card.due=now+60000;card.ease=Math.max(1.3,card.ease-0.2);}
-  else if(card.status==='new'||card.status==='learning'){
-    if(quality===1){card.status='learning';card.interval=0;card.due=now+600000;}
-    else if(quality===2){card.status='review';card.interval=1;card.due=now+DAY;card.reps=1;}
-    else{card.status='review';card.interval=4;card.due=now+4*DAY;card.reps=1;card.ease=Math.min(3,card.ease+0.15);}
+function _fsrsW(){
+  if(db.settings&&db.settings.fsrsWeights&&db.settings.fsrsWeights.length===19)return db.settings.fsrsWeights;
+  return FSRS_W_DEFAULT;
+}
+
+function _fsrsRetrievability(elapsedDays,stability){
+  if(stability<=0)return 0;
+  return Math.pow(1+FSRS_FACTOR*elapsedDays/stability,FSRS_DECAY);
+}
+
+function _fsrsInitStability(grade){
+  var w=_fsrsW();
+  return Math.max(0.1,w[grade-1]);
+}
+
+function _fsrsInitDifficulty(grade){
+  var w=_fsrsW();
+  return Math.min(10,Math.max(1,w[4]-Math.exp(w[5]*(grade-1))+1));
+}
+
+function _fsrsMeanRevert(init,current){
+  var w=_fsrsW();
+  return w[7]*init+(1-w[7])*current;
+}
+
+function _fsrsNextDifficulty(d,grade){
+  var newD=d-_fsrsW()[6]*(grade-3);
+  return Math.min(10,Math.max(1,_fsrsMeanRevert(_fsrsInitDifficulty(4),newD)));
+}
+
+function _fsrsNextStabilityRecall(d,s,r,grade){
+  var w=_fsrsW();
+  var hardPenalty=(grade===2)?w[15]:1;
+  var easyBonus=(grade===4)?w[16]:1;
+  return s*(Math.exp(w[8])*(11-d)*Math.pow(s,-w[9])*(Math.exp(w[10]*(1-r))-1)*hardPenalty*easyBonus+1);
+}
+
+function _fsrsNextStabilityLapse(d,s,r){
+  var w=_fsrsW();
+  return Math.max(0.1,w[11]*Math.pow(d,-w[12])*(Math.pow(s+1,w[13])-1)*Math.exp(w[14]*(1-r)));
+}
+
+function _fsrsNextInterval(stability){
+  return Math.min(36500,Math.max(1,Math.round(stability/FSRS_FACTOR*(Math.pow(FSRS_TARGET_R,1/FSRS_DECAY)-1))));
+}
+
+function newCardData(){return{id:crypto.randomUUID(),cardName:'',front:'',fronts:[],back:'',definition:'',type:'basic',clozeText:'',reviewMode:'flip',displayMode:'voice',youtubeUrl:'',ytStart:null,ytEnd:null,driveUrl:'',cakeUrl:'',status:'new',interval:0,ease:2.5,stability:0,difficulty:0,due:Date.now(),reps:0,lapses:0,created:Date.now(),lastReview:null,tags:[],suspended:false};}
+
+function fsrs(card,quality){
+  var now=Date.now(),DAY=86400000;
+  var grade=quality+1;
+  var elapsedDays=card.lastReview?Math.max(0,(now-card.lastReview)/DAY):0;
+  card.lastReview=now;
+
+  if(card.status==='new'||!card.stability){
+    card.stability=_fsrsInitStability(grade);
+    card.difficulty=_fsrsInitDifficulty(grade);
+    card.reps=1;
+    if(grade===1){
+      card.status='learning';card.lapses=(card.lapses||0)+1;
+      card.interval=0;card.due=now+60000;
+    } else if(grade===2){
+      card.status='learning';
+      card.interval=0;card.due=now+600000;
+    } else {
+      card.status='review';
+      card.interval=_fsrsNextInterval(card.stability);
+      card.due=now+card.interval*DAY;
+    }
   } else {
-    let ni;
-    if(quality===1){ni=Math.max(1,Math.round(card.interval*1.2));card.ease=Math.max(1.3,card.ease-0.15);}
-    else if(quality===2){ni=Math.round(card.interval*card.ease);}
-    else{ni=Math.round(card.interval*card.ease*1.3);card.ease=Math.min(3,card.ease+0.15);}
-    card.interval=Math.min(ni,36500);card.due=now+card.interval*DAY;card.reps++;card.status='review';
+    var r=_fsrsRetrievability(elapsedDays,card.stability);
+    card.difficulty=_fsrsNextDifficulty(card.difficulty,grade);
+    if(grade===1){
+      card.stability=_fsrsNextStabilityLapse(card.difficulty,card.stability,r);
+      card.status='learning';card.lapses=(card.lapses||0)+1;card.reps=0;
+      card.interval=0;card.due=now+60000;
+    } else if(grade===2&&(card.status==='learning')){
+      card.status='learning';
+      card.interval=0;card.due=now+600000;
+    } else {
+      card.stability=_fsrsNextStabilityRecall(card.difficulty,card.stability,r,grade);
+      card.interval=_fsrsNextInterval(card.stability);
+      card.due=now+card.interval*DAY;card.reps++;card.status='review';
+    }
   }
-  if(card.lapses>=db.settings.leechThreshold)card.leech=true;
+  if(card.lapses>=(db.settings&&db.settings.leechThreshold||8))card.leech=true;
   return card;
 }
 
 function getIntervalText(card,q){
-  if(q===0)return'1 min';
-  if(card.status==='new'||card.status==='learning'){if(q===1)return'10 min';if(q===2)return'1 day';return'4 days';}
-  let iv;if(q===1)iv=Math.max(1,Math.round(card.interval*1.2));else if(q===2)iv=Math.round(card.interval*card.ease);else iv=Math.round(card.interval*card.ease*1.3);
-  iv=Math.min(iv,36500);if(iv===1)return'1 day';if(iv<30)return iv+' days';if(iv<365){const mo=Math.round(iv/30*10)/10;return mo+(mo===1?' month':' months');}const yr=Math.round(iv/365*10)/10;return yr+(yr===1?' year':' years');
+  var grade=q+1;
+  if(card.status==='new'||!card.stability){
+    if(grade===1)return'1 min';
+    if(grade===2)return'10 min';
+    var s0=_fsrsInitStability(grade);
+    var iv=_fsrsNextInterval(s0);
+    return _formatInterval(iv);
+  }
+  var DAY=86400000;
+  var elapsedDays=card.lastReview?Math.max(0,(Date.now()-card.lastReview)/DAY):0;
+  var r=_fsrsRetrievability(elapsedDays,card.stability);
+  if(grade===1){
+    return'1 min';
+  }
+  if(grade===2&&card.status==='learning'){
+    return'10 min';
+  }
+  var d=_fsrsNextDifficulty(card.difficulty,grade);
+  var ns;
+  if(grade===1)ns=_fsrsNextStabilityLapse(d,card.stability,r);
+  else ns=_fsrsNextStabilityRecall(d,card.stability,r,grade);
+  var iv=_fsrsNextInterval(ns);
+  return _formatInterval(iv);
+}
+
+function _formatInterval(iv){
+  if(iv<=0)return'< 1 day';
+  if(iv===1)return'1 day';
+  if(iv<30)return iv+' days';
+  if(iv<365){var mo=Math.round(iv/30*10)/10;return mo+(mo===1?' month':' months');}
+  var yr=Math.round(iv/365*10)/10;return yr+(yr===1?' year':' years');
 }
 
 // ===== VIEWS =====
@@ -2559,7 +2660,7 @@ function answerCard(quality){
   const realCard=deck.cards.find(c=>c.id===card.id);
   if(realCard){
     undoStack.push({cardId:card.id,prev:JSON.parse(JSON.stringify(realCard)),index:reviewIndex,prevStreak:streak,prevXp:sessionXp,prevCorrect:sessionCorrect});
-    sm2(realCard,quality);Object.assign(card,realCard);
+    fsrs(realCard,quality);Object.assign(card,realCard);
   }
   addReviewLog({date:Date.now(),deckId:currentDeckId,cardId:card.id,quality});
   saveDeckData(currentDeckId,deck);
@@ -3194,7 +3295,7 @@ async function loadSharedDecks(){
         data.defaultDisplayMode=existing.defaultDisplayMode;
         data.defaultReviewMode=existing.defaultReviewMode;
         const existingMap={};(existing.cards||[]).forEach(c=>{existingMap[c.id]=c;});
-        (data.cards||[]).forEach(c=>{var ec=existingMap[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;}});
+        (data.cards||[]).forEach(c=>{var ec=existingMap[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
         const sharedCardIds=new Set((data.cards||[]).map(c=>c.id));
         const userCards=(existing.cards||[]).filter(c=>!sharedCardIds.has(c.id));
         data.cards=(data.cards||[]).concat(userCards);
