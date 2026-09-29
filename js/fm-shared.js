@@ -876,10 +876,10 @@ function renderCardBrowser(){
       const dt=c.status==='new'?'—':formatDue(c.due);
       const tagHTML=(c.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
       const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
-      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':c.displayMode==='quiz'?'🎯':'';
+      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':c.displayMode==='reverse-vi'?'🇻🇳':c.displayMode==='quiz'?'🎯':'';
       const displayFront=c.cardName||c.front;
       return`<tr><td class="card-front-col">${esc(displayFront)}</td><td class="card-back-col">${esc(c.back)}</td>
-        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':c.displayMode==='quiz'?' · Quiz':''}">${modeLabel}${dispLabel}</td>
+        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':c.displayMode==='reverse-vi'?' · Reverse VN':c.displayMode==='quiz'?' · Quiz':''}">${modeLabel}${dispLabel}</td>
         <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
         <td><span class="card-status ${sc}">${st}</span></td>
         <td style="font-size:13px;color:var(--ink-dim)">${dt}</td>
@@ -1625,6 +1625,21 @@ function showCurrentCard(){
       window._dialogueVoiceMap=m;
       setTimeout(()=>playDialogueLine(0),100);
     });
+  } else if(card.displayMode==='reverse-vi'){
+    // Reverse mode: front=Vietnamese(back), back=English(front), speaker reads English
+    const viText=card.back||'';
+    const enText=card.front||'';
+    const safeEn=esc(enText).replace(/'/g,"\\'").replace(/\n/g,' ');
+    document.getElementById('cardFront').innerHTML=renderContent(viText);
+    const frontFace=document.querySelector('.flashcard-face.front');
+    const oldFB=frontFace.querySelector('.voice-mini-btn');if(oldFB)oldFB.remove();
+    const fBtn=document.createElement('button');fBtn.className='voice-mini-btn';fBtn.textContent='🔊';fBtn.title='Listen to English';
+    fBtn.onclick=function(e){e.stopPropagation();stopAllAudio();speakText(enText);};frontFace.appendChild(fBtn);
+    document.getElementById('cardBack').innerHTML=renderContent(enText);
+    const backFace=document.querySelector('.flashcard-face.back');
+    const oldBB=backFace.querySelector('.voice-mini-btn');if(oldBB)oldBB.remove();
+    const bBtn=document.createElement('button');bBtn.className='voice-mini-btn';bBtn.textContent='🔊';bBtn.title='Listen to English';
+    bBtn.onclick=function(e){e.stopPropagation();stopAllAudio();speakText(enText);};backFace.appendChild(bBtn);
   } else if(isVoice){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
     const modeHint=card.displayMode==='voice-repeat'?'🔁 Listen and repeat the sentence':card.displayMode==='voice-translate'?'🌐 Listen and translate the sentence':'🎧 Listen and answer the question';
