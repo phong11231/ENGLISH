@@ -197,23 +197,33 @@ async function mergeAndLoadCloud(){
   if(unsubDecks)unsubDecks();
   const decksRef=ref.child('decks');
   var _listenerRefs=[];
-  const onDeckChanged=decksRef.on('child_changed',s=>{
-    const id=s.key;const nd=s.val();if(!nd)return;
-    if(_skipDeckSync[id]&&Date.now()-_skipDeckSync[id]<3000){delete _skipDeckSync[id];return;}
-    console.log('[RTDB] deck changed:',id);
-    var _delCards=db.settings.deletedCards||{};
-    var ex=db.decks[id];
-    if(ex&&ex._shared){
-      nd.defaultDisplayMode=ex.defaultDisplayMode;nd.defaultReviewMode=ex.defaultReviewMode;
-      var em={};(ex.cards||[]).forEach(c=>{em[c.id]=c;});
-      (nd.cards||[]).forEach(c=>{var ec=em[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
-      nd.cards=(nd.cards||[]).filter(c=>!_delCards[id+'_'+c.id]);
-      var si=new Set((nd.cards||[]).map(c=>c.id));var uc=(ex.cards||[]).filter(c=>!si.has(c.id)&&!_delCards[id+'_'+c.id]);nd.cards=nd.cards.concat(uc);
-    }
-    db.decks[id]=nd;
-    saveLocal();renderCurrentView();
-  });
-  _listenerRefs.push(['child_changed',onDeckChanged]);
+  var _cardListeners={};
+  // Per-card listener: chi tai 1 card khi review, khong tai ca deck
+  function _setupCardListeners(deckId){
+    if(_cardListeners[deckId])return;
+    var cardsRef=ref.child('decks/'+deckId+'/cards');
+    var fn=cardsRef.on('child_changed',function(s){
+      if(_skipDeckSync[deckId]&&Date.now()-_skipDeckSync[deckId]<3000){return;}
+      var idx=parseInt(s.key);if(isNaN(idx))return;
+      if(!db.decks[deckId]||!db.decks[deckId].cards)return;
+      var nd=s.val();if(!nd)return;
+      var ex=db.decks[deckId];
+      if(ex._shared){
+        var ec=ex.cards[idx];
+        if(ec){nd.status=ec.status;nd.interval=ec.interval;nd.ease=ec.ease;nd.due=ec.due;nd.reps=ec.reps;nd.lapses=ec.lapses;nd.lastReview=ec.lastReview;nd.suspended=ec.suspended;nd.leech=ec.leech;nd.reviewMode=ec.reviewMode;nd.displayMode=ec.displayMode;nd.stability=ec.stability;nd.difficulty=ec.difficulty;}
+      }
+      console.log('[RTDB] card changed:',deckId.slice(0,8),idx);
+      db.decks[deckId].cards[idx]=nd;
+      saveLocal();renderCurrentView();
+    });
+    _cardListeners[deckId]={ref:cardsRef,fn:fn};
+  }
+  function _teardownCardListeners(deckId){
+    if(!_cardListeners[deckId])return;
+    _cardListeners[deckId].ref.off('child_changed',_cardListeners[deckId].fn);
+    delete _cardListeners[deckId];
+  }
+  // Deck-level listener: chi cho add/remove deck + metadata thay doi (khong phai cards)
   var _deckListenerReady=false;
   setTimeout(()=>{_deckListenerReady=true;},3000);
   const onDeckAdded=decksRef.on('child_added',s=>{
@@ -221,15 +231,19 @@ async function mergeAndLoadCloud(){
     const id=s.key;if(db.decks[id])return;
     console.log('[RTDB] deck added:',id);
     db.decks[id]=s.val();saveLocal();renderCurrentView();
+    _setupCardListeners(id);
   });
   _listenerRefs.push(['child_added',onDeckAdded]);
   const onDeckRemoved=decksRef.on('child_removed',s=>{
     const id=s.key;
     console.log('[RTDB] deck removed:',id);
+    _teardownCardListeners(id);
     delete db.decks[id];saveLocal();renderCurrentView();
   });
   _listenerRefs.push(['child_removed',onDeckRemoved]);
-  unsubDecks=()=>{_listenerRefs.forEach(([ev,fn])=>decksRef.off(ev,fn));};
+  // Setup card listeners cho tat ca deck hien co
+  Object.keys(db.decks).forEach(id=>_setupCardListeners(id));
+  unsubDecks=()=>{_listenerRefs.forEach(([ev,fn])=>decksRef.off(ev,fn));Object.keys(_cardListeners).forEach(id=>_teardownCardListeners(id));};
   saveLocal();renderCurrentView();
   await loadSharedDecks();
 }
