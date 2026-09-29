@@ -393,10 +393,16 @@ function showView(name){
   }
 }
 
-var _renderTimer=null;
+var _renderTimer=null,_pointerDown=false;
+document.addEventListener('pointerdown',function(){_pointerDown=true;});
+document.addEventListener('pointerup',function(){_pointerDown=false;});
+function _doRender(){
+  if(_pointerDown){_renderTimer=setTimeout(_doRender,500);return;}
+  _renderTimer=null;if(typeof pageRender==='function')pageRender();
+}
 function renderCurrentView(){
   if(_renderTimer)clearTimeout(_renderTimer);
-  _renderTimer=setTimeout(function(){_renderTimer=null;if(typeof pageRender==='function')pageRender();},250);
+  _renderTimer=setTimeout(_doRender,300);
 }
 
 // ===== SUB-DECKS =====
