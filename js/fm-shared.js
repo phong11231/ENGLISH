@@ -1630,8 +1630,8 @@ function showCurrentCard(){
       setTimeout(()=>playDialogueLine(0),100);
     });
   } else if(card.displayMode==='reverse-vi'){
-    // Reverse mode: front=Vietnamese(back), back=English(front), speaker reads English
-    const viText=card.back||'';
+    // Reverse mode: front=Vietnamese(backVi), back=English(front), speaker reads English
+    const viText=card.backVi||card.back||'';
     const enText=card.front||'';
     const safeEn=esc(enText).replace(/'/g,"\\'").replace(/\n/g,' ');
     document.getElementById('cardFront').innerHTML=renderContent(viText);
