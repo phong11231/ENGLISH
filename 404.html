@@ -70,6 +70,7 @@ if (!_routeId) location.replace(_basePath);
     <h2 style="font-size:18px;font-weight:700;flex:1" id="browserDeckName"></h2>
     <button class="btn btn-ghost btn-sm" onclick="startReview(_routeId)">▶ Review</button>
     <button class="btn btn-ghost btn-sm" onclick="startReviewAll(_routeId)">▶ Review All</button>
+    <button class="btn btn-ghost btn-sm" onclick="startReviewReverse(_routeId)" title="Front = Tiếng Việt, loa đọc tiếng Anh">🇻🇳 Review Reverse</button>
     <button class="btn btn-ghost btn-sm" onclick="openBulkAddModal()">📋 Bulk add</button>
     <button class="btn btn-ghost btn-sm" onclick="openChatAddModal()">💬 Add Chat</button>
     <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📥 Import</button>
@@ -518,6 +519,11 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
         return;
       }
       reviewQueue = cards.slice();
+      var _displayOverride = _params.get('display');
+      if(_displayOverride){
+        for(var di=0;di<reviewQueue.length;di++) reviewQueue[di]=Object.assign({},reviewQueue[di],{displayMode:_displayOverride});
+        if(_displayOverride==='reverse-vi') label += ' 🇻🇳 Reverse';
+      }
       for(var i=reviewQueue.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=reviewQueue[i];reviewQueue[i]=reviewQueue[j];reviewQueue[j]=tmp;}
       reviewIndex = 0;
       undoStack = [];

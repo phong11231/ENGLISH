@@ -1042,6 +1042,10 @@ function startReview(deckId){
   location.href=_basePath+deckId+'/review';
 }
 
+function startReviewReverse(deckId){
+  location.href=_basePath+deckId+'/review?mode=all&display=reverse-vi';
+}
+
 // ===== SLEEP LISTEN =====
 let sleepPlaylist=[],sleepIndex=0,sleepTimer=null,sleepSpeed=1.5,sleepLoadedAt=0,sleepAudioEl=null;
 let sleepDrillOn=false,sleepDrillIdx=0;
