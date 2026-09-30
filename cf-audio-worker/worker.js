@@ -16,6 +16,16 @@ export default {
         const files = list.objects.map(o => ({ key: o.key, size: o.size, uploaded: o.uploaded }));
         return new Response(JSON.stringify(files), { headers: { ...cors, 'Content-Type': 'application/json' } });
       }
+      if (key) {
+        const obj = await env.BUCKET.get(key);
+        if (!obj) return new Response('Not found', { status: 404, headers: cors });
+        const headers = { ...cors, 'Content-Type': obj.httpMetadata?.contentType || 'application/octet-stream', 'Cache-Control': 'public, max-age=60', 'ETag': obj.httpEtag };
+        const ifNoneMatch = request.headers.get('If-None-Match');
+        if (ifNoneMatch && ifNoneMatch === obj.httpEtag) {
+          return new Response(null, { status: 304, headers });
+        }
+        return new Response(obj.body, { headers });
+      }
       return new Response('Use public URL', { status: 400, headers: cors });
     }
 
