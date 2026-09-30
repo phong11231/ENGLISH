@@ -248,7 +248,7 @@ async function mergeAndLoadCloud(){
   await loadSharedDecks();
 }
 async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}await mergeAndLoadCloud();toggleUserMenu();}
-function saveDeckData(id,data){saveLocal();if(currentUser){rtdbUser().child('decks/'+id).set(stripUndef(data)).catch(console.error);if(data._shared&&isAdmin)rtdb.ref('sharedDecks/'+id).set(stripUndef(Object.assign({},data,{sharedBy:currentUser.uid,sharedAt:Date.now()}))).catch(console.error);}}
+function saveDeckData(id,data){saveLocal();if(currentUser){rtdbUser().child('decks/'+id).set(stripUndef(data)).catch(console.error);}}
 var _skipDeckSync={};
 function saveCardOnly(deckId,cardId){
   saveLocal();if(!currentUser)return;
@@ -3369,6 +3369,10 @@ function _pushPreviewDelete(deckId){
   if(!confirm('Xoa deck "'+( deck.name||deckId)+'" ? Se xoa ca local lan cloud.'))return;
   delete db.decks[deckId];
   deleteDeckData(deckId);
+  if(!db.settings.dismissedShared)db.settings.dismissedShared=[];
+  if(db.settings.dismissedShared.indexOf(deckId)===-1)db.settings.dismissedShared.push(deckId);
+  saveLocal();
+  if(currentUser)rtdbUser().child('settings/dismissedShared').set(db.settings.dismissedShared).catch(console.error);
   var row=document.querySelector('#pushPreviewModal tr[data-deck-id="'+deckId+'"]');
   if(row)row.remove();
   var build=_buildPushData();
@@ -3420,7 +3424,10 @@ async function doPushDecksToAll(){
   }catch(e){console.error(e);toast('Push failed: '+e.message);}
 }
 async function pushDecksToAll(){showPushPreview();}
+var _loadingShared=false;
 async function loadSharedDecks(){
+  if(_loadingShared)return;
+  _loadingShared=true;
   try{
     var val=null;
     try{
@@ -3474,7 +3481,7 @@ async function loadSharedDecks(){
       count++;
     }
     if(count>0){saveLocal();renderCurrentView();}
-  }catch(e){console.error('[SharedDecks] error:',e.code||'',e.message);}
+  }catch(e){console.error('[SharedDecks] error:',e.code||'',e.message);}finally{_loadingShared=false;}
 }
 function _getGHToken(){try{return localStorage.getItem('_fmGHT')||'';}catch(e){return '';}}
 function _saveGHToken(t){try{localStorage.setItem('_fmGHT',t);}catch(e){}}
