@@ -3362,18 +3362,13 @@ async function pushDecksToAll(){
     for(const[id,deck] of Object.entries(db.decks)){
       sharedData[id]=Object.assign({},deck,{sharedBy:currentUser.uid,sharedAt:Date.now()});
     }
-    var ver=Date.now();
-    sharedData._version=ver;
-    await rtdb.ref('sharedDecks').set(stripUndef(sharedData));
-    try{
-      var ak=getAdminKey();
-      if(ak){
-        var blob=JSON.stringify(stripUndef(sharedData));
-        var resp=await fetch(AUDIO_WORKER+'/shared-decks.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:blob});
-        if(resp.ok){console.log('[R2] shared-decks.json uploaded, ver='+ver);}
-        else{console.warn('[R2] upload failed:',resp.status);}
-      }
-    }catch(r2e){console.warn('[R2] upload error:',r2e);}
+    sharedData._version=Date.now();
+    var ak=getAdminKey();
+    if(!ak){toast('Admin key required');return;}
+    var blob=JSON.stringify(stripUndef(sharedData));
+    var resp=await fetch(AUDIO_WORKER+'/shared-decks.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:blob});
+    if(!resp.ok){toast('Upload failed: '+resp.status);if(resp.status===401)localStorage.removeItem('flashmind_admin_key');return;}
+    console.log('[R2] shared-decks.json uploaded, ver='+sharedData._version);
     toast('Pushed '+deckKeys.length+' decks to all users!');
   }catch(e){console.error(e);toast('Push failed: '+e.message);}
 }
@@ -3399,17 +3394,8 @@ async function loadSharedDecks(){
         console.warn('[R2] shared-decks fetch status:',r2resp.status);
       }
     }catch(r2e){
-      console.warn('[R2] shared-decks fetch error, trying cache/RTDB:',r2e);
+      console.warn('[R2] shared-decks fetch error, trying cache:',r2e);
       try{var cd=localStorage.getItem('_sdCache');if(cd)val=JSON.parse(cd);}catch(ce){}
-    }
-    if(!val){
-      console.log('[RTDB] fallback: loading sharedDecks from Firebase');
-      var snap=await rtdb.ref('sharedDecks').once('value');
-      val=snap.val();
-      if(!val){
-        try{const fsSnap=await firestore.collection('sharedDecks').get();if(!fsSnap.empty){val={};fsSnap.forEach(d=>{val[d.id]=d.data();});await rtdb.ref('sharedDecks').set(stripUndef(val));console.log('[Migration] sharedDecks Firestore->RTDB: '+Object.keys(val).length);}}catch(e){console.error('[Migration] sharedDecks error:',e);}
-      }
-      if(val){try{localStorage.setItem('_sdCache',JSON.stringify(val));localStorage.setItem('_sdVer',String(val._version||''));}catch(se){}}
     }
     if(!val)return;
     delete val._version;
