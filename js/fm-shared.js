@@ -3367,9 +3367,9 @@ function showPushPreview(){
   overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
 }
 async function _autoPushR2(){
-  var ak=localStorage.getItem('flashmind_admin_key');if(!ak)return;
+  if(!isAdmin)return;
   var build=_buildPushData();build.data._version=Date.now();
-  var resp=await fetch(AUDIO_WORKER+'/users/_shared.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:JSON.stringify(stripUndef(build.data))});
+  var resp=await fetch(AUDIO_WORKER+'/users/_shared.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(stripUndef(build.data))});
   if(resp.ok)console.log('[R2] auto-push ok, cards='+build.totalCards);
   else console.warn('[R2] auto-push failed:',resp.status);
 }
@@ -3379,11 +3379,9 @@ async function doPushDecksToAll(){
   try{
     var build=_buildPushData();
     build.data._version=Date.now();
-    var ak=getAdminKey();
-    if(!ak){toast('Admin key required');return;}
     var blob=JSON.stringify(stripUndef(build.data));
-    var resp=await fetch(AUDIO_WORKER+'/users/_shared.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:blob});
-    if(!resp.ok){toast('Upload failed: '+resp.status);if(resp.status===401)localStorage.removeItem('flashmind_admin_key');return;}
+    var resp=await fetch(AUDIO_WORKER+'/users/_shared.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:blob});
+    if(!resp.ok){toast('Upload failed: '+resp.status);return;}
     console.log('[R2] shared-decks.json uploaded, ver='+build.data._version+', cards='+build.totalCards);
     toast('Pushed '+Object.keys(db.decks).length+' decks ('+build.totalCards+' cards) to all users!');
   }catch(e){console.error(e);toast('Push failed: '+e.message);}
