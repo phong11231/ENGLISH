@@ -216,7 +216,7 @@ async function mergeAndLoadCloud(){
   if(switchedUser){db.decks={};db.reviewLog=[];db.settings={dailyGoal:20,leechThreshold:8};saveLocal();}
   await _loadUserFromR2();
   saveLocal();renderCurrentView();
-  await loadSharedDecks();
+  await loadSharedDecks(true);
 }
 async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}await mergeAndLoadCloud();toggleUserMenu();}
 function saveDeckData(id,data){saveLocal();_scheduleR2Save();}
@@ -3369,7 +3369,7 @@ function showPushPreview(){
 async function _autoPushR2(){
   var ak=localStorage.getItem('flashmind_admin_key');if(!ak)return;
   var build=_buildPushData();build.data._version=Date.now();
-  var resp=await fetch(AUDIO_WORKER+'/shared-decks.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:JSON.stringify(stripUndef(build.data))});
+  var resp=await fetch(AUDIO_WORKER+'/users/_shared.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:JSON.stringify(stripUndef(build.data))});
   if(resp.ok)console.log('[R2] auto-push ok, cards='+build.totalCards);
   else console.warn('[R2] auto-push failed:',resp.status);
 }
@@ -3382,7 +3382,7 @@ async function doPushDecksToAll(){
     var ak=getAdminKey();
     if(!ak){toast('Admin key required');return;}
     var blob=JSON.stringify(stripUndef(build.data));
-    var resp=await fetch(AUDIO_WORKER+'/shared-decks.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:blob});
+    var resp=await fetch(AUDIO_WORKER+'/users/_shared.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:blob});
     if(!resp.ok){toast('Upload failed: '+resp.status);if(resp.status===401)localStorage.removeItem('flashmind_admin_key');return;}
     console.log('[R2] shared-decks.json uploaded, ver='+build.data._version+', cards='+build.totalCards);
     toast('Pushed '+Object.keys(db.decks).length+' decks ('+build.totalCards+' cards) to all users!');
@@ -3402,7 +3402,7 @@ async function loadSharedDecks(force){
       var headers={};
       var etag=localStorage.getItem('_sdEtag')||'';
       if(etag)headers['If-None-Match']=etag;
-      var r2resp=await fetch(AUDIO_WORKER+'/shared-decks.json',{headers:headers});
+      var r2resp=await fetch(AUDIO_WORKER+'/users/_shared.json',{headers:headers});
       if(r2resp.status===304&&cachedData){
         val=JSON.parse(cachedData);
         console.log('[R2] shared-decks 304 not modified, using cache');
