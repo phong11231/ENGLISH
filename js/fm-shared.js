@@ -94,7 +94,11 @@ auth.onAuthStateChanged(user=>{
   } else {
     if(navLogin)navLogin.style.display='flex';
     if(avImg)avImg.style.display='none';if(avInit)avInit.style.display='none';
-    db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}};saveLocal();renderCurrentView();
+    var _keepDismissed=db.settings.dismissedShared;var _keepDelCards=db.settings.deletedCards;
+    db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}};
+    if(_keepDismissed&&_keepDismissed.length>0)db.settings.dismissedShared=_keepDismissed;
+    if(_keepDelCards&&Object.keys(_keepDelCards).length>0)db.settings.deletedCards=_keepDelCards;
+    saveLocal();renderCurrentView();
     loadSharedDecks();
   }
 });
@@ -582,7 +586,7 @@ function deleteDeck(id){
     if(!db.settings.dismissedShared.includes(id))db.settings.dismissedShared.push(id);
     getSubDecks(id).forEach(([subId])=>{if(!db.settings.dismissedShared.includes(subId))db.settings.dismissedShared.push(subId);delete db.decks[subId];deleteDeckData(subId);});
     delete db.decks[id];deleteDeckData(id);
-    _scheduleR2Save();
+    _saveUserToR2().catch(console.error);
     renderDecks();toast('Removed');return;
   }
   if(!confirm('Delete "'+deck.name+'" and everything inside?'))return;
