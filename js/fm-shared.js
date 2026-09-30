@@ -929,6 +929,7 @@ function deleteCard(cardId){
   saveDeckData(currentDeckId,deck);saveLocal();
   if(currentUser)rtdbUser().child('settings/deletedCards').set(db.settings.deletedCards).catch(console.error);
   renderCardBrowser();toast('Deleted');
+  if(isAdmin&&db.decks[currentDeckId]&&db.decks[currentDeckId]._shared)_autoPushR2().catch(console.error);
 }
 
 function copyCardToDeck(cardId,move){
@@ -3408,6 +3409,13 @@ function showPushPreview(){
   document.body.appendChild(overlay);
   overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
 }
+async function _autoPushR2(){
+  var ak=localStorage.getItem('flashmind_admin_key');if(!ak)return;
+  var build=_buildPushData();build.data._version=Date.now();
+  var resp=await fetch(AUDIO_WORKER+'/shared-decks.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:JSON.stringify(stripUndef(build.data))});
+  if(resp.ok)console.log('[R2] auto-push ok, cards='+build.totalCards);
+  else console.warn('[R2] auto-push failed:',resp.status);
+}
 async function doPushDecksToAll(){
   var modal=document.getElementById('pushPreviewModal');
   if(modal)modal.remove();
@@ -3424,9 +3432,10 @@ async function doPushDecksToAll(){
   }catch(e){console.error(e);toast('Push failed: '+e.message);}
 }
 async function pushDecksToAll(){showPushPreview();}
-var _loadingShared=false;
-async function loadSharedDecks(){
+var _loadingShared=false;var _sharedLoadedAt=0;
+async function loadSharedDecks(force){
   if(_loadingShared)return;
+  if(!force&&_sharedLoadedAt&&Date.now()-_sharedLoadedAt<300000)return;
   _loadingShared=true;
   try{
     var val=null;
@@ -3481,6 +3490,7 @@ async function loadSharedDecks(){
       count++;
     }
     if(count>0){saveLocal();renderCurrentView();}
+    _sharedLoadedAt=Date.now();
   }catch(e){console.error('[SharedDecks] error:',e.code||'',e.message);}finally{_loadingShared=false;}
 }
 function _getGHToken(){try{return localStorage.getItem('_fmGHT')||'';}catch(e){return '';}}
