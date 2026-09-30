@@ -578,7 +578,7 @@ function saveDeck(){
   }
   closeDeckModal();renderDecks();
 }
-function deleteDeck(id){
+async function deleteDeck(id){
   var deck=db.decks[id];if(!deck)return;
   if(deck._shared&&!isAdmin){
     if(!confirm('Remove "'+deck.name+'" from your list?'))return;
@@ -586,8 +586,9 @@ function deleteDeck(id){
     if(!db.settings.dismissedShared.includes(id))db.settings.dismissedShared.push(id);
     getSubDecks(id).forEach(([subId])=>{if(!db.settings.dismissedShared.includes(subId))db.settings.dismissedShared.push(subId);delete db.decks[subId];deleteDeckData(subId);});
     delete db.decks[id];deleteDeckData(id);
-    _saveUserToR2().catch(console.error);
-    renderDecks();toast('Removed');return;
+    renderDecks();toast('Saving...');
+    try{await _saveUserToR2();toast('Removed');}catch(e){console.error(e);toast('Removed (sync pending)');}
+    return;
   }
   if(!confirm('Delete "'+deck.name+'" and everything inside?'))return;
   getSubDecks(id).forEach(([subId])=>deleteDeck(subId));
@@ -3425,7 +3426,7 @@ async function loadSharedDecks(force){
     const dismissed=new Set(db.settings.dismissedShared||[]);
     const sharedIds=new Set(Object.keys(val));
     for(const id of Object.keys(db.decks)){
-      if(db.decks[id]._shared&&!sharedIds.has(id)){delete db.decks[id];deleteDeckData(id);}
+      if(db.decks[id]._shared&&(!sharedIds.has(id)||dismissed.has(id))){delete db.decks[id];deleteDeckData(id);}
     }
     let count=0;
     for(const[id,raw] of Object.entries(val)){
