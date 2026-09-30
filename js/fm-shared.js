@@ -3363,6 +3363,21 @@ function _buildPushData(){
   }
   return{data:sharedData,totalCards:totalCards};
 }
+function _pushPreviewDelete(deckId){
+  var deck=db.decks[deckId];
+  if(!deck)return;
+  if(!confirm('Xoa deck "'+( deck.name||deckId)+'" ? Se xoa ca local lan cloud.'))return;
+  delete db.decks[deckId];
+  deleteDeckData(deckId);
+  var row=document.querySelector('#pushPreviewModal tr[data-deck-id="'+deckId+'"]');
+  if(row)row.remove();
+  var build=_buildPushData();
+  var deckKeys=Object.keys(db.decks);
+  var summary=document.querySelector('#pushPreviewModal div[style*="opacity"]');
+  if(summary)summary.textContent=deckKeys.length+' decks · '+build.totalCards+' cards';
+  renderCurrentView();
+  toast('Deleted "'+( deck.name||'')+'"');
+}
 function showPushPreview(){
   if(!isAdmin||!currentUser){toast('Admin access required');return;}
   toggleUserMenu();
@@ -3376,14 +3391,14 @@ function showPushPreview(){
     var d=build.data[id];
     var cardCount=(d.cards||[]).length;
     var emoji=d.emoji||'📖';
-    rows+='<tr><td style="padding:8px 12px">'+emoji+' '+esc(d.name||id)+'</td><td style="padding:8px 12px;text-align:center;font-weight:700">'+cardCount+'</td></tr>';
+    rows+='<tr data-deck-id="'+id+'"><td style="padding:8px 12px">'+emoji+' '+esc(d.name||id)+'</td><td style="padding:8px 12px;text-align:center;font-weight:700">'+cardCount+'</td><td style="padding:8px 4px;text-align:center"><button onclick="_pushPreviewDelete(\''+id+'\')" title="Xoa deck nay" style="background:none;border:none;cursor:pointer;font-size:16px;opacity:.5;padding:4px">🗑️</button></td></tr>';
   }
   var overlay=document.createElement('div');overlay.id='pushPreviewModal';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
   overlay.innerHTML='<div style="background:var(--surface,#fff);border:1px solid var(--line,#ddd);border-radius:16px;padding:24px;max-width:500px;width:100%;color:var(--ink,#222);max-height:80vh;overflow-y:auto">'+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:18px;font-weight:700">📦 Push Preview</h3><button onclick="this.closest(\'#pushPreviewModal\').remove()" style="background:none;border:none;color:var(--ink,#222);font-size:20px;cursor:pointer;opacity:.6">✕</button></div>'+
     '<div style="margin-bottom:12px;font-size:14px;opacity:.7">'+deckKeys.length+' decks · '+build.totalCards+' cards · '+delCount+' deleted cards filtered</div>'+
-    '<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px"><thead><tr style="border-bottom:2px solid var(--line,#ddd)"><th style="padding:8px 12px;text-align:left">Deck</th><th style="padding:8px 12px;text-align:center">Cards</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px"><thead><tr style="border-bottom:2px solid var(--line,#ddd)"><th style="padding:8px 12px;text-align:left">Deck</th><th style="padding:8px 12px;text-align:center">Cards</th><th style="padding:8px 4px;width:40px"></th></tr></thead><tbody>'+rows+'</tbody></table>'+
     '<div style="display:flex;gap:10px"><button onclick="doPushDecksToAll()" style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--primary,#E03131);color:#fff;font-weight:700;font-size:15px;cursor:pointer">Push to All Users</button><button onclick="this.closest(\'#pushPreviewModal\').remove()" style="padding:10px 20px;border-radius:10px;border:1px solid var(--line,#ddd);background:transparent;color:var(--ink,#222);font-size:14px;cursor:pointer;opacity:.7">Cancel</button></div>'+
     '</div>';
   document.body.appendChild(overlay);
