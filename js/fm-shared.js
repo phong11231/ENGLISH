@@ -3351,27 +3351,60 @@ function verifyAdminPass(){
     document.getElementById('adminError').style.display='block';
   }
 }
-async function pushDecksToAll(){
+function _buildPushData(){
+  var delCards=db.settings.deletedCards||{};
+  var sharedData={};var totalCards=0;
+  for(var id in db.decks){
+    var deck=db.decks[id];
+    var cleanDeck=Object.assign({},deck,{sharedBy:currentUser.uid,sharedAt:Date.now()});
+    cleanDeck.cards=(cleanDeck.cards||[]).filter(function(c){return !delCards[id+'_'+c.id];});
+    totalCards+=cleanDeck.cards.length;
+    sharedData[id]=cleanDeck;
+  }
+  return{data:sharedData,totalCards:totalCards};
+}
+function showPushPreview(){
   if(!isAdmin||!currentUser){toast('Admin access required');return;}
   toggleUserMenu();
-  const deckKeys=Object.keys(db.decks);
+  var deckKeys=Object.keys(db.decks);
   if(deckKeys.length===0){toast('No decks to push');return;}
-  if(!confirm('Push all your decks ('+deckKeys.length+') to every user?'))return;
+  var build=_buildPushData();
+  var delCards=db.settings.deletedCards||{};
+  var delCount=Object.keys(delCards).length;
+  var rows='';
+  for(var id in build.data){
+    var d=build.data[id];
+    var cardCount=(d.cards||[]).length;
+    var emoji=d.emoji||'📖';
+    rows+='<tr><td style="padding:8px 12px">'+emoji+' '+esc(d.name||id)+'</td><td style="padding:8px 12px;text-align:center;font-weight:700">'+cardCount+'</td></tr>';
+  }
+  var overlay=document.createElement('div');overlay.id='pushPreviewModal';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.innerHTML='<div style="background:var(--surface,#fff);border:1px solid var(--line,#ddd);border-radius:16px;padding:24px;max-width:500px;width:100%;color:var(--ink,#222);max-height:80vh;overflow-y:auto">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:18px;font-weight:700">📦 Push Preview</h3><button onclick="this.closest(\'#pushPreviewModal\').remove()" style="background:none;border:none;color:var(--ink,#222);font-size:20px;cursor:pointer;opacity:.6">✕</button></div>'+
+    '<div style="margin-bottom:12px;font-size:14px;opacity:.7">'+deckKeys.length+' decks · '+build.totalCards+' cards · '+delCount+' deleted cards filtered</div>'+
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px"><thead><tr style="border-bottom:2px solid var(--line,#ddd)"><th style="padding:8px 12px;text-align:left">Deck</th><th style="padding:8px 12px;text-align:center">Cards</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div style="display:flex;gap:10px"><button onclick="doPushDecksToAll()" style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--primary,#E03131);color:#fff;font-weight:700;font-size:15px;cursor:pointer">Push to All Users</button><button onclick="this.closest(\'#pushPreviewModal\').remove()" style="padding:10px 20px;border-radius:10px;border:1px solid var(--line,#ddd);background:transparent;color:var(--ink,#222);font-size:14px;cursor:pointer;opacity:.7">Cancel</button></div>'+
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+}
+async function doPushDecksToAll(){
+  var modal=document.getElementById('pushPreviewModal');
+  if(modal)modal.remove();
   try{
-    const sharedData={};
-    for(const[id,deck] of Object.entries(db.decks)){
-      sharedData[id]=Object.assign({},deck,{sharedBy:currentUser.uid,sharedAt:Date.now()});
-    }
-    sharedData._version=Date.now();
+    var build=_buildPushData();
+    build.data._version=Date.now();
     var ak=getAdminKey();
     if(!ak){toast('Admin key required');return;}
-    var blob=JSON.stringify(stripUndef(sharedData));
+    var blob=JSON.stringify(stripUndef(build.data));
     var resp=await fetch(AUDIO_WORKER+'/shared-decks.json',{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ak},body:blob});
     if(!resp.ok){toast('Upload failed: '+resp.status);if(resp.status===401)localStorage.removeItem('flashmind_admin_key');return;}
-    console.log('[R2] shared-decks.json uploaded, ver='+sharedData._version);
-    toast('Pushed '+deckKeys.length+' decks to all users!');
+    console.log('[R2] shared-decks.json uploaded, ver='+build.data._version+', cards='+build.totalCards);
+    toast('Pushed '+Object.keys(db.decks).length+' decks ('+build.totalCards+' cards) to all users!');
   }catch(e){console.error(e);toast('Push failed: '+e.message);}
 }
+async function pushDecksToAll(){showPushPreview();}
 async function loadSharedDecks(){
   try{
     var val=null;
