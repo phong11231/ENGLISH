@@ -29,9 +29,13 @@ export default {
       return new Response('Use public URL', { status: 400, headers: cors });
     }
 
-    const adminKey = request.headers.get('X-Admin-Key');
-    if (!adminKey || adminKey !== env.ADMIN_KEY) {
-      return new Response('Unauthorized', { status: 401, headers: cors });
+    // users/* cho phep PUT/DELETE tu do (user data)
+    const isUserPath = key.startsWith('users/');
+    if (!isUserPath) {
+      const adminKey = request.headers.get('X-Admin-Key');
+      if (!adminKey || adminKey !== env.ADMIN_KEY) {
+        return new Response('Unauthorized', { status: 401, headers: cors });
+      }
     }
 
     if (request.method === 'PUT' && key) {
