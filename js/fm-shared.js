@@ -3573,7 +3573,7 @@ async function loadSharedDecks(force){
         const existingMap={};(existing.cards||[]).forEach(c=>{existingMap[c.id]=c;});
         var _delCards=db.settings.deletedCards||{};
         data.cards=(data.cards||[]).filter(c=>!_delCards[id+'_'+c.id]);
-        data.cards.forEach(c=>{var ec=existingMap[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
+        data.cards.forEach(c=>{var ec=existingMap[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;c.difficultyLevel=ec.difficultyLevel;if(ec.cardName)c.cardName=ec.cardName;if(ec.definition)c.definition=ec.definition;}});
         const sharedCardIds=new Set(data.cards.map(c=>c.id));
         const userCards=(existing.cards||[]).filter(c=>!sharedCardIds.has(c.id)&&!_delCards[id+'_'+c.id]);
         userCards.forEach(c=>{c._userAdded=true;});
