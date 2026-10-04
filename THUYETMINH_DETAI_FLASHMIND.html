@@ -1,0 +1,655 @@
+<title>FlashMind Thuyet Minh</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+:root {
+  --bg: #ffffff;
+  --ink: #1a1a1a;
+  --ink-dim: #555;
+  --accent: #2563eb;
+  --line: #ddd;
+  color-scheme: light;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#181818;--ink:#e8e8e8;--ink-dim:#aaa;--accent:#60a5fa;--line:#333;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181818;--ink:#e8e8e8;--ink-dim:#aaa;--accent:#60a5fa;--line:#333;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;margin:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:'Be Vietnam Pro',serif;
+  font-size:13.5px;line-height:1.8;
+  padding:0 24px;padding-block:20px;
+  max-width:780px;margin:0 auto;
+}
+h1{font-size:1.3rem;font-weight:800;text-align:center;text-transform:uppercase;margin-bottom:4px;letter-spacing:.02em}
+h2{font-size:1.05rem;font-weight:700;margin-top:28px;margin-bottom:10px;border-bottom:2px solid var(--accent);padding-bottom:4px;color:var(--accent)}
+h3{font-size:.95rem;font-weight:700;margin-top:18px;margin-bottom:8px}
+h4{font-size:.88rem;font-weight:700;margin-top:14px;margin-bottom:6px;font-style:italic}
+p{margin-bottom:10px;text-align:justify}
+ul,ol{margin-bottom:10px;padding-left:22px}
+li{margin-bottom:4px}
+.center{text-align:center}
+.fill{color:var(--accent);font-weight:700;font-style:italic}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.85rem}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+th{background:var(--accent);color:#fff;font-weight:600}
+:root[data-theme="dark"] th,
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) th{background:#2563eb}}
+.page-break{border-top:1px dashed var(--line);margin:30px 0;padding-top:8px;text-align:right;font-size:.75rem;color:var(--ink-dim)}
+code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-size:.85em}
+blockquote{border-left:3px solid var(--accent);padding:8px 14px;margin:12px 0;background:rgba(37,99,235,.04);font-style:italic}
+.toc{background:rgba(0,0,0,.03);padding:16px 20px;border-radius:8px;margin:16px 0}
+.toc a{color:var(--accent);text-decoration:none}
+.toc li{margin-bottom:3px}
+img{max-width:100%}
+.fig{text-align:center;margin:14px 0;font-size:.82rem;color:var(--ink-dim);font-style:italic}
+</style>
+
+<div class="center">
+  <p style="font-size:.85rem;margin-bottom:2px"><span class="fill">[TÊN TRƯỜNG ĐẠI HỌC]</span></p>
+  <p style="font-size:.85rem;margin-bottom:16px"><span class="fill">[KHOA / BỘ MÔN]</span></p>
+  <h1>THUYẾT MINH ĐỀ TÀI<br>SINH VIÊN NGHIÊN CỨU KHOA HỌC</h1>
+  <p style="font-size:.9rem;margin-top:16px;margin-bottom:4px">──────────────</p>
+</div>
+
+<!-- ===== 1. TEN DE TAI ===== -->
+<h2>1. Tên đề tài</h2>
+<p style="font-size:1.05rem;font-weight:700;text-align:center;margin:16px 0">
+  "Xây dựng ứng dụng web học từ vựng tiếng Anh thông minh sử dụng thuật toán lặp lại ngắt quãng FSRS v5 và trí tuệ nhân tạo"
+</p>
+<p><strong>Tên tiếng Anh:</strong> FlashMind — Intelligent English Vocabulary Learning Web Application Using FSRS v5 Spaced Repetition Algorithm and Artificial Intelligence</p>
+
+<!-- ===== 2. GVHD ===== -->
+<h2>2. Giảng viên hướng dẫn</h2>
+<table>
+  <tr><th>Họ và tên</th><th>Đơn vị công tác</th><th>SĐT</th><th>Email</th></tr>
+  <tr><td class="fill">[Họ tên GVHD]</td><td class="fill">[Khoa/Bộ môn]</td><td class="fill">[SĐT]</td><td class="fill">[Email]</td></tr>
+</table>
+
+<!-- ===== 3. NHOM SV ===== -->
+<h2>3. Nhóm sinh viên thực hiện</h2>
+<h4>Chủ nhiệm đề tài:</h4>
+<table>
+  <tr><th>STT</th><th>Họ và tên</th><th>MSSV</th><th>SĐT</th><th>Email</th></tr>
+  <tr><td>1</td><td class="fill">[Họ tên chủ nhiệm]</td><td class="fill">[MSSV]</td><td class="fill">[SĐT]</td><td class="fill">[Email]</td></tr>
+</table>
+<h4>Các thành viên tham gia đề tài:</h4>
+<table>
+  <tr><th>STT</th><th>Họ và tên</th><th>MSSV</th><th>SĐT</th><th>Email</th><th>Vai trò</th></tr>
+  <tr><td>1</td><td class="fill">[Thành viên 1]</td><td class="fill">[MSSV]</td><td class="fill">[SĐT]</td><td class="fill">[Email]</td><td class="fill">[Frontend/Backend/...]</td></tr>
+  <tr><td>2</td><td class="fill">[Thành viên 2]</td><td class="fill">[MSSV]</td><td class="fill">[SĐT]</td><td class="fill">[Email]</td><td class="fill">[...]</td></tr>
+</table>
+
+<div class="page-break">── Trang 1 ──</div>
+
+<!-- ===== 4. TINH CAP THIET ===== -->
+<h2>4. Tính cấp thiết của đề tài</h2>
+
+<h3>4.1. Vấn đề thực tế</h3>
+<p>Trong bối cảnh hội nhập quốc tế ngày càng sâu rộng, tiếng Anh đã trở thành kỹ năng thiết yếu đối với sinh viên và người lao động Việt Nam. Theo báo cáo của EF Education First (EF EPI 2024), Việt Nam xếp hạng 60/113 quốc gia về trình độ tiếng Anh, thuộc nhóm "trung bình thấp" (Low Proficiency). Một trong những nguyên nhân chính là phương pháp học từ vựng truyền thống — học thuộc lòng, ghi chép tay, hoặc sử dụng flashcard giấy — có hiệu quả thấp do không tận dụng được các nghiên cứu khoa học về trí nhớ.</p>
+
+<p>Nghiên cứu của Ebbinghaus (1885) về "đường cong quên" (forgetting curve) đã chứng minh rằng con người quên khoảng 70% thông tin mới sau 24 giờ nếu không ôn tập. Tuy nhiên, nếu ôn tập đúng thời điểm — khi ký ức sắp phai — thì thông tin sẽ được củng cố và lưu giữ lâu dài hơn đáng kể. Đây là nền tảng lý thuyết của phương pháp lặp lại ngắt quãng (Spaced Repetition).</p>
+
+<h3>4.2. Hạn chế của các giải pháp hiện có</h3>
+<p>Hiện nay trên thị trường có nhiều ứng dụng học từ vựng, tuy nhiên mỗi ứng dụng đều có những hạn chế nhất định:</p>
+
+<p><strong>Anki</strong> — ứng dụng flashcard phổ biến nhất thế giới — sử dụng thuật toán SM-2 (SuperMemo 2) được phát triển từ năm 1987. Mặc dù Anki đã tích hợp FSRS từ phiên bản 23.10, nhưng vẫn tồn tại nhiều hạn chế: giao diện phức tạp, không thân thiện với người dùng mới; chỉ hỗ trợ một chế độ học duy nhất (lật thẻ); phiên bản iOS có giá $24.99; không tích hợp AI hay Text-to-Speech chất lượng cao; không có hệ thống nhắc học thông minh.</p>
+
+<p><strong>Quizlet</strong> — nền tảng học flashcard trực tuyến phổ biến — yêu cầu đăng ký tài khoản trả phí ($35.99/năm) để sử dụng đầy đủ tính năng. Quizlet không sử dụng bất kỳ thuật toán spaced repetition nào, nghĩa là việc ôn tập không được tối ưu hóa dựa trên khoa học trí nhớ. Các thẻ được hiển thị ngẫu nhiên hoặc theo thứ tự, không dựa trên mức độ ghi nhớ thực tế của người dùng.</p>
+
+<p><strong>Duolingo</strong> — ứng dụng học ngoại ngữ gamification — tập trung vào bài học theo chủ đề hơn là flashcard từ vựng tùy chỉnh. Người dùng không thể tạo bộ thẻ riêng hoặc nhập từ vựng từ bài học thực tế của họ.</p>
+
+<p>Tại Việt Nam, hầu hết các ứng dụng học tiếng Anh (VDict, TFlat, English Study) chỉ đơn thuần là từ điển hoặc bộ bài tập có sẵn, thiếu hệ thống spaced repetition và không tận dụng AI để cá nhân hóa quá trình học.</p>
+
+<h3>4.3. Lý do cần thực hiện đề tài</h3>
+<p>Đề tài này nhằm xây dựng một ứng dụng web học từ vựng tiếng Anh tích hợp những tiến bộ mới nhất trong lĩnh vực AI và khoa học trí nhớ:</p>
+<ul>
+  <li><strong>Thuật toán FSRS v5</strong> (Free Spaced Repetition Scheduler, phiên bản 5) — thuật toán machine learning thế hệ mới nhất (2024), được huấn luyện trên hơn 700 triệu lượt ôn tập thực tế, cho độ chính xác cao hơn SM-2 từ 30-50% theo nghiên cứu của Ye (2024).</li>
+  <li><strong>Trí tuệ nhân tạo</strong> (Gemini LLM) tự động sinh nội dung học tập cá nhân hóa từ dữ liệu từ vựng của người dùng.</li>
+  <li><strong>Công nghệ Progressive Web App</strong> (PWA) cho phép ứng dụng hoạt động như app gốc trên mọi thiết bị mà không cần qua App Store.</li>
+  <li><strong>Hệ thống nhắc học thông minh</strong> theo mô hình Duolingo, tăng tỷ lệ duy trì thói quen học tập.</li>
+</ul>
+
+<h3>4.4. Giá trị khoa học và ứng dụng dự kiến</h3>
+<p><strong>Giá trị khoa học:</strong> Đề tài đóng góp vào việc ứng dụng thuật toán machine learning (FSRS v5) vào lĩnh vực giáo dục, cụ thể là tối ưu hóa quá trình ghi nhớ từ vựng. Kết quả nghiên cứu có thể làm cơ sở tham khảo cho các nghiên cứu tiếp theo về adaptive learning và personalized education.</p>
+<p><strong>Giá trị ứng dụng:</strong> Sản phẩm là một ứng dụng web hoàn chỉnh, có thể triển khai thực tế phục vụ sinh viên, học sinh, và người đi làm cần cải thiện vốn từ vựng tiếng Anh. Chi phí vận hành gần như bằng 0 nhờ tận dụng các dịch vụ cloud miễn phí (GitHub Pages, Firebase, Cloudflare Workers).</p>
+
+<div class="page-break">── Trang 3 ──</div>
+
+<!-- ===== 5. MUC TIEU ===== -->
+<h2>5. Mục tiêu đề tài</h2>
+
+<h3>5.1. Mục tiêu tổng quát</h3>
+<p>Xây dựng và triển khai một ứng dụng web Progressive Web App (PWA) hỗ trợ học từ vựng tiếng Anh thông minh, sử dụng thuật toán lặp lại ngắt quãng FSRS v5 kết hợp trí tuệ nhân tạo (Gemini AI) nhằm tối ưu hóa hiệu quả ghi nhớ và cá nhân hóa trải nghiệm học tập cho người dùng Việt Nam.</p>
+
+<h3>5.2. Mục tiêu cụ thể</h3>
+<ol>
+  <li><strong>Triển khai thuật toán FSRS v5</strong> vào hệ thống flashcard, tính toán thời điểm ôn tập tối ưu cho từng thẻ dựa trên lịch sử ôn tập cá nhân, đạt độ chính xác dự đoán khả năng nhớ (retrievability) trên 85%.</li>
+  <li><strong>Tích hợp AI (Gemini)</strong> để tự động sinh bài hội thoại tiếng Anh từ từ vựng đã học, giúp người dùng vận dụng từ vựng trong ngữ cảnh thực tế.</li>
+  <li><strong>Xây dựng hệ thống Text-to-Speech</strong> sử dụng Microsoft Edge Neural TTS, phát âm từ vựng với giọng đọc tự nhiên, hỗ trợ nhiều giọng nói (Mỹ, Anh, Úc) và tốc độ đọc tùy chỉnh.</li>
+  <li><strong>Phát triển 6 chế độ học đa dạng:</strong> lật thẻ (flip), nghe và nói (voice), gõ phím (typing), trắc nghiệm (quiz), thi có thời gian (exam), điền khuyết (cloze) — phù hợp với nhiều phong cách học tập khác nhau.</li>
+  <li><strong>Xây dựng hệ thống nhắc học thông minh</strong> qua Web Push Notification, áp dụng mô hình escalation (tăng cấp) của Duolingo với smart timing dựa trên thói quen học của người dùng.</li>
+  <li><strong>Triển khai đồng bộ dữ liệu realtime</strong> đa thiết bị qua Firebase Realtime Database, tối ưu bandwidth sử dụng kỹ thuật granular read/write (đọc/ghi theo từng thẻ thay vì toàn bộ bộ thẻ).</li>
+  <li><strong>Đóng gói ứng dụng dưới dạng PWA</strong> cho phép người dùng cài đặt trên điện thoại như ứng dụng gốc, hỗ trợ hoạt động offline cơ bản.</li>
+</ol>
+
+<div class="page-break">── Trang 5 ──</div>
+
+<!-- ===== 6. DOI TUONG, PHAM VI ===== -->
+<h2>6. Đối tượng, phạm vi nghiên cứu, cách tiếp cận và phương pháp nghiên cứu</h2>
+
+<h3>6.1. Đối tượng nghiên cứu</h3>
+<ul>
+  <li><strong>Thuật toán FSRS v5:</strong> Mô hình machine learning dự đoán khả năng nhớ (retrievability) dựa trên hai tham số chính — stability (độ ổn định ký ức) và difficulty (độ khó của thẻ) — sử dụng 19 trọng số (weights) được huấn luyện từ dữ liệu thực tế.</li>
+  <li><strong>Người dùng:</strong> Sinh viên, học sinh Việt Nam có nhu cầu cải thiện vốn từ vựng tiếng Anh, từ trình độ cơ bản đến trung cấp.</li>
+  <li><strong>Công nghệ web hiện đại:</strong> Progressive Web App, Firebase Realtime Database, Web Push API, Gemini AI API, Microsoft Edge Neural TTS.</li>
+</ul>
+
+<h3>6.2. Phạm vi nghiên cứu</h3>
+
+<h4>Phạm vi dữ liệu</h4>
+<ul>
+  <li><strong>Nguồn dữ liệu:</strong> Từ vựng do người dùng tự tạo (user-generated content), bộ thẻ chia sẻ từ admin/giáo viên (shared decks), dữ liệu ôn tập (review log) lưu trên Firebase RTDB.</li>
+  <li><strong>Quy mô:</strong> Hỗ trợ hàng nghìn thẻ trên mỗi tài khoản, không giới hạn số lượng bộ thẻ (deck). Mỗi thẻ chứa: mặt trước (front), mặt sau (back), định nghĩa, tags, trạng thái FSRS (stability, difficulty, interval, due date), chế độ ôn tập, media (YouTube, audio).</li>
+  <li><strong>Đặc trưng chính:</strong> Dữ liệu có tính cá nhân hóa cao — mỗi người dùng có lịch sử ôn tập, chuỗi streak, XP, daily goal riêng biệt.</li>
+</ul>
+
+<h4>Phạm vi chức năng</h4>
+<ul>
+  <li>Quản lý bộ thẻ (tạo, sửa, xóa, sắp xếp theo folder)</li>
+  <li>Ôn tập flashcard với 6 chế độ học</li>
+  <li>Thuật toán FSRS v5 lên lịch ôn tập tự động</li>
+  <li>AI sinh hội thoại từ từ vựng đã học</li>
+  <li>Text-to-Speech phát âm từ vựng</li>
+  <li>Thống kê tiến độ học tập (XP, streak, biểu đồ)</li>
+  <li>Push notification nhắc học</li>
+  <li>Đồng bộ dữ liệu realtime đa thiết bị</li>
+  <li>Chia sẻ bộ thẻ giữa admin và học sinh</li>
+</ul>
+
+<h4>Phạm vi thực nghiệm</h4>
+<ul>
+  <li>Triển khai trên GitHub Pages (hosting miễn phí)</li>
+  <li>Kiểm thử trên trình duyệt Chrome, Safari (iOS), Firefox</li>
+  <li>Đánh giá trải nghiệm người dùng qua thực tế sử dụng</li>
+</ul>
+
+<h4>Giới hạn</h4>
+<ul>
+  <li>Không xây dựng ứng dụng native (Android/iOS riêng biệt) — chỉ PWA</li>
+  <li>Không hỗ trợ offline editing phức tạp (chỉ đọc từ localStorage)</li>
+  <li>AI sinh nội dung phụ thuộc vào Gemini API (cần kết nối internet)</li>
+  <li>Chưa có speech-to-text cho kiểm tra phát âm</li>
+</ul>
+
+<div class="page-break">── Trang 7 ──</div>
+
+<h3>6.3. Cách tiếp cận và phương pháp nghiên cứu</h3>
+
+<h4>6.3.1. Quy trình nghiên cứu</h4>
+<p>Đề tài được thực hiện theo quy trình phát triển phần mềm Agile (Agile Development), cụ thể là mô hình lặp (Iterative Development), gồm các giai đoạn:</p>
+<ol>
+  <li><strong>Giai đoạn 1 — Khảo sát và phân tích yêu cầu:</strong> Nghiên cứu các ứng dụng flashcard hiện có (Anki, Quizlet, Memrise), phân tích ưu nhược điểm, xác định yêu cầu chức năng và phi chức năng cho hệ thống mới.</li>
+  <li><strong>Giai đoạn 2 — Nghiên cứu thuật toán:</strong> Nghiên cứu sâu thuật toán FSRS v5, so sánh với SM-2, hiểu rõ mô hình toán học và cách triển khai.</li>
+  <li><strong>Giai đoạn 3 — Thiết kế và xây dựng hệ thống:</strong> Thiết kế kiến trúc ứng dụng, cơ sở dữ liệu, giao diện người dùng. Lập trình từng module và tích hợp.</li>
+  <li><strong>Giai đoạn 4 — Tích hợp AI và tối ưu:</strong> Tích hợp Gemini API, Edge TTS, Push Notification. Tối ưu hiệu năng và bandwidth.</li>
+  <li><strong>Giai đoạn 5 — Kiểm thử và triển khai:</strong> Kiểm thử chức năng, kiểm thử giao diện trên nhiều thiết bị, triển khai lên GitHub Pages.</li>
+</ol>
+
+<h4>6.3.2. Thuật toán FSRS v5 — Mô hình toán học</h4>
+<p>FSRS (Free Spaced Repetition Scheduler) phiên bản 5 là thuật toán machine learning được phát triển bởi Jarrett Ye (2024), sử dụng mô hình DSR (Difficulty-Stability-Retrievability) để dự đoán khả năng nhớ. Thuật toán sử dụng 19 tham số trọng số (w₀ đến w₁₈) được huấn luyện từ dữ liệu ôn tập thực tế.</p>
+
+<p><strong>Các công thức cốt lõi:</strong></p>
+
+<p><strong>1. Hàm Retrievability (khả năng nhớ):</strong></p>
+<blockquote>R(t, S) = (1 + FACTOR × t / S)<sup>DECAY</sup></blockquote>
+<p>Trong đó: t = số ngày kể từ lần ôn cuối, S = stability (độ ổn định ký ức), FACTOR = 19/81, DECAY = -0.5. Khi R = 0.9 (90% khả năng nhớ), đó là thời điểm tối ưu để ôn tập.</p>
+
+<p><strong>2. Initial Stability (stability ban đầu khi thẻ mới):</strong></p>
+<blockquote>S₀(G) = w[G-1]</blockquote>
+<p>Trong đó G ∈ {1, 2, 3, 4} tương ứng với đánh giá Again/Hard/Good/Easy. Giá trị mặc định: w = [0.4072, 1.1829, 3.1262, 15.4722].</p>
+
+<p><strong>3. Initial Difficulty (độ khó ban đầu):</strong></p>
+<blockquote>D₀(G) = w[4] - exp(w[5] × (G - 1)) + 1</blockquote>
+
+<p><strong>4. Next Stability khi nhớ được (recall):</strong></p>
+<blockquote>S'ᵣ = S × (exp(w[8]) × (11 - D) × S<sup>-w[9]</sup> × (exp(w[10] × (1 - R)) - 1) × hardPenalty × easyBonus + 1)</blockquote>
+<p>Trong đó D = difficulty, R = retrievability tại thời điểm ôn, hardPenalty và easyBonus là hệ số điều chỉnh theo đánh giá.</p>
+
+<p><strong>5. Next Stability khi quên (lapse):</strong></p>
+<blockquote>S'ₗ = w[11] × D<sup>-w[12]</sup> × ((S + 1)<sup>w[13]</sup> - 1) × exp(w[14] × (1 - R))</blockquote>
+
+<p><strong>6. Next Interval (khoảng cách đến lần ôn tiếp theo):</strong></p>
+<blockquote>I = min(36500, max(1, round(S / FACTOR × (R_target<sup>1/DECAY</sup> - 1))))</blockquote>
+<p>Với R_target = 0.9, DECAY = -0.5, FACTOR = 19/81.</p>
+
+<p><strong>7. Mean Reversion cho Difficulty:</strong></p>
+<blockquote>D' = w[7] × D₀(4) + (1 - w[7]) × D_new</blockquote>
+<p>Giúp difficulty hội tụ về giá trị trung bình theo thời gian, tránh extreme values.</p>
+
+<div class="page-break">── Trang 9 ──</div>
+
+<p><strong>So sánh FSRS v5 với SM-2 (SuperMemo 2):</strong></p>
+<table>
+  <tr><th>Tiêu chí</th><th>SM-2 (1987)</th><th>FSRS v5 (2024)</th></tr>
+  <tr><td>Mô hình</td><td>Rule-based, công thức cố định</td><td>Machine learning, 19 tham số huấn luyện</td></tr>
+  <tr><td>Tham số cá nhân hóa</td><td>1 (ease factor)</td><td>19 (trọng số w₀-w₁₈)</td></tr>
+  <tr><td>Dự đoán khả năng nhớ</td><td>Không</td><td>Có (retrievability function)</td></tr>
+  <tr><td>Xử lý khi quên</td><td>Reset về interval 1</td><td>Tính stability mới dựa trên history</td></tr>
+  <tr><td>Dữ liệu huấn luyện</td><td>Không có</td><td>700 triệu+ review logs</td></tr>
+  <tr><td>Độ chính xác (RMSE)</td><td>Cao (sai lệch lớn)</td><td>Thấp hơn 30-50%</td></tr>
+  <tr><td>Tối ưu cá nhân</td><td>Không</td><td>Có thể train weights riêng</td></tr>
+</table>
+
+<h4>6.3.3. Công nghệ sử dụng</h4>
+<table>
+  <tr><th>Thành phần</th><th>Công nghệ</th><th>Mục đích</th></tr>
+  <tr><td>Frontend</td><td>HTML5, CSS3, JavaScript (Vanilla)</td><td>Giao diện người dùng, không framework</td></tr>
+  <tr><td>PWA</td><td>Service Worker, Web App Manifest</td><td>Cài đặt như app, push notification</td></tr>
+  <tr><td>Authentication</td><td>Firebase Authentication</td><td>Đăng nhập Email/Password + Google OAuth</td></tr>
+  <tr><td>Database</td><td>Firebase Realtime Database</td><td>Lưu trữ và đồng bộ dữ liệu realtime</td></tr>
+  <tr><td>AI</td><td>Google Gemini API (2.5 Flash / 3.6 Flash)</td><td>Sinh hội thoại từ từ vựng</td></tr>
+  <tr><td>TTS</td><td>Microsoft Edge Neural TTS</td><td>Phát âm từ vựng giọng tự nhiên</td></tr>
+  <tr><td>Notification</td><td>Web Push API + VAPID</td><td>Nhắc học thông minh</td></tr>
+  <tr><td>CI/CD</td><td>GitHub Actions (Cron)</td><td>Gửi push notification định kỳ</td></tr>
+  <tr><td>Hosting</td><td>GitHub Pages</td><td>Hosting miễn phí cho static site</td></tr>
+  <tr><td>CDN/Proxy</td><td>Cloudflare Workers</td><td>Proxy audio TTS, xử lý CORS</td></tr>
+</table>
+
+<h4>6.3.4. Kiến trúc hệ thống</h4>
+<p>Hệ thống được thiết kế theo kiến trúc client-heavy, serverless:</p>
+<ul>
+  <li><strong>Client (Browser):</strong> Toàn bộ logic ứng dụng chạy trên trình duyệt — bao gồm thuật toán FSRS, quản lý deck/card, rendering UI, đồng bộ dữ liệu. Dữ liệu được cache tại localStorage để hỗ trợ offline cơ bản.</li>
+  <li><strong>Firebase RTDB:</strong> Lưu trữ dữ liệu người dùng (decks, cards, settings, review logs). Hỗ trợ realtime listener để đồng bộ giữa các thiết bị. Tối ưu bandwidth bằng granular read/write — mỗi thao tác ôn bài chỉ gửi/nhận đúng 1 thẻ thay vì toàn bộ bộ thẻ.</li>
+  <li><strong>Firebase Auth:</strong> Xử lý đăng nhập, đăng ký, Google OAuth.</li>
+  <li><strong>Gemini API:</strong> Gọi trực tiếp từ client-side (API key lưu tại Firestore, chỉ admin quản lý).</li>
+  <li><strong>Edge TTS Proxy (Vercel/Cloudflare):</strong> Proxy text-to-speech request để tránh CORS blocking.</li>
+  <li><strong>GitHub Actions:</strong> Cron job chạy mỗi 2 giờ, đọc danh sách push subscription từ RTDB, tính smart timing, gửi Web Push notification.</li>
+</ul>
+
+<div class="page-break">── Trang 11 ──</div>
+
+<h4>6.3.5. Cấu trúc dữ liệu Firebase RTDB</h4>
+<p>Dữ liệu được tổ chức theo cấu trúc phân cấp trên Firebase Realtime Database:</p>
+
+<pre style="background:rgba(0,0,0,.05);padding:14px;border-radius:8px;overflow-x:auto;font-size:.82rem;line-height:1.5"><code>users/
+  {userId}/
+    decks/
+      {deckId}/
+        name: "IELTS Vocabulary"
+        emoji: "🇬🇧"
+        parentId: null
+        defaultDisplayMode: "voice"
+        cards/
+          0/
+            id: "uuid"
+            front: "ubiquitous"
+            back: "có mặt khắp nơi"
+            status: "review"        // new | learning | review
+            stability: 12.5         // FSRS stability
+            difficulty: 4.2         // FSRS difficulty
+            interval: 15            // ngày đến lần ôn tiếp
+            due: 1727500000000      // timestamp lần ôn tiếp
+            reps: 8                 // số lần đã ôn
+            lapses: 1               // số lần quên
+            reviewMode: "flip"      // flip | voice | typing
+            displayMode: "voice"    // voice | text | quiz
+            suspended: false
+            leech: false
+          1/ ...
+    settings/
+      dailyGoal: 20
+      totalXp: 1250
+      streakDays/
+        "2024-09-25": 15
+        "2024-09-26": 22
+      voiceProvider: "edge"
+      voiceId: "en-US-JennyNeural"
+      speechRate: 1.0
+      deletedCards/
+        "{deckId}_{cardId}": true
+    reviewLog/
+      {pushKey}/
+        deckId: "..."
+        cardId: "..."
+        grade: 3
+        date: 1727500000000
+    pushSubscription/
+      endpoint: "https://fcm.googleapis.com/..."
+      keys: { p256dh: "...", auth: "..." }
+    _pushSubCount: 1
+
+sharedDecks/
+  {deckId}/
+    name: "..."
+    cards/ ...</code></pre>
+
+<div class="page-break">── Trang 13 ──</div>
+
+<h4>6.3.6. Phương pháp đối chứng</h4>
+<p>Để đánh giá hiệu quả của thuật toán FSRS v5, đề tài sử dụng các metric sau:</p>
+<ul>
+  <li><strong>Retention Rate:</strong> Tỷ lệ thẻ được trả lời đúng tại thời điểm ôn tập (mục tiêu: ≥ 85%).</li>
+  <li><strong>RMSE (Root Mean Square Error):</strong> Sai số giữa retrievability dự đoán và kết quả ôn tập thực tế.</li>
+  <li><strong>Review Efficiency:</strong> Số lần ôn tập cần thiết để đưa một thẻ từ trạng thái "new" sang "mature" (interval ≥ 21 ngày).</li>
+  <li><strong>User Engagement:</strong> Tỷ lệ quay lại học hàng ngày, streak trung bình, số thẻ ôn tập/ngày.</li>
+</ul>
+
+<!-- ===== 7. TIEN DO ===== -->
+<h2>7. Tiến độ hiện tại của đề tài</h2>
+
+<h3>7.1. Tổng quan tiến độ</h3>
+<table>
+  <tr><th>Nội dung</th><th>Trạng thái</th><th>Tỷ lệ hoàn thành</th><th>Minh chứng</th></tr>
+  <tr><td>Khảo sát tài liệu (Anki, FSRS, SM-2)</td><td>Hoàn thành</td><td>100%</td><td>Tài liệu tham khảo</td></tr>
+  <tr><td>Thiết kế cơ sở dữ liệu</td><td>Hoàn thành</td><td>100%</td><td>Firebase RTDB schema</td></tr>
+  <tr><td>Xây dựng giao diện (UI/UX)</td><td>Hoàn thành</td><td>100%</td><td>Source code HTML/CSS</td></tr>
+  <tr><td>Triển khai thuật toán FSRS v5</td><td>Hoàn thành</td><td>100%</td><td>Source code JavaScript</td></tr>
+  <tr><td>Hệ thống Auth + Realtime Sync</td><td>Hoàn thành</td><td>100%</td><td>Firebase Auth + RTDB</td></tr>
+  <tr><td>Tích hợp AI (Gemini)</td><td>Hoàn thành</td><td>100%</td><td>AI Practice feature</td></tr>
+  <tr><td>Text-to-Speech (Edge TTS)</td><td>Hoàn thành</td><td>100%</td><td>Voice playback</td></tr>
+  <tr><td>Push Notification</td><td>Hoàn thành</td><td>100%</td><td>Service Worker + GitHub Actions</td></tr>
+  <tr><td>Tối ưu bandwidth RTDB</td><td>Hoàn thành</td><td>100%</td><td>Granular read/write</td></tr>
+  <tr><td>PWA (cài đặt, offline)</td><td>Hoàn thành</td><td>100%</td><td>manifest.json + SW</td></tr>
+  <tr><td>Kiểm thử responsive mobile</td><td>Hoàn thành</td><td>100%</td><td>CSS media queries</td></tr>
+  <tr><td>Viết báo cáo/thuyết minh</td><td>Đang thực hiện</td><td>50%</td><td>Bản thảo</td></tr>
+</table>
+
+<h3>7.2. Sản phẩm đã có</h3>
+<ul>
+  <li>✅ Source code hoàn chỉnh (GitHub repository)</li>
+  <li>✅ Ứng dụng web hoạt động tại <span class="fill">[URL GitHub Pages]</span></li>
+  <li>✅ PWA có thể cài đặt trên điện thoại</li>
+  <li>✅ Prototype đầy đủ tính năng, đã có người dùng thực tế sử dụng</li>
+</ul>
+
+<div class="page-break">── Trang 15 ──</div>
+
+<!-- ===== 8. NOI DUNG NGHIEN CUU ===== -->
+<h2>8. Nội dung nghiên cứu và kế hoạch thực hiện</h2>
+
+<h3>8.1. Nội dung nghiên cứu chi tiết</h3>
+
+<h4>Nội dung 1: Nghiên cứu lý thuyết về Spaced Repetition và FSRS</h4>
+<table>
+  <tr><th style="width:25%">Mục</th><th>Chi tiết</th></tr>
+  <tr><td>Nội dung cụ thể</td><td>Nghiên cứu lý thuyết đường cong quên (Ebbinghaus), phương pháp lặp lại ngắt quãng (Pimsleur, Leitner, SuperMemo), thuật toán SM-2, và thuật toán FSRS v5 (mô hình DSR). Phân tích 19 tham số trọng số, công thức retrievability, stability, difficulty. So sánh hiệu quả FSRS v5 vs SM-2 dựa trên nghiên cứu của Ye (2024).</td></tr>
+  <tr><td>Sản phẩm phải đạt</td><td>Báo cáo tổng quan lý thuyết (Chương 2 của báo cáo). Bảng so sánh chi tiết các thuật toán.</td></tr>
+  <tr><td>Thời gian</td><td class="fill">[Tuần 1-3]</td></tr>
+  <tr><td>Người thực hiện</td><td class="fill">[Tên]</td></tr>
+</table>
+
+<h4>Nội dung 2: Phân tích và thiết kế hệ thống</h4>
+<table>
+  <tr><th style="width:25%">Mục</th><th>Chi tiết</th></tr>
+  <tr><td>Nội dung cụ thể</td><td>Phân tích yêu cầu chức năng (use case diagram): quản lý deck/card, ôn tập flashcard, AI Practice, thống kê, admin. Yêu cầu phi chức năng: responsive mobile-first, offline cơ bản, tải trang &lt; 2s, bandwidth tối ưu. Thiết kế cơ sở dữ liệu Firebase RTDB (schema JSON). Thiết kế kiến trúc hệ thống client-heavy serverless.</td></tr>
+  <tr><td>Sản phẩm phải đạt</td><td>Use case diagram, class diagram, sequence diagram, database schema, wireframe giao diện.</td></tr>
+  <tr><td>Thời gian</td><td class="fill">[Tuần 2-4]</td></tr>
+  <tr><td>Người thực hiện</td><td class="fill">[Tên]</td></tr>
+</table>
+
+<h4>Nội dung 3: Xây dựng core engine — FSRS v5 và hệ thống flashcard</h4>
+<table>
+  <tr><th style="width:25%">Mục</th><th>Chi tiết</th></tr>
+  <tr><td>Nội dung cụ thể</td><td>Triển khai thuật toán FSRS v5 bằng JavaScript: các hàm <code>_fsrsRetrievability()</code>, <code>_fsrsInitStability()</code>, <code>_fsrsInitDifficulty()</code>, <code>_fsrsNextStabilityRecall()</code>, <code>_fsrsNextStabilityLapse()</code>, <code>_fsrsNextInterval()</code>. Xây dựng hệ thống quản lý thẻ: tạo/sửa/xóa card, hỗ trợ nhiều loại thẻ (basic, reversed, cloze). Xây dựng 6 chế độ ôn tập: flip, voice, typing, quiz, exam, cloze. Leech detection (phát hiện thẻ khó).</td></tr>
+  <tr><td>Sản phẩm phải đạt</td><td>Module FSRS hoạt động chính xác. 6 chế độ ôn tập. Unit test kiểm tra công thức FSRS.</td></tr>
+  <tr><td>Thời gian</td><td class="fill">[Tuần 3-8]</td></tr>
+  <tr><td>Người thực hiện</td><td class="fill">[Tên]</td></tr>
+</table>
+
+<div class="page-break">── Trang 17 ──</div>
+
+<h4>Nội dung 4: Xây dựng giao diện người dùng (UI/UX)</h4>
+<table>
+  <tr><th style="width:25%">Mục</th><th>Chi tiết</th></tr>
+  <tr><td>Nội dung cụ thể</td><td>Thiết kế giao diện mobile-first responsive. Trang chính: dashboard với streak widget, daily goal, action cards, danh sách deck. Trang ôn tập: flashcard view với animation flip, progress bar, nút đánh giá FSRS (Again/Hard/Good/Easy). Trang thống kê: biểu đồ tiến độ, XP, streak calendar. PWA: manifest.json, service worker, splash screen, icon.</td></tr>
+  <tr><td>Sản phẩm phải đạt</td><td>Giao diện hoàn chỉnh, responsive trên mobile/tablet/desktop. Trải nghiệm mượt mà, không lag.</td></tr>
+  <tr><td>Thời gian</td><td class="fill">[Tuần 4-10]</td></tr>
+  <tr><td>Người thực hiện</td><td class="fill">[Tên]</td></tr>
+</table>
+
+<h4>Nội dung 5: Tích hợp AI và Text-to-Speech</h4>
+<table>
+  <tr><th style="width:25%">Mục</th><th>Chi tiết</th></tr>
+  <tr><td>Nội dung cụ thể</td><td><strong>AI Practice:</strong> Thu thập tự động từ vựng tiếng Anh từ tất cả deck của user (hàm <code>collectAllVocab()</code>), phân loại thành words/sentences/idioms, chọn ngẫu nhiên 50 từ, xây dựng prompt yêu cầu Gemini tạo hội thoại dài 25-30 câu sử dụng tất cả từ đó. Gọi Gemini API với fallback qua nhiều model (2.5 Flash → 3.6 Flash). <br><strong>Edge TTS:</strong> Tích hợp Microsoft Edge Neural TTS qua proxy Vercel/Cloudflare. Hỗ trợ chọn giọng nói (en-US, en-GB, en-AU), random voice, tốc độ đọc tùy chỉnh 0.5x-2x. Fallback về Web Speech API khi Edge TTS không khả dụng.</td></tr>
+  <tr><td>Sản phẩm phải đạt</td><td>AI Practice tạo hội thoại thành công. TTS phát âm mượt mà trên mobile và desktop.</td></tr>
+  <tr><td>Thời gian</td><td class="fill">[Tuần 8-12]</td></tr>
+  <tr><td>Người thực hiện</td><td class="fill">[Tên]</td></tr>
+</table>
+
+<h4>Nội dung 6: Xây dựng hệ thống đồng bộ và notification</h4>
+<table>
+  <tr><th style="width:25%">Mục</th><th>Chi tiết</th></tr>
+  <tr><td>Nội dung cụ thể</td><td><strong>Realtime Sync:</strong> Firebase RTDB với các listener: <code>child_changed</code>, <code>child_added</code>, <code>child_removed</code> (thay vì <code>on('value')</code> để tiết kiệm bandwidth). Kỹ thuật <code>saveCardOnly()</code> — ghi từng thẻ riêng lẻ tại đường dẫn <code>decks/{deckId}/cards/{idx}</code>. Skip flag <code>_skipDeckSync</code> tránh vòng lặp tải lại dữ liệu vừa gửi. <br><strong>Push Notification:</strong> Web Push API với VAPID keys. GitHub Actions cron job mỗi 2 giờ. Escalation message: ngày 1 nhẹ nhàng, ngày 2 khuyến khích, ngày 3+ mạnh hơn. Smart timing: phân tích giờ học thường ngày. Frequency cap: max 1 push/ngày, dừng sau 7 ngày inactive.</td></tr>
+  <tr><td>Sản phẩm phải đạt</td><td>Đồng bộ realtime hoạt động. Push notification nhận thành công trên Chrome + iOS Safari.</td></tr>
+  <tr><td>Thời gian</td><td class="fill">[Tuần 10-14]</td></tr>
+  <tr><td>Người thực hiện</td><td class="fill">[Tên]</td></tr>
+</table>
+
+<div class="page-break">── Trang 19 ──</div>
+
+<h4>Nội dung 7: Kiểm thử và tối ưu hệ thống</h4>
+<table>
+  <tr><th style="width:25%">Mục</th><th>Chi tiết</th></tr>
+  <tr><td>Nội dung cụ thể</td><td>Kiểm thử chức năng: tất cả 6 chế độ ôn tập, tạo/sửa/xóa card, import/export, AI Practice, TTS. Kiểm thử responsive: mobile (375px), tablet (768px), desktop (1200px+). Kiểm thử cross-browser: Chrome, Safari (iOS), Firefox. Tối ưu bandwidth RTDB: đo lường trước/sau tối ưu. Kiểm thử push notification trên nhiều thiết bị. Kiểm thử offline mode (localStorage).</td></tr>
+  <tr><td>Sản phẩm phải đạt</td><td>Báo cáo kiểm thử. Danh sách bug đã sửa. Kết quả đo bandwidth trước/sau.</td></tr>
+  <tr><td>Thời gian</td><td class="fill">[Tuần 12-15]</td></tr>
+  <tr><td>Người thực hiện</td><td class="fill">[Tên]</td></tr>
+</table>
+
+<h4>Nội dung 8: Hoàn thiện báo cáo và bảo vệ</h4>
+<table>
+  <tr><th style="width:25%">Mục</th><th>Chi tiết</th></tr>
+  <tr><td>Nội dung cụ thể</td><td>Viết báo cáo đầy đủ các chương: Tổng quan, Cơ sở lý thuyết, Phân tích thiết kế, Triển khai, Kiểm thử đánh giá, Kết luận. Chuẩn bị slide trình bày. Demo ứng dụng live.</td></tr>
+  <tr><td>Sản phẩm phải đạt</td><td>Báo cáo 30-50 trang. Slide trình bày. Video demo.</td></tr>
+  <tr><td>Thời gian</td><td class="fill">[Tuần 14-16]</td></tr>
+  <tr><td>Người thực hiện</td><td class="fill">[Tên]</td></tr>
+</table>
+
+<div class="page-break">── Trang 20 ──</div>
+
+<h3>8.2. Kế hoạch thực hiện tổng thể (Gantt Chart)</h3>
+<table>
+  <tr>
+    <th>STT</th><th>Nội dung công việc</th><th>Sản phẩm</th><th>Thời gian</th><th>Người thực hiện</th>
+  </tr>
+  <tr><td>1</td><td>Nghiên cứu lý thuyết SR, FSRS v5</td><td>Báo cáo tổng quan</td><td class="fill">[T1-T3]</td><td class="fill">[Tên]</td></tr>
+  <tr><td>2</td><td>Phân tích yêu cầu, thiết kế hệ thống</td><td>Use case, DB schema</td><td class="fill">[T2-T4]</td><td class="fill">[Tên]</td></tr>
+  <tr><td>3</td><td>Xây dựng FSRS engine + flashcard</td><td>Core module</td><td class="fill">[T3-T8]</td><td class="fill">[Tên]</td></tr>
+  <tr><td>4</td><td>Xây dựng giao diện UI/UX</td><td>Giao diện responsive</td><td class="fill">[T4-T10]</td><td class="fill">[Tên]</td></tr>
+  <tr><td>5</td><td>Tích hợp AI + TTS</td><td>AI Practice, Edge TTS</td><td class="fill">[T8-T12]</td><td class="fill">[Tên]</td></tr>
+  <tr><td>6</td><td>Đồng bộ + Push Notification</td><td>Realtime sync, push</td><td class="fill">[T10-T14]</td><td class="fill">[Tên]</td></tr>
+  <tr><td>7</td><td>Kiểm thử + tối ưu</td><td>Báo cáo kiểm thử</td><td class="fill">[T12-T15]</td><td class="fill">[Tên]</td></tr>
+  <tr><td>8</td><td>Viết báo cáo + bảo vệ</td><td>Báo cáo, slide, demo</td><td class="fill">[T14-T16]</td><td class="fill">[Tên]</td></tr>
+</table>
+
+<div class="page-break">── Trang 21 ──</div>
+
+<!-- ===== CHUONG BO SUNG: CHI TIET KY THUAT ===== -->
+<h2>Phụ lục A: Chi tiết kỹ thuật triển khai</h2>
+
+<h3>A.1. Triển khai thuật toán FSRS v5 trong JavaScript</h3>
+<p>Thuật toán FSRS v5 được triển khai hoàn toàn bằng JavaScript phía client, không yêu cầu server-side processing. Dưới đây là mô tả chi tiết các hàm chính:</p>
+
+<p><strong>Hằng số cốt lõi:</strong></p>
+<ul>
+  <li><code>FSRS_DECAY = -0.5</code> — hệ số suy giảm ký ức</li>
+  <li><code>FSRS_FACTOR = 19/81 ≈ 0.2346</code> — hệ số tỷ lệ</li>
+  <li><code>FSRS_TARGET_R = 0.9</code> — mục tiêu retrievability (90%)</li>
+  <li><code>FSRS_W_DEFAULT</code> — mảng 19 trọng số mặc định, được lấy từ nghiên cứu của Ye (2024)</li>
+</ul>
+
+<p><strong>Luồng xử lý khi người dùng đánh giá một thẻ:</strong></p>
+<ol>
+  <li>Hàm <code>fsrs(card, quality)</code> được gọi với quality ∈ {1: Again, 2: Hard, 3: Good, 4: Easy}</li>
+  <li>Nếu thẻ ở trạng thái "new" (chưa ôn bao giờ): tính <code>_fsrsInitStability(quality)</code> và <code>_fsrsInitDifficulty(quality)</code></li>
+  <li>Nếu thẻ đã ôn trước đó: tính retrievability hiện tại, sau đó:
+    <ul>
+      <li>Nếu quality ≥ 2 (nhớ được): dùng <code>_fsrsNextStabilityRecall()</code></li>
+      <li>Nếu quality = 1 (quên): dùng <code>_fsrsNextStabilityLapse()</code>, tăng lapses</li>
+    </ul>
+  </li>
+  <li>Cập nhật difficulty bằng <code>_fsrsNextDifficulty()</code> với mean reversion</li>
+  <li>Tính interval mới bằng <code>_fsrsNextInterval(stability)</code></li>
+  <li>Cập nhật <code>card.due = Date.now() + interval * 86400000</code></li>
+  <li>Kiểm tra leech: nếu <code>lapses >= leechThreshold</code> (mặc định 8), đánh dấu thẻ là leech</li>
+  <li>Gọi <code>saveCardOnly(deckId, cardId)</code> — chỉ gửi thẻ này lên RTDB, không gửi toàn bộ deck</li>
+</ol>
+
+<h3>A.2. Hệ thống Text-to-Speech đa lớp</h3>
+<p>FlashMind triển khai hệ thống TTS 3 lớp fallback:</p>
+<ol>
+  <li><strong>Edge TTS (ưu tiên cao nhất):</strong> Gọi Microsoft Edge Neural TTS qua proxy API. Giọng đọc tự nhiên, hỗ trợ hơn 20 giọng tiếng Anh (en-US-JennyNeural, en-US-GuyNeural, en-GB-SoniaNeural, en-AU-NatashaNeural, v.v.). Trả về file audio stream.</li>
+  <li><strong>Google TTS (fallback 1):</strong> Sử dụng Google Translate TTS endpoint. Giới hạn độ dài text, đôi khi bị block.</li>
+  <li><strong>Web Speech API (fallback 2):</strong> API có sẵn trên trình duyệt. Chất lượng giọng đọc thấp hơn nhưng không cần server.</li>
+</ol>
+
+<p>Người dùng có thể tùy chỉnh: chọn giọng nói cụ thể, bật chế độ random voice (mỗi thẻ một giọng khác nhau), điều chỉnh tốc độ đọc từ 0.5x đến 2x.</p>
+
+<div class="page-break">── Trang 23 ──</div>
+
+<h3>A.3. Hệ thống Push Notification kiểu Duolingo</h3>
+<p>Hệ thống nhắc học được thiết kế theo mô hình Duolingo với các đặc tính:</p>
+
+<p><strong>Escalation Messages:</strong></p>
+<table>
+  <tr><th>Ngày không học</th><th>Giọng điệu</th><th>Ví dụ message</th></tr>
+  <tr><td>Ngày 1</td><td>Nhẹ nhàng, thân thiện</td><td>"Hôm nay bạn chưa ôn bài! Chỉ 5 phút thôi nhé 📚"</td></tr>
+  <tr><td>Ngày 2</td><td>Khuyến khích, nhấn mạnh streak</td><td>"Đừng để streak bị reset! Bạn đã học X ngày liên tục rồi 🔥"</td></tr>
+  <tr><td>Ngày 3+</td><td>Mạnh hơn, tạo cảm giác cấp bách</td><td>"Bạn đã nghỉ X ngày rồi! Quay lại trước khi quên hết nhé 😰"</td></tr>
+  <tr><td>Ngày 7+</td><td>Dừng gửi</td><td>(Không gửi nữa — tránh spam)</td></tr>
+</table>
+
+<p><strong>Smart Timing:</strong> Hệ thống phân tích timestamp của các lần ôn tập gần nhất (từ review log), tính ra giờ học thường ngày của user, và gửi notification vào đúng thời điểm đó. Ví dụ: nếu user thường học lúc 20:00, notification sẽ được gửi lúc 20:00 thay vì một giờ cố định.</p>
+
+<p><strong>Kiến trúc kỹ thuật:</strong></p>
+<ul>
+  <li>GitHub Actions cron job chạy mỗi 2 giờ (<code>0 */2 * * *</code>)</li>
+  <li>Script Node.js đọc tất cả user từ RTDB</li>
+  <li>Với mỗi user: kiểm tra đã học hôm nay chưa, tính số ngày inactive, kiểm tra smart timing</li>
+  <li>Gửi Web Push qua thư viện <code>web-push</code> với VAPID keys</li>
+  <li>Ghi timestamp gửi vào RTDB để tránh gửi trùng</li>
+</ul>
+
+<h3>A.4. Tối ưu bandwidth Firebase RTDB</h3>
+<p>Vấn đề ban đầu: mỗi thao tác ôn tập (đánh giá 1 thẻ) gửi và nhận <strong>toàn bộ deck</strong> (có thể hàng trăm thẻ) qua RTDB. Một deck 300 thẻ, mỗi thẻ ~500 bytes = mỗi lần ôn tải/gửi ~150KB. Ôn 20 thẻ/ngày = 3MB/ngày/user. 10 users = 30MB/ngày → nhanh chóng cạn free tier (10GB/tháng).</p>
+
+<p><strong>Giải pháp đã triển khai:</strong></p>
+<table>
+  <tr><th>Trước tối ưu</th><th>Sau tối ưu</th><th>Giảm</th></tr>
+  <tr><td><code>saveDeckData()</code> — ghi toàn bộ deck</td><td><code>saveCardOnly()</code> — ghi đúng 1 thẻ tại <code>cards/{idx}</code></td><td>~99%/lần ghi</td></tr>
+  <tr><td><code>on('value')</code> — nhận toàn bộ decks node</td><td><code>on('child_changed')</code> — nhận đúng 1 deck thay đổi</td><td>~95%/lần đọc</td></tr>
+  <tr><td><code>updates['settings'] = {...}</code> — ghi toàn bộ settings</td><td><code>updates['settings/totalXp'] = ...</code> — ghi từng field</td><td>~80%</td></tr>
+  <tr><td>Visibility change: đọc toàn bộ settings mỗi 60s</td><td>Đọc <code>settings/totalXp</code> + <code>settings/streakDays</code> mỗi 300s</td><td>~90%</td></tr>
+</table>
+<p><strong>Kết quả:</strong> Giảm tổng bandwidth ước tính ~90%, cho phép nhiều user hơn trong free tier Firebase RTDB (10GB downloads/tháng).</p>
+
+<div class="page-break">── Trang 25 ──</div>
+
+<h3>A.5. Các chế độ ôn tập chi tiết</h3>
+<table>
+  <tr><th>Chế độ</th><th>Mô tả</th><th>Cách đánh giá</th></tr>
+  <tr><td><strong>Flip</strong></td><td>Hiển thị mặt trước → user tự nhớ → lật xem mặt sau → tự đánh giá</td><td>User chọn Again/Hard/Good/Easy</td></tr>
+  <tr><td><strong>Voice</strong></td><td>Phát âm từ vựng bằng Edge TTS → user nghe → tự nhớ nghĩa → lật xem</td><td>User chọn Again/Hard/Good/Easy</td></tr>
+  <tr><td><strong>Typing</strong></td><td>Hiển thị nghĩa tiếng Việt → user gõ từ tiếng Anh → hệ thống so sánh</td><td>Tự động: đúng = Good, sai = Again</td></tr>
+  <tr><td><strong>Quiz</strong></td><td>Hiển thị từ + 4 đáp án trắc nghiệm → user chọn</td><td>Tự động: đúng = Good, sai = Again</td></tr>
+  <tr><td><strong>Exam</strong></td><td>Bài thi trắc nghiệm có giới hạn thời gian, chấm điểm cuối bài</td><td>Điểm số % và xem đáp án</td></tr>
+  <tr><td><strong>Cloze</strong></td><td>Câu có chỗ trống {{...}} → user điền từ còn thiếu</td><td>Tự động so sánh, hỗ trợ nhiều đáp án đúng</td></tr>
+</table>
+
+<h3>A.6. Hệ thống AI Practice — Gemini Integration</h3>
+<p>Quy trình tạo bài hội thoại AI:</p>
+<ol>
+  <li><strong>Thu thập từ vựng:</strong> Hàm <code>collectAllVocab()</code> quét tất cả deck, lọc ra từ tiếng Anh (loại bỏ tiếng Việt bằng regex dấu), phân loại thành 3 nhóm: words (từ đơn), sentences (câu dài >40 ký tự), idioms (thành ngữ).</li>
+  <li><strong>Chọn ngẫu nhiên:</strong> Trộn đều 3 nhóm, chọn 50 từ/cụm ngẫu nhiên bằng Fisher-Yates shuffle.</li>
+  <li><strong>Xây dựng prompt:</strong> Hàm <code>buildAIPrompt()</code> tạo prompt yêu cầu Gemini sinh hội thoại A-B dài 25-30 câu sử dụng TẤT CẢ 50 từ, kèm bản dịch tiếng Việt.</li>
+  <li><strong>Gọi API:</strong> Hàm <code>callGemini()</code> thử lần lượt qua 2 model (gemini-2.5-flash → gemini-3.6-flash) với fallback.</li>
+  <li><strong>Hiển thị:</strong> Kết quả hội thoại hiển thị trong modal, user có thể copy toàn bộ.</li>
+</ol>
+<p>Ngoài ra, user có thể copy prompt để paste vào ChatGPT hoặc Claude nếu muốn sử dụng LLM khác.</p>
+
+<div class="page-break">── Trang 27 ──</div>
+
+<!-- ===== PHU LUC B: GIAO DIEN ===== -->
+<h2>Phụ lục B: Giao diện ứng dụng</h2>
+
+<h3>B.1. Trang chính (Dashboard)</h3>
+<p>Trang chính hiển thị:</p>
+<ul>
+  <li><strong>Navigation bar:</strong> Logo FlashMind, các nút chuyển view (Decks, Review, Quiz, Quizy, Stats), nút đổi theme, avatar user.</li>
+  <li><strong>Streak Widget:</strong> Hiển thị chuỗi ngày học liên tục, XP đã kiếm, mục tiêu hàng ngày.</li>
+  <li><strong>Daily Goal:</strong> Thanh tiến độ hiển thị số thẻ đã ôn / mục tiêu ngày.</li>
+  <li><strong>Action Cards:</strong> 3 nút chức năng nhanh — Review (ôn bài), Create (tạo thẻ), AI Practice (tạo hội thoại AI).</li>
+  <li><strong>Stats Row:</strong> 4 ô thống kê — Streak, Cards Reviewed, XP, Study Hours.</li>
+  <li><strong>Deck List:</strong> Sidebar hiển thị danh sách bộ thẻ, hỗ trợ folder lồng nhau (parent-child), emoji icon.</li>
+</ul>
+
+<h3>B.2. Trang ôn tập (Review)</h3>
+<p>Giao diện ôn tập gồm:</p>
+<ul>
+  <li><strong>Flashcard:</strong> Thẻ lật với animation CSS 3D transform. Mặt trước hiển thị câu hỏi/từ vựng, mặt sau hiển thị đáp án/nghĩa.</li>
+  <li><strong>Progress bar:</strong> Thanh tiến độ hiển thị số thẻ đã ôn / tổng số thẻ cần ôn hôm nay.</li>
+  <li><strong>Rating buttons:</strong> 4 nút đánh giá FSRS — Again (🔴), Hard (🟠), Good (🟢), Easy (🔵) — mỗi nút hiển thị interval dự kiến.</li>
+  <li><strong>Audio player:</strong> Nút phát âm Edge TTS, auto-play khi chuyển thẻ (ở chế độ voice).</li>
+  <li><strong>Undo button:</strong> Hoàn tác đánh giá thẻ trước đó.</li>
+</ul>
+
+<h3>B.3. Trang thống kê (Stats)</h3>
+<ul>
+  <li>Biểu đồ XP theo ngày/tuần</li>
+  <li>Streak calendar (heatmap kiểu GitHub)</li>
+  <li>Phân bố trạng thái thẻ (new/learning/review/mature)</li>
+  <li>Top thẻ khó (leech cards)</li>
+  <li>Study hours tracking</li>
+</ul>
+
+<div class="page-break">── Trang 29 ──</div>
+
+<!-- ===== PHU LUC C: TAI LIEU THAM KHAO ===== -->
+<h2>Phụ lục C: Tài liệu tham khảo</h2>
+
+<ol>
+  <li>Ebbinghaus, H. (1885). <em>Über das Gedächtnis: Untersuchungen zur experimentellen Psychologie</em>. Leipzig: Duncker & Humblot.</li>
+  <li>Pimsleur, P. (1967). A Memory Schedule. <em>The Modern Language Journal</em>, 51(2), 73-75.</li>
+  <li>Wozniak, P. A., & Gorzelanczyk, E. J. (1994). Optimization of repetition spacing in the practice of learning. <em>Acta Neurobiologiae Experimentalis</em>, 54, 59-62.</li>
+  <li>Ye, J. (2024). FSRS: A Modern Spaced Repetition Algorithm. <em>GitHub: open-spaced-repetition/fsrs4anki</em>. Truy cập: https://github.com/open-spaced-repetition/fsrs4anki</li>
+  <li>Ye, J. (2024). A Stochastic Shortest Path Algorithm for Optimizing Spaced Repetition Scheduling. <em>Proceedings of the 38th AAAI Conference on Artificial Intelligence</em>.</li>
+  <li>Leitner, S. (1972). <em>So lernt man lernen: Der Weg zum Erfolg</em>. Freiburg: Herder.</li>
+  <li>Google. (2024). Gemini API Documentation. Truy cập: https://ai.google.dev/docs</li>
+  <li>Mozilla. (2024). Progressive Web Apps (PWA). <em>MDN Web Docs</em>. Truy cập: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps</li>
+  <li>Firebase. (2024). Realtime Database Documentation. Truy cập: https://firebase.google.com/docs/database</li>
+  <li>W3C. (2024). Push API Specification. Truy cập: https://www.w3.org/TR/push-api/</li>
+  <li>Microsoft. (2024). Edge Text-to-Speech Neural Voices. Truy cập: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support</li>
+  <li>Settles, B., & Meeder, B. (2016). A Trainable Spaced Repetition Model for Language Learning. <em>Proceedings of ACL 2016</em>.</li>
+  <li>Kornell, N. (2009). Optimising learning using flashcards: Spacing is more effective than cramming. <em>Applied Cognitive Psychology</em>, 23(9), 1297-1317.</li>
+  <li>Karpicke, J. D., & Roediger, H. L. (2008). The Critical Importance of Retrieval for Learning. <em>Science</em>, 319(5865), 966-968.</li>
+</ol>
+
+<div class="page-break">── Trang 30 ──</div>
+
+<!-- ===== CHU KY ===== -->
+<div style="margin-top:40px">
+  <table style="border:none;width:100%">
+    <tr style="border:none">
+      <td style="border:none;text-align:center;width:50%;vertical-align:top;padding:20px">
+        <p><strong>Giảng viên hướng dẫn</strong></p>
+        <p style="color:var(--ink-dim);font-size:.85rem">(Ký và ghi rõ họ tên)</p>
+        <br><br><br>
+        <p class="fill">[Họ tên GVHD]</p>
+      </td>
+      <td style="border:none;text-align:center;width:50%;vertical-align:top;padding:20px">
+        <p><strong>Chủ nhiệm đề tài</strong></p>
+        <p style="color:var(--ink-dim);font-size:.85rem">(Ký và ghi rõ họ tên)</p>
+        <br><br><br>
+        <p class="fill">[Họ tên SV chủ nhiệm]</p>
+      </td>
+    </tr>
+  </table>
+</div>
