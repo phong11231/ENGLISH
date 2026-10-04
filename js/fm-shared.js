@@ -77,7 +77,7 @@ function signInGoogle(){
   if(isMobile){auth.signInWithRedirect(provider);}
   else{auth.signInWithPopup(provider).then(()=>closeAuthModal()).catch(e=>{if(e.code==='auth/popup-blocked'){auth.signInWithRedirect(provider);}else{showAuthError('Google error: '+e.message);}});}
 }
-function signOutUser(){ if(unsubDecks){unsubDecks();unsubDecks=null;} lastUserId=null;localStorage.removeItem('flashmind_lastUser'); auth.signOut(); db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}};saveLocal(); toggleUserMenu(); renderCurrentView(); }
+function signOutUser(){ if(_r2SaveTimer){clearTimeout(_r2SaveTimer);_r2SaveTimer=null;} if(unsubDecks){unsubDecks();unsubDecks=null;} lastUserId=null;localStorage.removeItem('flashmind_lastUser'); auth.signOut(); db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}};saveLocal(); toggleUserMenu(); renderCurrentView(); }
 function toggleUserMenu(){ document.getElementById('userMenu').classList.toggle('active'); }
 document.addEventListener('click',e=>{const m=document.getElementById('userMenu'),a=document.getElementById('userAvatar'),b=document.getElementById('userAvatarInitial');if(m&&!m.contains(e.target)&&e.target!==a&&e.target!==b)m.classList.remove('active');});
 
@@ -125,6 +125,7 @@ async function _saveUserToR2(){
   if(!currentUser)return;
   var data={decks:{},settings:db.settings,reviewLog:db.reviewLog.slice(-500)};
   for(var id in db.decks){if(!db.decks[id]._shared)data.decks[id]=db.decks[id];}
+  if(Object.keys(data.decks).length===0&&(!data.reviewLog||data.reviewLog.length===0)){console.warn('[R2] skip save: empty data');return;}
   var blob=JSON.stringify(stripUndef(data));
   var resp=await fetch(_r2UserPath(),{method:'PUT',headers:{'Content-Type':'application/json'},body:blob});
   if(resp.ok)console.log('[R2] user data saved, decks='+Object.keys(data.decks).length);
