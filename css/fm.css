@@ -468,6 +468,8 @@ select option{background:#fff;color:#222}
 .quiz-result{text-align:center;font-size:16px;font-weight:700;margin-top:8px;padding:6px 14px;border-radius:var(--r-sm)}
 .quiz-result.correct-result{color:var(--green);background:var(--green-bg)}
 .quiz-result.wrong-result{color:var(--red);background:var(--red-bg)}
+.card-prompt{font-size:18px;font-weight:700;color:var(--primary);line-height:1.5;text-align:center;padding:8px 16px;margin-bottom:8px;background:var(--primary-bg);border-radius:var(--r-sm);border-left:4px solid var(--primary);word-break:break-word}
+@media(max-width:480px){.card-prompt{font-size:15px;padding:6px 12px}}
 .quiz-question-text{display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 0}
 .quiz-question-text .quiz-question-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);background:var(--glass);padding:3px 10px;border-radius:6px;border:1px solid var(--glass-border)}
 .quiz-question-text .quiz-question-content{font-size:22px;font-weight:700;line-height:1.4;text-align:center;color:var(--ink);word-break:break-word;max-width:100%}

@@ -725,9 +725,9 @@ function onDisplayModeChange(){
   if(addBtn)addBtn.textContent=isQuiz?'+ Add answer':'+ Add dialogue line';
   var nameLabel=document.getElementById('cardNameLabel');
   var isShowText=_getQuizShowMode()==='text';
-  if(nameLabel)nameLabel.innerHTML=isQuiz?'Question <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— '+(isShowText?'hiện trên màn hình':'AI sẽ đọc')+'</span>':'Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span>';
+  if(nameLabel)nameLabel.innerHTML=isQuiz?'Question <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— '+(isShowText?'hiện trên màn hình':'AI sẽ đọc')+'</span>':'Đề bài / Prompt <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— hiện trước câu hỏi (optional)</span>';
   var nameInput=document.getElementById('cardNameInput');
-  if(nameInput)nameInput.placeholder=isQuiz?'e.g. What does hello mean?':'e.g. Greeting, At the store...';
+  if(nameInput)nameInput.placeholder=isQuiz?'e.g. What does hello mean?':'e.g. Viết lại câu sau với: I didn\'t...';
   document.querySelectorAll('#frontFieldsWrap .front-speaker-wrap').forEach(function(el){el.style.display=isQuiz?'none':'';});
   document.querySelectorAll('#frontFieldsWrap .front-input').forEach(function(el,i){el.placeholder=isQuiz?'Answer option '+(i+1):'Enter question, vocabulary...';});
   document.querySelectorAll('#frontFieldsWrap .front-field-row').forEach(function(row){
@@ -1801,7 +1801,9 @@ function showCurrentCard(){
   } else if(isVoice){
     const safeText=esc(card.front).replace(/'/g,"\\'").replace(/\n/g,' ');
     const modeHint=card.displayMode==='voice-repeat'?'🔁 Listen and repeat the sentence':card.displayMode==='voice-translate'?'🌐 Listen and translate the sentence':'🎧 Listen and answer the question';
-    document.getElementById('cardFront').innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();stopAllAudio();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">'+modeHint+'</div></div>';
+    var promptHtml='';
+    if(card.cardName){promptHtml='<div class="card-prompt">'+renderContent(card.cardName)+'</div>';}
+    document.getElementById('cardFront').innerHTML=promptHtml+'<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();stopAllAudio();speakText(\''+safeText+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">'+modeHint+'</div></div>';
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
     const backFace=document.querySelector('.flashcard-face.back');
     const oldBtn=backFace.querySelector('.voice-mini-btn');if(oldBtn)oldBtn.remove();
@@ -1809,7 +1811,9 @@ function showCurrentCard(){
     miniBtn.onclick=function(e){e.stopPropagation();stopAllAudio();speakText(card.front);};backFace.appendChild(miniBtn);
     setTimeout(()=>speakText(card.front),300);
   } else {
-    document.getElementById('cardFront').innerHTML=renderContent(card.front);
+    var textPromptHtml='';
+    if(card.cardName){textPromptHtml='<div class="card-prompt">'+renderContent(card.cardName)+'</div>';}
+    document.getElementById('cardFront').innerHTML=textPromptHtml+renderContent(card.front);
     document.getElementById('cardBack').innerHTML=renderContent(card.back);
     const frontFace=document.querySelector('.flashcard-face.front');
     const oldFrontBtn=frontFace.querySelector('.voice-mini-btn');if(oldFrontBtn)oldFrontBtn.remove();
