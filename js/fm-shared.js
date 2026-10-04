@@ -134,8 +134,8 @@ async function _saveUserToR2(){
       var progress={cards:{},defaultDisplayMode:deck.defaultDisplayMode,defaultReviewMode:deck.defaultReviewMode};
       var userCards=[];
       (deck.cards||[]).forEach(function(c){
-        if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty,difficultyLevel:c.difficultyLevel};}
-        else if(c.difficultyLevel){progress.cards[c.id]=progress.cards[c.id]||{};progress.cards[c.id].difficultyLevel=c.difficultyLevel;}
+        if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty,difficultyLevel:c.difficultyLevel,cardName:c.cardName||'',definition:c.definition||''};}
+        else if(c.difficultyLevel||c.cardName||c.displayMode){progress.cards[c.id]=progress.cards[c.id]||{};if(c.difficultyLevel)progress.cards[c.id].difficultyLevel=c.difficultyLevel;if(c.cardName)progress.cards[c.id].cardName=c.cardName;if(c.displayMode)progress.cards[c.id].displayMode=c.displayMode;if(c.definition)progress.cards[c.id].definition=c.definition;}
         if(c._userAdded||!baseIds.has(c.id))userCards.push(c);
       });
       if(Object.keys(progress.cards).length>0||userCards.length>0){progress.userCards=userCards;data.sharedProgress[id]=progress;}
@@ -3776,8 +3776,8 @@ window.addEventListener('beforeunload',function(){
         var progress={cards:{},defaultDisplayMode:deck.defaultDisplayMode,defaultReviewMode:deck.defaultReviewMode};
         var userCards=[];
         (deck.cards||[]).forEach(function(c){
-          if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty,difficultyLevel:c.difficultyLevel};}
-          else if(c.difficultyLevel){progress.cards[c.id]=progress.cards[c.id]||{};progress.cards[c.id].difficultyLevel=c.difficultyLevel;}
+          if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty,difficultyLevel:c.difficultyLevel,cardName:c.cardName||'',definition:c.definition||''};}
+          else if(c.difficultyLevel||c.cardName||c.displayMode){progress.cards[c.id]=progress.cards[c.id]||{};if(c.difficultyLevel)progress.cards[c.id].difficultyLevel=c.difficultyLevel;if(c.cardName)progress.cards[c.id].cardName=c.cardName;if(c.displayMode)progress.cards[c.id].displayMode=c.displayMode;if(c.definition)progress.cards[c.id].definition=c.definition;}
           if(c._userAdded||!baseIds.has(c.id))userCards.push(c);
         });
         if(Object.keys(progress.cards).length>0||userCards.length>0){progress.userCards=userCards;data.sharedProgress[id]=progress;}
