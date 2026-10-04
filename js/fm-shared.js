@@ -926,7 +926,7 @@ function renderCardBrowser(){
       const tagHTML=(c.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
       const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
       const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':c.displayMode==='reverse-vi'?'🇻🇳':c.displayMode==='quiz'?'🎯':c.displayMode==='quiz-text'?'📋':'';
-      const displayFront=c.cardName||c.front;
+      const displayFront=c.front;
       const diffLbl=c.difficultyLevel==='easy'?'🟢':c.difficultyLevel==='medium'?'🟡':c.difficultyLevel==='hard'?'🔴':'—';
       return`<tr><td class="card-front-col">${esc(displayFront)}</td><td class="card-back-col">${esc(c.back)}</td>
         <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':c.displayMode==='reverse-vi'?' · Reverse VN':c.displayMode==='quiz'?' · Quiz (Listen)':c.displayMode==='quiz-text'?' · Quiz (Read)':''}">${modeLabel}${dispLabel}</td>
