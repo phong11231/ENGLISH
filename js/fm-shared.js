@@ -134,7 +134,8 @@ async function _saveUserToR2(){
       var progress={cards:{},defaultDisplayMode:deck.defaultDisplayMode,defaultReviewMode:deck.defaultReviewMode};
       var userCards=[];
       (deck.cards||[]).forEach(function(c){
-        if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty};}
+        if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty,difficultyLevel:c.difficultyLevel};}
+        else if(c.difficultyLevel){progress.cards[c.id]=progress.cards[c.id]||{};progress.cards[c.id].difficultyLevel=c.difficultyLevel;}
         if(c._userAdded||!baseIds.has(c.id))userCards.push(c);
       });
       if(Object.keys(progress.cards).length>0||userCards.length>0){progress.userCards=userCards;data.sharedProgress[id]=progress;}
@@ -506,8 +507,8 @@ function renderDecks(){
     if(parentCards.length>0){
       wrap.innerHTML=`<div style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="startReviewAll('${viewingParentId}')">📚 Study all</button>
-          <button class="btn btn-primary" onclick="startReview('${viewingParentId}')">▶ Study (${parentCards.length} cards)</button>
+          <button class="btn btn-primary" onclick="showDifficultyPicker('${viewingParentId}',true)">📚 Study all</button>
+          <button class="btn btn-primary" onclick="showDifficultyPicker('${viewingParentId}',false)">▶ Study (${parentCards.length} cards)</button>
           <button class="btn btn-ghost" onclick="openBrowser('${viewingParentId}')">📋 View / Edit</button>
           <button class="btn btn-ghost" onclick="openDeckModal()">📂 + Sub-deck</button>
           <button class="btn btn-ghost" onclick="startSleepListen('${viewingParentId}',true)">🌙 Sleep Listen</button>
@@ -889,7 +890,7 @@ function renderCardBrowser(){
     return;
   }
   wrap.innerHTML=`<div style="overflow-x:auto"><table class="card-table">
-    <thead><tr><th>Front</th><th>Back</th><th>Mode</th><th>Tags</th><th>Status</th><th>Next</th><th></th></tr></thead>
+    <thead><tr><th>Front</th><th>Back</th><th>Mode</th><th>Diff</th><th>Tags</th><th>Status</th><th>Next</th><th></th></tr></thead>
     <tbody>${filtered.map(c=>{
       const sc=c.suspended?'status-suspended':c.status==='new'?'status-new':c.status==='learning'?'status-learning':'status-review';
       const st=c.suspended?'Suspended':c.status==='new'?'New':c.status==='learning'?'Learning':'Review';
@@ -898,8 +899,10 @@ function renderCardBrowser(){
       const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
       const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':c.displayMode==='reverse-vi'?'🇻🇳':c.displayMode==='quiz'?'🎯':'';
       const displayFront=c.cardName||c.front;
+      const diffLbl=c.difficultyLevel==='easy'?'🟢':c.difficultyLevel==='medium'?'🟡':c.difficultyLevel==='hard'?'🔴':'—';
       return`<tr><td class="card-front-col">${esc(displayFront)}</td><td class="card-back-col">${esc(c.back)}</td>
         <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':c.displayMode==='reverse-vi'?' · Reverse VN':c.displayMode==='quiz'?' · Quiz':''}">${modeLabel}${dispLabel}</td>
+        <td style="text-align:center;cursor:pointer" onclick="event.stopPropagation();_quickSetDiff('${c.id}')" title="Click to set difficulty">${diffLbl}</td>
         <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
         <td><span class="card-status ${sc}">${st}</span></td>
         <td style="font-size:13px;color:var(--ink-dim)">${dt}</td>
@@ -913,6 +916,28 @@ function renderCardBrowser(){
 }
 
 function filterCards(){renderCardBrowser();}
+
+function _quickSetDiff(cardId){
+  var deck=db.decks[currentDeckId];if(!deck)return;
+  var card=deck.cards.find(c=>c.id===cardId);if(!card)return;
+  var menu=document.createElement('div');menu.id='diffMenuPopup';
+  menu.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);padding:16px';
+  menu.innerHTML='<div style="background:var(--surface,#fff);border-radius:12px;padding:16px;min-width:200px;color:var(--ink,#222)">'+
+    '<div style="font-weight:700;margin-bottom:12px;font-size:15px">Phân loại card</div>'+
+    '<div style="display:flex;flex-direction:column;gap:6px">'+
+    '<button class="btn btn-ghost" onclick="_setDiffBrowser(\''+cardId+'\',\'easy\');this.closest(\'#diffMenuPopup\').remove()" style="text-align:left">🟢 Dễ</button>'+
+    '<button class="btn btn-ghost" onclick="_setDiffBrowser(\''+cardId+'\',\'medium\');this.closest(\'#diffMenuPopup\').remove()" style="text-align:left">🟡 Trung bình</button>'+
+    '<button class="btn btn-ghost" onclick="_setDiffBrowser(\''+cardId+'\',\'hard\');this.closest(\'#diffMenuPopup\').remove()" style="text-align:left">🔴 Khó</button>'+
+    '</div></div>';
+  document.body.appendChild(menu);
+  menu.onclick=function(e){if(e.target===menu)menu.remove();};
+}
+function _setDiffBrowser(cardId,level){
+  var deck=db.decks[currentDeckId];if(!deck)return;
+  var card=deck.cards.find(c=>c.id===cardId);if(!card)return;
+  card.difficultyLevel=level;saveCardOnly(currentDeckId,cardId);renderCardBrowser();
+  toast('Set: '+(level==='easy'?'🟢 Dễ':level==='medium'?'🟡 Trung bình':'🔴 Khó'));
+}
 
 function toggleSuspend(cardId){
   const deck=db.decks[currentDeckId];const card=deck.cards.find(c=>c.id===cardId);
@@ -1061,6 +1086,81 @@ function startReview(deckId){
 
 function startReviewReverse(deckId){
   location.href=_basePath+deckId+'/review?mode=all&display=reverse-vi';
+}
+
+function showDifficultyPicker(deckId,allMode){
+  var overlay=document.createElement('div');overlay.id='diffPickerModal';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  var cards=allMode?getAllCardsRecursive(deckId):getDeckCards(deckId);
+  var cE=cards.filter(c=>c.difficultyLevel==='easy'&&!c.suspended).length;
+  var cM=cards.filter(c=>c.difficultyLevel==='medium'&&!c.suspended).length;
+  var cH=cards.filter(c=>c.difficultyLevel==='hard'&&!c.suspended).length;
+  var cU=cards.filter(c=>!c.difficultyLevel&&!c.suspended).length;
+  var cAll=cards.filter(c=>!c.suspended).length;
+  overlay.innerHTML='<div style="background:var(--surface,#fff);border:1px solid var(--line,#e0e0e0);border-radius:16px;padding:24px;max-width:380px;width:100%;color:var(--ink,#222)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:18px;font-weight:700">📚 Chọn chế độ ôn</h3><button onclick="this.closest(\'#diffPickerModal\').remove()" style="background:none;border:none;color:var(--ink,#222);font-size:20px;cursor:pointer;opacity:.6">✕</button></div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'&diff=easy\'" style="justify-content:space-between;display:flex"><span>🟢 Dễ</span><span style="opacity:.7">'+cE+' cards</span></button>'+
+    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'&diff=medium\'" style="justify-content:space-between;display:flex;background:var(--orange-text,#ed8936)"><span>🟡 Trung bình</span><span style="opacity:.7">'+cM+' cards</span></button>'+
+    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'&diff=hard\'" style="justify-content:space-between;display:flex;background:var(--red,#e53e3e)"><span>🔴 Khó</span><span style="opacity:.7">'+cH+' cards</span></button>'+
+    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'&diff=unset\'" style="justify-content:space-between;display:flex;background:var(--ink-dim,#888)"><span>❓ Chưa phân loại</span><span style="opacity:.7">'+cU+' cards</span></button>'+
+    '<hr style="border:none;border-top:1px solid var(--line,#e0e0e0);margin:4px 0">'+
+    '<button class="btn btn-ghost" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'\'" style="justify-content:space-between;display:flex"><span>📚 Ôn tất cả</span><span style="opacity:.7">'+cAll+' cards</span></button>'+
+    '</div></div>';
+  document.body.appendChild(overlay);
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+}
+
+function setCardDifficulty(cardId,level){
+  var deck=db.decks[currentDeckId];if(!deck)return;
+  var card=deck.cards.find(c=>c.id===cardId);if(!card)return;
+  card.difficultyLevel=level;
+  saveCardOnly(currentDeckId,cardId);
+  var qc=reviewQueue[reviewIndex];if(qc&&qc.id===cardId)qc.difficultyLevel=level;
+  toast('Set: '+(level==='easy'?'🟢 Dễ':level==='medium'?'🟡 Trung bình':'🔴 Khó'));
+  updateDiffBadge();
+}
+
+function deleteCardDuringReview(){
+  var card=reviewQueue[reviewIndex];if(!card)return;
+  var deck=db.decks[currentDeckId];if(!deck)return;
+  if(deck._shared){
+    if(!db.settings.deletedCards)db.settings.deletedCards={};
+    db.settings.deletedCards[currentDeckId+'_'+card.id]=true;
+  }
+  deck.cards=deck.cards.filter(c=>c.id!==card.id);
+  saveDeckData(currentDeckId,deck);
+  reviewQueue.splice(reviewIndex,1);
+  if(reviewIndex>=reviewQueue.length&&reviewIndex>0)reviewIndex--;
+  showCurrentCard();toast('Card deleted');
+}
+
+function updateDiffBadge(){
+  var el=document.getElementById('diffBadgeWrap');if(!el)return;
+  var card=reviewQueue[reviewIndex];if(!card){el.innerHTML='';return;}
+  var lv=card.difficultyLevel;
+  var label=lv==='easy'?'🟢 Dễ':lv==='medium'?'🟡 TB':lv==='hard'?'🔴 Khó':'❓';
+  el.innerHTML='<div style="display:inline-flex;align-items:center;gap:6px;font-size:12px">'+
+    '<span style="padding:2px 8px;border-radius:12px;background:var(--glass,rgba(0,0,0,.05));font-weight:600">'+label+'</span>'+
+    '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showDiffMenu()" style="font-size:11px;padding:2px 6px">⚙</button>'+
+    '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();if(confirm(\'Xóa card này?\'))deleteCardDuringReview()" style="font-size:11px;padding:2px 6px;color:var(--red,#e53e3e)">🗑</button>'+
+    '</div>';
+}
+
+function showDiffMenu(){
+  var card=reviewQueue[reviewIndex];if(!card)return;
+  var el=document.getElementById('diffBadgeWrap');if(!el)return;
+  var menu=document.createElement('div');menu.id='diffMenuPopup';
+  menu.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);padding:16px';
+  menu.innerHTML='<div style="background:var(--surface,#fff);border-radius:12px;padding:16px;min-width:200px;color:var(--ink,#222)">'+
+    '<div style="font-weight:700;margin-bottom:12px;font-size:15px">Phân loại card</div>'+
+    '<div style="display:flex;flex-direction:column;gap:6px">'+
+    '<button class="btn btn-ghost" onclick="setCardDifficulty(\''+card.id+'\',\'easy\');this.closest(\'#diffMenuPopup\').remove()" style="text-align:left">🟢 Dễ</button>'+
+    '<button class="btn btn-ghost" onclick="setCardDifficulty(\''+card.id+'\',\'medium\');this.closest(\'#diffMenuPopup\').remove()" style="text-align:left">🟡 Trung bình</button>'+
+    '<button class="btn btn-ghost" onclick="setCardDifficulty(\''+card.id+'\',\'hard\');this.closest(\'#diffMenuPopup\').remove()" style="text-align:left">🔴 Khó</button>'+
+    '</div></div>';
+  document.body.appendChild(menu);
+  menu.onclick=function(e){if(e.target===menu)menu.remove();};
 }
 
 // ===== SLEEP LISTEN =====
@@ -1571,6 +1671,7 @@ function showCurrentCard(){
   fcEl.classList.toggle('dialogue-mode',isDialogue);
   document.getElementById('reviewActions').style.display='none';
   document.getElementById('undoBtn').style.display=undoStack.length>0?'block':'none';
+  updateDiffBadge();
 
   const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
   const isQuiz=card.displayMode==='quiz';
@@ -3635,7 +3736,8 @@ window.addEventListener('beforeunload',function(){
         var progress={cards:{},defaultDisplayMode:deck.defaultDisplayMode,defaultReviewMode:deck.defaultReviewMode};
         var userCards=[];
         (deck.cards||[]).forEach(function(c){
-          if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty};}
+          if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty,difficultyLevel:c.difficultyLevel};}
+          else if(c.difficultyLevel){progress.cards[c.id]=progress.cards[c.id]||{};progress.cards[c.id].difficultyLevel=c.difficultyLevel;}
           if(c._userAdded||!baseIds.has(c.id))userCards.push(c);
         });
         if(Object.keys(progress.cards).length>0||userCards.length>0){progress.userCards=userCards;data.sharedProgress[id]=progress;}

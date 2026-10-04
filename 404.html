@@ -125,6 +125,7 @@ if (!_routeId) location.replace(_basePath);
         <span class="cnt-learn" id="cntLearn">0 learning</span>
         <span class="cnt-due" id="cntDue">0 review</span>
       </div>
+      <div id="diffBadgeWrap" style="flex:none"></div>
       <div style="font-size:11px;opacity:.5;flex:none;white-space:nowrap" title="Shift+P to replay voice">⌨️ Shift+P = replay</div>
     </div>
     <div class="review-progress">
@@ -513,6 +514,11 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
       } else {
         cards = getDeckCards(_deckId).filter(function(c){return !c.suspended;});
       }
+      var _diff = _params.get('diff');
+      if(_diff==='easy') { cards=cards.filter(function(c){return c.difficultyLevel==='easy';}); label+=' (Dễ)'; }
+      else if(_diff==='medium') { cards=cards.filter(function(c){return c.difficultyLevel==='medium';}); label+=' (TB)'; }
+      else if(_diff==='hard') { cards=cards.filter(function(c){return c.difficultyLevel==='hard';}); label+=' (Khó)'; }
+      else if(_diff==='unset') { cards=cards.filter(function(c){return !c.difficultyLevel;}); label+=' (Chưa PL)'; }
       if(cards.length===0){
         toast('No cards to review!');
         location.href=_basePath+_deckId;
