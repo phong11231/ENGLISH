@@ -653,7 +653,7 @@ function addFrontField(value,speaker){
   const spk=typeof value==='object'?(value.speaker||''):speaker||'';
   row.innerHTML='<div class="front-speaker-wrap"><input class="front-speaker" placeholder="Speaker" value="'+esc(spk)+'" maxlength="20"></div><textarea class="front-input" placeholder="Next dialogue line..." rows="2">'+esc(txt)+'</textarea><button type="button" class="front-remove-btn" onclick="removeFrontField(this)" title="Remove">✕</button>';
   wrap.appendChild(row);
-  if(document.getElementById('cardDisplayMode')?.value==='quiz'){
+  if(document.getElementById('cardDisplayMode')?.value==='quiz'||document.getElementById('cardDisplayMode')?.value==='quiz-text'){
     var tick=document.createElement('button');tick.type='button';tick.className='quiz-correct-tick';tick.title='Mark as correct answer';tick.textContent='✓';
     tick.onclick=function(){quizMarkCorrect(this);};
     row.insertBefore(tick,row.querySelector('.front-remove-btn'));
@@ -673,7 +673,7 @@ function updateFrontRemoveButtons(){
     const btn=r.querySelector('.front-remove-btn');
     if(btn)btn.style.display=rows.length>1?'block':'none';
   });
-  const isQuizMode=document.getElementById('cardDisplayMode')?.value==='quiz';
+  var _cdm=document.getElementById('cardDisplayMode')?.value;const isQuizMode=_cdm==='quiz'||_cdm==='quiz-text';
   const backGroup=document.getElementById('cardBackInput')?.closest('.form-group');
   if(backGroup)backGroup.style.display=(rows.length>1&&!isQuizMode)?'none':'block';
 }
@@ -708,7 +708,7 @@ function onCardTypeChange(){
 
 function onDisplayModeChange(){
   const mode=document.getElementById('cardDisplayMode').value;
-  const isQuiz=mode==='quiz';
+  const isQuiz=mode==='quiz'||mode==='quiz-text';
   const frontLabel=document.querySelector('#basicFields .form-group:first-child > label');
   if(frontLabel){
     frontLabel.innerHTML=isQuiz?'Answers (options) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— tick = correct answer</span>':'Front (question) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— multiple = dialogue mode</span>';
@@ -716,7 +716,7 @@ function onDisplayModeChange(){
   var addBtn=document.getElementById('addFrontBtn');
   if(addBtn)addBtn.textContent=isQuiz?'+ Add answer':'+ Add dialogue line';
   var nameLabel=document.getElementById('cardNameLabel');
-  if(nameLabel)nameLabel.innerHTML=isQuiz?'Question <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— the question AI will read</span>':'Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span>';
+  if(nameLabel)nameLabel.innerHTML=isQuiz?'Question <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— '+(mode==='quiz-text'?'shown on screen':'the question AI will read')+'</span>':'Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span>';
   var nameInput=document.getElementById('cardNameInput');
   if(nameInput)nameInput.placeholder=isQuiz?'e.g. What does hello mean?':'e.g. Greeting, At the store...';
   document.querySelectorAll('#frontFieldsWrap .front-speaker-wrap').forEach(function(el){el.style.display=isQuiz?'none':'';});
@@ -840,7 +840,7 @@ function saveCard(){
   } else {
     const fronts=getFrontValues();
     const back=document.getElementById('cardBackInput').value.trim();
-    if(cardDisplayMode==='quiz'){
+    if(cardDisplayMode==='quiz'||cardDisplayMode==='quiz-text'){
       if(!cardName){toast('Quiz needs a question in Card name');return;}
       if(fronts.length<2){toast('Quiz needs at least 2 answer options');return;}
       if(!back){toast('Please tick the correct answer');return;}
@@ -897,11 +897,11 @@ function renderCardBrowser(){
       const dt=c.status==='new'?'—':formatDue(c.due);
       const tagHTML=(c.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
       const leechHTML=c.leech?'<span class="leech-badge">⚠ Leech</span>':'';
-      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':c.displayMode==='reverse-vi'?'🇻🇳':c.displayMode==='quiz'?'🎯':'';
+      const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':c.displayMode==='reverse-vi'?'🇻🇳':c.displayMode==='quiz'?'🎯':c.displayMode==='quiz-text'?'📋':'';
       const displayFront=c.cardName||c.front;
       const diffLbl=c.difficultyLevel==='easy'?'🟢':c.difficultyLevel==='medium'?'🟡':c.difficultyLevel==='hard'?'🔴':'—';
       return`<tr><td class="card-front-col">${esc(displayFront)}</td><td class="card-back-col">${esc(c.back)}</td>
-        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':c.displayMode==='reverse-vi'?' · Reverse VN':c.displayMode==='quiz'?' · Quiz':''}">${modeLabel}${dispLabel}</td>
+        <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':c.displayMode==='reverse-vi'?' · Reverse VN':c.displayMode==='quiz'?' · Quiz (Listen)':c.displayMode==='quiz-text'?' · Quiz (Read)':''}">${modeLabel}${dispLabel}</td>
         <td style="text-align:center;cursor:pointer" onclick="event.stopPropagation();_quickSetDiff('${c.id}')" title="Click to set difficulty">${diffLbl}</td>
         <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
         <td><span class="card-status ${sc}">${st}</span></td>
@@ -1660,7 +1660,7 @@ function showCurrentCard(){
   cleanupDialogueLayout();
   const card=reviewQueue[reviewIndex];
   const fronts=card.fronts&&card.fronts.length>1?card.fronts:[card.front];
-  const isDialogue=fronts.length>1&&card.displayMode!=='quiz';
+  const isDialogue=fronts.length>1&&card.displayMode!=='quiz'&&card.displayMode!=='quiz-text';
   window._cardFronts=fronts;
   window._cardFrontIdx=0;
   window._dialogueShown=false;
@@ -1672,12 +1672,13 @@ function showCurrentCard(){
   document.getElementById('reviewDone').style.display='none';
   fcEl.classList.remove('flipped');
   fcEl.classList.toggle('dialogue-mode',isDialogue);
+  fcEl.classList.toggle('quiz-mode',card.displayMode==='quiz'||card.displayMode==='quiz-text');
   document.getElementById('reviewActions').style.display='none';
   document.getElementById('undoBtn').style.display=undoStack.length>0?'block':'none';
   updateDiffBadge();
 
   const isVoice=card.displayMode&&card.displayMode.startsWith('voice');
-  const isQuiz=card.displayMode==='quiz';
+  const isQuiz=card.displayMode==='quiz'||card.displayMode==='quiz-text';
 
   if(isQuiz&&fronts.length>1){
     const el=document.getElementById('cardFront');
@@ -1696,7 +1697,11 @@ function showCurrentCard(){
         +'</div>';
     });
     optionsHtml+='</div><div id="cardQuizResult"></div>';
-    el.innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeQ+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">🎯 Listen & pick the right answer</div></div>'+optionsHtml;
+    if(card.displayMode==='quiz-text'){
+      el.innerHTML='<div class="quiz-question-text"><div class="quiz-question-label">QUESTION</div><div class="quiz-question-content">'+renderContent(questionText)+'</div><div class="voice-hint">📋 Read & pick the right answer</div></div>'+optionsHtml;
+    } else {
+      el.innerHTML='<div class="voice-card"><button class="voice-play-btn" onclick="event.stopPropagation();speakText(\''+safeQ+'\')"><span class="voice-icon">🔊</span><span class="voice-label">Replay</span></button><div class="voice-hint">🎯 Listen & pick the right answer</div></div>'+optionsHtml;
+    }
     document.querySelectorAll('.quiz-option-text.hidden-answer').forEach(function(span,i){
       var txt=typeof fronts[i]==='object'?(fronts[i].text||''):fronts[i];
       span.setAttribute('data-text',txt);
@@ -1705,7 +1710,7 @@ function showCurrentCard(){
     const hint=document.querySelector('.flashcard-hint');
     if(hint)hint.style.display='none';
     window._quizAnswered=false;
-    setTimeout(function(){speakText(questionText);},300);
+    if(card.displayMode!=='quiz-text')setTimeout(function(){speakText(questionText);},300);
   } else if(isDialogue){
     // Dialogue mode: auto-play all fronts sequentially, voice-only (hidden text)
     const el=document.getElementById('cardFront');
@@ -2181,7 +2186,7 @@ function replayDialogue(){
 function flipCard(){
   if(reviewMode==='type')return;
   var curCard=reviewQueue[reviewIndex];
-  if(curCard&&curCard.displayMode==='quiz'&&(curCard.fronts&&curCard.fronts.length>1))return;
+  if(curCard&&(curCard.displayMode==='quiz'||curCard.displayMode==='quiz-text')&&(curCard.fronts&&curCard.fronts.length>1))return;
   if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
@@ -2310,7 +2315,7 @@ function flipCard(){
     } else {
       document.getElementById('reviewActions').style.display='flex';
     }
-    if(!card.displayMode||(!card.displayMode.startsWith('voice')&&card.displayMode!=='quiz')){
+    if(!card.displayMode||(!card.displayMode.startsWith('voice')&&card.displayMode!=='quiz'&&card.displayMode!=='quiz-text')){
       setTimeout(function(){speakText(card.back);},300);
     }
   }
