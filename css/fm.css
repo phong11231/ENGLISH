@@ -472,6 +472,9 @@ select option{background:#fff;color:#222}
 .quiz-question-text .quiz-question-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);background:var(--glass);padding:3px 10px;border-radius:6px;border:1px solid var(--glass-border)}
 .quiz-question-text .quiz-question-content{font-size:22px;font-weight:700;line-height:1.4;text-align:center;color:var(--ink);word-break:break-word;max-width:100%}
 @media(max-width:480px){.quiz-option-speaker{width:30px;height:30px;min-width:30px;font-size:15px}.quiz-option{gap:6px;padding:7px 10px}.quiz-option-label{font-size:13px;min-width:16px}.quiz-option-text{font-size:13px}.quiz-option-tick{width:24px;height:24px;min-width:24px;font-size:13px}.quiz-question-text .quiz-question-content{font-size:18px}}
+.quiz-show-toggle{background:var(--surface-2);border:2px solid var(--line-strong);color:var(--ink-dim);font-weight:600;font-size:13px;border-radius:var(--r-sm);padding:8px 12px;cursor:pointer;transition:all .2s}
+.quiz-show-toggle.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.quiz-show-toggle:not(.active):hover{border-color:var(--primary-a25);color:var(--ink)}
 .quiz-correct-tick{background:none;border:2px solid var(--ink-dim,#666);border-radius:50%;width:32px;height:32px;min-width:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s;color:transparent;margin-left:4px}
 .quiz-correct-tick:hover{border-color:var(--accent,#8b5cf6)}
 .quiz-correct-tick.selected{background:var(--green);border-color:var(--green);color:#fff}

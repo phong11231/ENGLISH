@@ -200,9 +200,15 @@ if (!_routeId) location.replace(_basePath);
           <option value="voice-repeat">🔁 Listen & Repeat — AI reads, repeat the sentence</option>
           <option value="voice-translate">🌐 Listen & Translate — AI reads, translate it</option>
           <option value="reverse-vi">🇻🇳 Reverse — Tiếng Việt trước, nghe tiếng Anh</option>
-          <option value="quiz">🎯 Quiz — Listen & pick the right answer</option>
-          <option value="quiz-text">📋 Quiz — Read & pick the right answer</option>
+          <option value="quiz">🎯 Quiz — Pick the right answer</option>
         </select>
+      </div>
+      <div class="form-group" id="quizShowQuestionGroup" style="display:none">
+        <label>Hiển thị câu hỏi</label>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="btn btn-sm quiz-show-toggle active" data-val="listen" onclick="setQuizShowMode(this)" style="flex:1">🔊 Chỉ nghe</button>
+          <button type="button" class="btn btn-sm quiz-show-toggle" data-val="text" onclick="setQuizShowMode(this)" style="flex:1">📋 Hiện câu hỏi</button>
+        </div>
       </div>
       <div class="form-group" id="cardNameGroup"><label id="cardNameLabel">Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span></label><input id="cardNameInput" placeholder="e.g. Greeting, At the store..." maxlength="60" style="width:100%;padding:8px 12px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--glass-border);color:var(--ink);font-size:14px"></div>
       <div id="basicFields">

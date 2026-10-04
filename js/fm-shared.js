@@ -709,6 +709,14 @@ function onCardTypeChange(){
 function onDisplayModeChange(){
   const mode=document.getElementById('cardDisplayMode').value;
   const isQuiz=mode==='quiz'||mode==='quiz-text';
+  var quizToggle=document.getElementById('quizShowQuestionGroup');
+  if(quizToggle){
+    quizToggle.style.display=isQuiz?'block':'none';
+    if(isQuiz){
+      var activeVal=mode==='quiz-text'?'text':'listen';
+      quizToggle.querySelectorAll('.quiz-show-toggle').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-val')===activeVal);});
+    }
+  }
   const frontLabel=document.querySelector('#basicFields .form-group:first-child > label');
   if(frontLabel){
     frontLabel.innerHTML=isQuiz?'Answers (options) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— tick = correct answer</span>':'Front (question) <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— multiple = dialogue mode</span>';
@@ -716,7 +724,8 @@ function onDisplayModeChange(){
   var addBtn=document.getElementById('addFrontBtn');
   if(addBtn)addBtn.textContent=isQuiz?'+ Add answer':'+ Add dialogue line';
   var nameLabel=document.getElementById('cardNameLabel');
-  if(nameLabel)nameLabel.innerHTML=isQuiz?'Question <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— '+(mode==='quiz-text'?'shown on screen':'the question AI will read')+'</span>':'Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span>';
+  var isShowText=_getQuizShowMode()==='text';
+  if(nameLabel)nameLabel.innerHTML=isQuiz?'Question <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— '+(isShowText?'hiện trên màn hình':'AI sẽ đọc')+'</span>':'Card name <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— optional</span>';
   var nameInput=document.getElementById('cardNameInput');
   if(nameInput)nameInput.placeholder=isQuiz?'e.g. What does hello mean?':'e.g. Greeting, At the store...';
   document.querySelectorAll('#frontFieldsWrap .front-speaker-wrap').forEach(function(el){el.style.display=isQuiz?'none':'';});
@@ -742,6 +751,19 @@ function onDisplayModeChange(){
         }
       });
     }
+  }
+}
+function _getQuizShowMode(){
+  var el=document.querySelector('#quizShowQuestionGroup .quiz-show-toggle.active');
+  return el?el.getAttribute('data-val'):'listen';
+}
+function setQuizShowMode(btn){
+  document.querySelectorAll('#quizShowQuestionGroup .quiz-show-toggle').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  var nameLabel=document.getElementById('cardNameLabel');
+  if(nameLabel){
+    var isText=btn.getAttribute('data-val')==='text';
+    nameLabel.innerHTML='Question <span style="font-size:11px;color:var(--ink-dim);font-weight:400">— '+(isText?'hiện trên màn hình':'AI sẽ đọc')+'</span>';
   }
 }
 function quizMarkCorrect(btn){
@@ -770,8 +792,11 @@ function openCardModal(cardId){
     }
     document.getElementById('cardTagsInput').value=(card.tags||[]).join(', ');
     document.getElementById('cardReviewMode').value=card.reviewMode||'flip';
-    document.getElementById('cardDisplayMode').value=card.displayMode||'voice';
+    var _editDM=card.displayMode||'voice';
+    if(_editDM==='quiz-text'){document.getElementById('cardDisplayMode').value='quiz';}
+    else{document.getElementById('cardDisplayMode').value=_editDM;}
     onDisplayModeChange();
+    if(_editDM==='quiz-text'){var _tb=document.querySelector('#quizShowQuestionGroup .quiz-show-toggle[data-val="text"]');if(_tb)setQuizShowMode(_tb);}
     document.getElementById('cardNameInput').value=card.cardName||'';
     document.getElementById('cardDefinitionInput').value=card.definition||'';
     document.getElementById('cardYoutubeUrl').value=card.youtubeUrl||'';
@@ -788,9 +813,11 @@ function openCardModal(cardId){
     setFrontFields(['']);document.getElementById('cardBackInput').value='';
     var _deck=db.decks[currentDeckId];
     document.getElementById('cardReviewMode').value=(_deck&&_deck.defaultReviewMode)||'flip';
-    var _ddm=(_deck&&_deck.defaultDisplayMode)||'voice';if(_ddm==='show_text')_ddm='text';
-    document.getElementById('cardDisplayMode').value=_ddm;
+    var _ddm=(_deck&&_deck.defaultDisplayMode)||'quiz';if(_ddm==='show_text')_ddm='text';
+    if(_ddm==='quiz-text'){document.getElementById('cardDisplayMode').value='quiz';}
+    else{document.getElementById('cardDisplayMode').value=_ddm;}
     onDisplayModeChange();
+    if(_ddm==='quiz-text'){var _tb=document.querySelector('#quizShowQuestionGroup .quiz-show-toggle[data-val="text"]');if(_tb)setQuizShowMode(_tb);}
     document.getElementById('clozeInput').value='';document.getElementById('cardTagsInput').value='';
     document.getElementById('cardYoutubeUrl').value='';document.getElementById('cardDriveUrl').value='';document.getElementById('cardYtStart').value='';document.getElementById('cardYtEnd').value='';
     document.getElementById('cardCakeUrl').value='';
@@ -811,7 +838,8 @@ function saveCard(){
   if(deck._shared&&!isAdmin){toast('This is a default deck and cannot be edited');return;}
 
   const cardReviewMode=document.getElementById('cardReviewMode').value;
-  const cardDisplayMode=document.getElementById('cardDisplayMode').value;
+  var cardDisplayMode=document.getElementById('cardDisplayMode').value;
+  if(cardDisplayMode==='quiz'&&_getQuizShowMode()==='text')cardDisplayMode='quiz-text';
   deck.defaultReviewMode=cardReviewMode;
   deck.defaultDisplayMode=cardDisplayMode;
   const ytUrl=document.getElementById('cardYoutubeUrl').value.trim();
