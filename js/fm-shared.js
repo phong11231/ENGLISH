@@ -1088,7 +1088,7 @@ function startReviewReverse(deckId){
   location.href=_basePath+deckId+'/review?mode=all&display=reverse-vi';
 }
 
-function showDifficultyPicker(deckId,allMode){
+function showDifficultyPicker(deckId,allMode,displayOverride){
   var overlay=document.createElement('div');overlay.id='diffPickerModal';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
   var cards=allMode?getAllCardsRecursive(deckId):getDeckCards(deckId);
@@ -1097,15 +1097,18 @@ function showDifficultyPicker(deckId,allMode){
   var cH=cards.filter(c=>c.difficultyLevel==='hard'&&!c.suspended).length;
   var cU=cards.filter(c=>!c.difficultyLevel&&!c.suspended).length;
   var cAll=cards.filter(c=>!c.suspended).length;
+  var modeParam=allMode?'all':'';
+  var dispParam=displayOverride?'&display='+displayOverride:'';
+  var titleEmoji=displayOverride==='reverse-vi'?'🇻🇳':'📚';
   overlay.innerHTML='<div style="background:var(--surface,#fff);border:1px solid var(--line,#e0e0e0);border-radius:16px;padding:24px;max-width:380px;width:100%;color:var(--ink,#222)">'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:18px;font-weight:700">📚 Chọn chế độ ôn</h3><button onclick="this.closest(\'#diffPickerModal\').remove()" style="background:none;border:none;color:var(--ink,#222);font-size:20px;cursor:pointer;opacity:.6">✕</button></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:18px;font-weight:700">'+titleEmoji+' Chọn chế độ ôn</h3><button onclick="this.closest(\'#diffPickerModal\').remove()" style="background:none;border:none;color:var(--ink,#222);font-size:20px;cursor:pointer;opacity:.6">✕</button></div>'+
     '<div style="display:flex;flex-direction:column;gap:8px">'+
-    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'&diff=easy\'" style="justify-content:space-between;display:flex"><span>🟢 Dễ</span><span style="opacity:.7">'+cE+' cards</span></button>'+
-    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'&diff=medium\'" style="justify-content:space-between;display:flex;background:var(--orange-text,#ed8936)"><span>🟡 Trung bình</span><span style="opacity:.7">'+cM+' cards</span></button>'+
-    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'&diff=hard\'" style="justify-content:space-between;display:flex;background:var(--red,#e53e3e)"><span>🔴 Khó</span><span style="opacity:.7">'+cH+' cards</span></button>'+
-    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'&diff=unset\'" style="justify-content:space-between;display:flex;background:var(--ink-dim,#888)"><span>❓ Chưa phân loại</span><span style="opacity:.7">'+cU+' cards</span></button>'+
+    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+modeParam+'&diff=easy'+dispParam+'\'" style="justify-content:space-between;display:flex"><span>🟢 Dễ</span><span style="opacity:.7">'+cE+' cards</span></button>'+
+    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+modeParam+'&diff=medium'+dispParam+'\'" style="justify-content:space-between;display:flex;background:var(--orange-text,#ed8936)"><span>🟡 Trung bình</span><span style="opacity:.7">'+cM+' cards</span></button>'+
+    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+modeParam+'&diff=hard'+dispParam+'\'" style="justify-content:space-between;display:flex;background:var(--red,#e53e3e)"><span>🔴 Khó</span><span style="opacity:.7">'+cH+' cards</span></button>'+
+    '<button class="btn btn-primary" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+modeParam+'&diff=unset'+dispParam+'\'" style="justify-content:space-between;display:flex;background:var(--ink-dim,#888)"><span>❓ Chưa phân loại</span><span style="opacity:.7">'+cU+' cards</span></button>'+
     '<hr style="border:none;border-top:1px solid var(--line,#e0e0e0);margin:4px 0">'+
-    '<button class="btn btn-ghost" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+(allMode?'all':'')+'\'" style="justify-content:space-between;display:flex"><span>📚 Ôn tất cả</span><span style="opacity:.7">'+cAll+' cards</span></button>'+
+    '<button class="btn btn-ghost" onclick="this.closest(\'#diffPickerModal\').remove();location.href=_basePath+\''+deckId+'/review?mode='+modeParam+dispParam+'\'" style="justify-content:space-between;display:flex"><span>📚 Ôn tất cả</span><span style="opacity:.7">'+cAll+' cards</span></button>'+
     '</div></div>';
   document.body.appendChild(overlay);
   overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};

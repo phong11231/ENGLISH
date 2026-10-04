@@ -68,9 +68,9 @@ if (!_routeId) location.replace(_basePath);
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
     <button class="btn btn-ghost btn-sm" onclick="exitBrowser()">← Back</button>
     <h2 style="font-size:18px;font-weight:700;flex:1" id="browserDeckName"></h2>
-    <button class="btn btn-ghost btn-sm" onclick="startReview(_routeId)">▶ Review</button>
-    <button class="btn btn-ghost btn-sm" onclick="startReviewAll(_routeId)">▶ Review All</button>
-    <button class="btn btn-ghost btn-sm" onclick="startReviewReverse(_routeId)" title="Front = Tiếng Việt, loa đọc tiếng Anh">🇻🇳 Review Reverse</button>
+    <button class="btn btn-ghost btn-sm" onclick="showDifficultyPicker(_routeId,false)">▶ Review</button>
+    <button class="btn btn-ghost btn-sm" onclick="showDifficultyPicker(_routeId,true)">▶ Review All</button>
+    <button class="btn btn-ghost btn-sm" onclick="showDifficultyPicker(_routeId,true,'reverse-vi')" title="Front = Tiếng Việt, loa đọc tiếng Anh">🇻🇳 Review Reverse</button>
     <button class="btn btn-ghost btn-sm" onclick="openBulkAddModal()">📋 Bulk add</button>
     <button class="btn btn-ghost btn-sm" onclick="openChatAddModal()">💬 Add Chat</button>
     <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📥 Import</button>
