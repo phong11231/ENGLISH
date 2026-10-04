@@ -15,7 +15,7 @@ function stripUndef(obj){if(obj===null||obj===undefined)return null;if(Array.isA
 let db = { decks:{}, reviewLog:[], settings:{ dailyGoal:20, leechThreshold:8 } };
 
 function loadLocal() {
-  try { const r = localStorage.getItem('flashmind_data'); if(r){ db=JSON.parse(r); if(!db.decks)db.decks={}; if(!db.reviewLog)db.reviewLog=[]; if(!db.settings)db.settings={dailyGoal:20,leechThreshold:8}; } } catch(e){ db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}}; }
+  try { const r = localStorage.getItem('flashmind_data'); if(r){ db=JSON.parse(r); if(!db.decks)db.decks={}; if(!Array.isArray(db.reviewLog))db.reviewLog=[]; if(!db.settings)db.settings={dailyGoal:20,leechThreshold:8}; } } catch(e){ db={decks:{},reviewLog:[],settings:{dailyGoal:20,leechThreshold:8}}; }
   lastUserId=localStorage.getItem('flashmind_lastUser');
 }
 function saveLocal() { try{localStorage.setItem('flashmind_data',JSON.stringify(db));if(lastUserId)localStorage.setItem('flashmind_lastUser',lastUserId);}catch(e){} }
@@ -123,12 +123,25 @@ function _scheduleR2Save(){
 }
 async function _saveUserToR2(){
   if(!currentUser)return;
-  var data={decks:{},settings:db.settings,reviewLog:db.reviewLog.slice(-500)};
-  for(var id in db.decks){if(!db.decks[id]._shared)data.decks[id]=db.decks[id];}
-  if(Object.keys(data.decks).length===0&&(!data.reviewLog||data.reviewLog.length===0)){console.warn('[R2] skip save: empty data');return;}
+  var data={decks:{},sharedProgress:{},settings:db.settings,reviewLog:(Array.isArray(db.reviewLog)?db.reviewLog:[]).slice(-500)};
+  for(var id in db.decks){
+    if(!db.decks[id]._shared){data.decks[id]=db.decks[id];}
+    else{
+      var deck=db.decks[id];
+      var progress={cards:{},defaultDisplayMode:deck.defaultDisplayMode,defaultReviewMode:deck.defaultReviewMode};
+      var userCards=[];
+      (deck.cards||[]).forEach(function(c){
+        if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty};}
+        if(c._userAdded)userCards.push(c);
+      });
+      if(Object.keys(progress.cards).length>0||userCards.length>0){progress.userCards=userCards;data.sharedProgress[id]=progress;}
+    }
+  }
+  var hasData=Object.keys(data.decks).length>0||Object.keys(data.sharedProgress).length>0||data.reviewLog.length>0;
+  if(!hasData){console.warn('[R2] skip save: empty data');return;}
   var blob=JSON.stringify(stripUndef(data));
   var resp=await fetch(_r2UserPath(),{method:'PUT',headers:{'Content-Type':'application/json'},body:blob});
-  if(resp.ok)console.log('[R2] user data saved, decks='+Object.keys(data.decks).length);
+  if(resp.ok)console.log('[R2] user data saved, decks='+Object.keys(data.decks).length+', sharedProgress='+Object.keys(data.sharedProgress).length);
   else console.warn('[R2] user save failed:',resp.status);
 }
 async function _migrateFromRTDB(){
@@ -185,6 +198,21 @@ async function _loadUserFromR2(){
     var cloudSettings=cloud.settings||{};
     var cloudLogs=cloud.reviewLog||[];
     for(var id in cloudDecks){if(!db.decks[id])db.decks[id]=cloudDecks[id];}
+    var cloudSharedProgress=cloud.sharedProgress||{};
+    for(var sid in cloudSharedProgress){
+      var sp=cloudSharedProgress[sid];
+      if(db.decks[sid]&&db.decks[sid]._shared){
+        var deck=db.decks[sid];
+        if(sp.defaultDisplayMode)deck.defaultDisplayMode=sp.defaultDisplayMode;
+        if(sp.defaultReviewMode)deck.defaultReviewMode=sp.defaultReviewMode;
+        var cardMap={};(deck.cards||[]).forEach(function(c){cardMap[c.id]=c;});
+        for(var cid in (sp.cards||{})){var pc=sp.cards[cid];var ec=cardMap[cid];if(ec){Object.assign(ec,pc);}}
+        if(sp.userCards&&sp.userCards.length>0){
+          var existIds=new Set((deck.cards||[]).map(function(c){return c.id;}));
+          sp.userCards.forEach(function(uc){uc._userAdded=true;if(!existIds.has(uc.id)){deck.cards.push(uc);}});
+        }
+      }
+    }
     db.settings.totalXp=Math.max(db.settings.totalXp||0,cloudSettings.totalXp||0);
     if(cloudSettings.streakDays){
       if(!db.settings.streakDays)db.settings.streakDays={};
@@ -203,7 +231,8 @@ async function _loadUserFromR2(){
       for(var h in cloudSettings.studyHours){db.settings.studyHours[h]=Math.max(db.settings.studyHours[h]||0,cloudSettings.studyHours[h]||0);}
     }
     if(cloudSettings.dailyGoal)db.settings.dailyGoal=cloudSettings.dailyGoal;
-    if(cloudLogs.length>0){
+    if(Array.isArray(cloudLogs)&&cloudLogs.length>0){
+      if(!Array.isArray(db.reviewLog))db.reviewLog=[];
       var existingDates=new Set();
       db.reviewLog.forEach(function(e){existingDates.add(e.date+'_'+e.cardId);});
       cloudLogs.forEach(function(e){if(!existingDates.has(e.date+'_'+e.cardId))db.reviewLog.push(e);});
@@ -211,7 +240,7 @@ async function _loadUserFromR2(){
       db.reviewLog=db.reviewLog.slice(-500);
     }
     saveLocal();renderCurrentView();
-    console.log('[R2] user data loaded, decks='+Object.keys(cloudDecks).length);
+    console.log('[R2] user data loaded, decks='+Object.keys(cloudDecks).length+', sharedProgress='+Object.keys(cloudSharedProgress).length);
   }catch(e){console.warn('[R2] user load error:',e);}
 }
 
@@ -227,7 +256,7 @@ async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}awa
 function saveDeckData(id,data){saveLocal();_scheduleR2Save();}
 function saveCardOnly(deckId,cardId){saveLocal();_scheduleR2Save();}
 function deleteDeckData(id){saveLocal();_scheduleR2Save();}
-function addReviewLog(entry){db.reviewLog.push(entry);saveLocal();_scheduleR2Save();}
+function addReviewLog(entry){if(!Array.isArray(db.reviewLog))db.reviewLog=[];db.reviewLog.push(entry);saveLocal();_scheduleR2Save();}
 
 // ===== FSRS v5 (Free Spaced Repetition Scheduler) =====
 var FSRS_DECAY=-0.5;
@@ -436,7 +465,8 @@ function renderDecks(){
   let totalCards=0,totalDue=0,totalNew=0;
   allDecks.forEach(id=>{const cards=getDeckCards(id);totalCards+=cards.length;cards.forEach(c=>{if(c.status==='new')totalNew++;});});
   const streak=calcStreak();
-  const todayReviews=db.reviewLog.filter(r=>new Date(r.date).toDateString()===new Date().toDateString()).length;
+  const _rl=Array.isArray(db.reviewLog)?db.reviewLog:[];
+  const todayReviews=_rl.filter(r=>new Date(r.date).toDateString()===new Date().toDateString()).length;
 
   document.getElementById('globalStats').innerHTML=`
     <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">TOTAL</div></div>
@@ -2798,7 +2828,8 @@ function renderStreakWidget(){
   const s=calcStreak();const xp=db.settings.totalXp||0;
   const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const today=new Date();const todayDay=today.getDay();
-  const reviewDays=new Set();db.reviewLog.forEach(r=>reviewDays.add(new Date(r.date).toDateString()));
+  const rl=Array.isArray(db.reviewLog)?db.reviewLog:[];
+  const reviewDays=new Set();rl.forEach(r=>reviewDays.add(new Date(r.date).toDateString()));
   let weekHTML='';
   for(let i=0;i<7;i++){
     const d=new Date(today);d.setDate(d.getDate()-(todayDay-i));
@@ -3021,7 +3052,8 @@ function copyAIResult(){
 
 // ===== STATS =====
 function calcStreak(){
-  const days=new Set();db.reviewLog.forEach(r=>days.add(new Date(r.date).toDateString()));
+  const logs=Array.isArray(db.reviewLog)?db.reviewLog:[];
+  const days=new Set();logs.forEach(r=>days.add(new Date(r.date).toDateString()));
   let streak=0;const d=new Date();while(days.has(d.toDateString())){streak++;d.setDate(d.getDate()-1);}return streak;
 }
 
@@ -3034,7 +3066,8 @@ function renderStats(){
     else{reviewCards++;if(c.interval>=21)matureCards++;}
     if(c.leech)leechCards++;
   });});
-  const todayReviews=db.reviewLog.filter(r=>new Date(r.date).toDateString()===new Date().toDateString()).length;
+  const _rl2=Array.isArray(db.reviewLog)?db.reviewLog:[];
+  const todayReviews=_rl2.filter(r=>new Date(r.date).toDateString()===new Date().toDateString()).length;
 
   document.getElementById('detailedStats').innerHTML=`
     <div class="stat-card"><div class="stat-icon">📇</div><div class="stat-value">${totalCards}</div><div class="stat-label">TOTAL</div></div>
@@ -3046,7 +3079,7 @@ function renderStats(){
 
   let hmHTML='<div class="heatmap">';
   for(let i=29;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toDateString();
-    const count=db.reviewLog.filter(r=>new Date(r.date).toDateString()===ds).length;
+    const count=_rl2.filter(r=>new Date(r.date).toDateString()===ds).length;
     const level=count===0?0:count<=5?1:count<=15?2:count<=30?3:4;
     hmHTML+=`<div class="heatmap-day" data-count="${level}" title="${d.toLocaleDateString('en')}: ${count} reviews"></div>`;}
   document.getElementById('heatmapContainer').innerHTML=hmHTML+'</div>';
@@ -3586,8 +3619,23 @@ function savePushSub(sub){
 
 window.addEventListener('beforeunload',function(){
   if(_r2SaveTimer&&currentUser){clearTimeout(_r2SaveTimer);_r2SaveTimer=null;
-    var data={decks:{},settings:db.settings,reviewLog:db.reviewLog.slice(-500)};
-    for(var id in db.decks){if(!db.decks[id]._shared)data.decks[id]=db.decks[id];}
+    var rl=Array.isArray(db.reviewLog)?db.reviewLog:[];
+    var data={decks:{},sharedProgress:{},settings:db.settings,reviewLog:rl.slice(-500)};
+    for(var id in db.decks){
+      if(!db.decks[id]._shared){data.decks[id]=db.decks[id];}
+      else{
+        var deck=db.decks[id];
+        var progress={cards:{},defaultDisplayMode:deck.defaultDisplayMode,defaultReviewMode:deck.defaultReviewMode};
+        var userCards=[];
+        (deck.cards||[]).forEach(function(c){
+          if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty};}
+          if(c._userAdded)userCards.push(c);
+        });
+        if(Object.keys(progress.cards).length>0||userCards.length>0){progress.userCards=userCards;data.sharedProgress[id]=progress;}
+      }
+    }
+    var hasData=Object.keys(data.decks).length>0||Object.keys(data.sharedProgress).length>0||rl.length>0;
+    if(!hasData)return;
     fetch(_r2UserPath(),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(stripUndef(data)),keepalive:true}).catch(function(){});
   }
 });
