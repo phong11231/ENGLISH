@@ -123,16 +123,19 @@ function _scheduleR2Save(){
 }
 async function _saveUserToR2(){
   if(!currentUser)return;
+  var sharedBase={};
+  try{var sc=localStorage.getItem('_sdCache');if(sc){var sp=JSON.parse(sc);for(var sid in sp){if(sp[sid].cards)sharedBase[sid]=new Set(sp[sid].cards.map(function(c){return c.id;}));}}}catch(e){}
   var data={decks:{},sharedProgress:{},settings:db.settings,reviewLog:(Array.isArray(db.reviewLog)?db.reviewLog:[]).slice(-500)};
   for(var id in db.decks){
     if(!db.decks[id]._shared){data.decks[id]=db.decks[id];}
     else{
       var deck=db.decks[id];
+      var baseIds=sharedBase[id]||new Set();
       var progress={cards:{},defaultDisplayMode:deck.defaultDisplayMode,defaultReviewMode:deck.defaultReviewMode};
       var userCards=[];
       (deck.cards||[]).forEach(function(c){
         if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty};}
-        if(c._userAdded)userCards.push(c);
+        if(c._userAdded||!baseIds.has(c.id))userCards.push(c);
       });
       if(Object.keys(progress.cards).length>0||userCards.length>0){progress.userCards=userCards;data.sharedProgress[id]=progress;}
     }
@@ -3478,6 +3481,7 @@ async function loadSharedDecks(force){
         data.cards.forEach(c=>{var ec=existingMap[c.id];if(ec){c.status=ec.status;c.interval=ec.interval;c.ease=ec.ease;c.due=ec.due;c.reps=ec.reps;c.lapses=ec.lapses;c.lastReview=ec.lastReview;c.suspended=ec.suspended;c.leech=ec.leech;c.reviewMode=ec.reviewMode;c.displayMode=ec.displayMode;c.stability=ec.stability;c.difficulty=ec.difficulty;}});
         const sharedCardIds=new Set(data.cards.map(c=>c.id));
         const userCards=(existing.cards||[]).filter(c=>!sharedCardIds.has(c.id)&&!_delCards[id+'_'+c.id]);
+        userCards.forEach(c=>{c._userAdded=true;});
         data.cards=data.cards.concat(userCards);
       }
       db.decks[id]=data;
@@ -3619,17 +3623,20 @@ function savePushSub(sub){
 
 window.addEventListener('beforeunload',function(){
   if(_r2SaveTimer&&currentUser){clearTimeout(_r2SaveTimer);_r2SaveTimer=null;
+    var sharedBase={};
+    try{var sc=localStorage.getItem('_sdCache');if(sc){var sp=JSON.parse(sc);for(var sid in sp){if(sp[sid].cards)sharedBase[sid]=new Set(sp[sid].cards.map(function(c){return c.id;}));}}}catch(e){}
     var rl=Array.isArray(db.reviewLog)?db.reviewLog:[];
     var data={decks:{},sharedProgress:{},settings:db.settings,reviewLog:rl.slice(-500)};
     for(var id in db.decks){
       if(!db.decks[id]._shared){data.decks[id]=db.decks[id];}
       else{
         var deck=db.decks[id];
+        var baseIds=sharedBase[id]||new Set();
         var progress={cards:{},defaultDisplayMode:deck.defaultDisplayMode,defaultReviewMode:deck.defaultReviewMode};
         var userCards=[];
         (deck.cards||[]).forEach(function(c){
           if(c.status&&c.status!=='new'){progress.cards[c.id]={status:c.status,interval:c.interval,ease:c.ease,due:c.due,reps:c.reps,lapses:c.lapses,lastReview:c.lastReview,suspended:c.suspended,leech:c.leech,reviewMode:c.reviewMode,displayMode:c.displayMode,stability:c.stability,difficulty:c.difficulty};}
-          if(c._userAdded)userCards.push(c);
+          if(c._userAdded||!baseIds.has(c.id))userCards.push(c);
         });
         if(Object.keys(progress.cards).length>0||userCards.length>0){progress.userCards=userCards;data.sharedProgress[id]=progress;}
       }
