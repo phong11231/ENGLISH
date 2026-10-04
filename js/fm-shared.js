@@ -5,9 +5,6 @@ function _nav(path){ return _basePath + path; }
 // ===== FIREBASE =====
 firebase.initializeApp({apiKey:"AIzaSyD7UXDjRS0NaT1OYRBvpxqpirZz3SQYVyc",authDomain:"flashmind-8b1bc.firebaseapp.com",projectId:"flashmind-8b1bc",storageBucket:"flashmind-8b1bc.firebasestorage.app",messagingSenderId:"482268690491",appId:"1:482268690491:web:2c53f56d0bdf8d30c7c41e"});
 const auth = firebase.auth(), firestore = firebase.firestore();
-// RTDB chi dung cho migration 1 lan
-var _rtdbApp=null,_rtdb=null;
-try{_rtdbApp=firebase.initializeApp({apiKey:"AIzaSyA6Qyt5t5Ik0ek29gNUeNCUe4cYP6TfITM",databaseURL:"https://flashmind-data-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"flashmind-data"},'data');_rtdb=_rtdbApp.database();}catch(e){try{_rtdb=firebase.app('data').database();}catch(e2){}}
 let currentUser = null, unsubDecks = null, lastUserId = null, _skipNextListener = false;
 function stripUndef(obj){if(obj===null||obj===undefined)return null;if(Array.isArray(obj))return obj.map(stripUndef);if(typeof obj==='object'){var r={};for(var k in obj){if(obj.hasOwnProperty(k)&&obj[k]!==undefined)r[k]=stripUndef(obj[k]);}return r;}return obj;}
 
@@ -148,54 +145,11 @@ async function _saveUserToR2(){
   if(resp.ok)console.log('[R2] user data saved, decks='+Object.keys(data.decks).length+', sharedProgress='+Object.keys(data.sharedProgress).length);
   else console.warn('[R2] user save failed:',resp.status);
 }
-async function _migrateFromRTDB(){
-  if(!_rtdb||!currentUser)return;
-  try{
-    console.log('[Migration] Loading user data from RTDB...');
-    var snap=await _rtdb.ref('users/'+currentUser.uid).once('value');
-    var cloud=snap.val();
-    if(!cloud){console.log('[Migration] No RTDB data for user');return;}
-    var cloudDecks=cloud.decks||{};
-    var cloudSettings=cloud.settings||{};
-    var cloudLogs=cloud.reviewLog||{};
-    for(var id in cloudDecks){if(!db.decks[id])db.decks[id]=cloudDecks[id];}
-    db.settings.totalXp=Math.max(db.settings.totalXp||0,cloudSettings.totalXp||0);
-    if(cloudSettings.streakDays){
-      if(!db.settings.streakDays)db.settings.streakDays={};
-      for(var day in cloudSettings.streakDays){db.settings.streakDays[day]=Math.max(db.settings.streakDays[day]||0,cloudSettings.streakDays[day]||0);}
-    }
-    if(cloudSettings.dismissedShared){
-      if(!db.settings.dismissedShared)db.settings.dismissedShared=[];
-      if(Array.isArray(cloudSettings.dismissedShared))cloudSettings.dismissedShared.forEach(function(id){if(!db.settings.dismissedShared.includes(id))db.settings.dismissedShared.push(id);});
-    }
-    if(cloudSettings.deletedCards){
-      if(!db.settings.deletedCards)db.settings.deletedCards={};
-      Object.assign(db.settings.deletedCards,cloudSettings.deletedCards);
-    }
-    if(cloudSettings.dailyGoal)db.settings.dailyGoal=cloudSettings.dailyGoal;
-    if(cloudSettings.studyHours){
-      if(!db.settings.studyHours)db.settings.studyHours={};
-      for(var h in cloudSettings.studyHours){db.settings.studyHours[h]=Math.max(db.settings.studyHours[h]||0,cloudSettings.studyHours[h]||0);}
-    }
-    var logEntries=Object.values(cloudLogs);
-    if(logEntries.length>0){
-      logEntries.sort(function(a,b){return(a.date||0)-(b.date||0);});
-      db.reviewLog=logEntries.slice(-500);
-    }
-    saveLocal();renderCurrentView();
-    console.log('[Migration] Loaded '+Object.keys(cloudDecks).length+' decks from RTDB, saving to R2...');
-    await _saveUserToR2();
-    console.log('[Migration] Done! Data migrated to R2.');
-  }catch(e){console.error('[Migration] RTDB error:',e);}
-}
 async function _loadUserFromR2(){
   if(!currentUser)return;
   try{
     var resp=await fetch(_r2UserPath());
-    if(resp.status===404){
-      await _migrateFromRTDB();
-      return;
-    }
+    if(resp.status===404){return;}
     if(!resp.ok){console.warn('[R2] user load failed:',resp.status);return;}
     var cloud=await resp.json();
     var cloudDecks=cloud.decks||{};
