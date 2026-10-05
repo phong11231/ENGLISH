@@ -1097,10 +1097,16 @@ function showDifficultyPicker(deckId,allMode,displayOverride){
 }
 
 function setCardDifficulty(cardId,level){
-  var deck=db.decks[currentDeckId];if(!deck)return;
-  var card=deck.cards.find(c=>c.id===cardId);if(!card)return;
+  var card=null,saveDeckId=currentDeckId;
+  var deck=db.decks[currentDeckId];
+  if(deck)card=deck.cards.find(c=>c.id===cardId);
+  if(!card){
+    var allIds=[currentDeckId].concat(getSubDecks(currentDeckId).map(function(s){return s[0];}));
+    for(var i=0;i<allIds.length;i++){var d=db.decks[allIds[i]];if(d){var fc=d.cards.find(c=>c.id===cardId);if(fc){card=fc;saveDeckId=allIds[i];break;}}}
+  }
+  if(!card)return;
   card.difficultyLevel=level;
-  saveCardOnly(currentDeckId,cardId);
+  saveCardOnly(saveDeckId,cardId);
   var qc=reviewQueue[reviewIndex];if(qc&&qc.id===cardId)qc.difficultyLevel=level;
   toast('Set: '+(level==='easy'?'🟢 Dễ':level==='medium'?'🟡 Trung bình':'🔴 Khó'));
   updateDiffBadge();
@@ -1108,13 +1114,19 @@ function setCardDifficulty(cardId,level){
 
 function deleteCardDuringReview(){
   var card=reviewQueue[reviewIndex];if(!card)return;
-  var deck=db.decks[currentDeckId];if(!deck)return;
-  if(deck._shared){
-    if(!db.settings.deletedCards)db.settings.deletedCards={};
-    db.settings.deletedCards[currentDeckId+'_'+card.id]=true;
+  var targetDeckId=currentDeckId;
+  var targetDeck=db.decks[currentDeckId];
+  if(targetDeck&&!targetDeck.cards.find(c=>c.id===card.id)){
+    var allIds=getSubDecks(currentDeckId).map(function(s){return s[0];});
+    for(var i=0;i<allIds.length;i++){var d=db.decks[allIds[i]];if(d&&d.cards.find(c=>c.id===card.id)){targetDeck=d;targetDeckId=allIds[i];break;}}
   }
-  deck.cards=deck.cards.filter(c=>c.id!==card.id);
-  saveDeckData(currentDeckId,deck);
+  if(!targetDeck)return;
+  if(targetDeck._shared){
+    if(!db.settings.deletedCards)db.settings.deletedCards={};
+    db.settings.deletedCards[targetDeckId+'_'+card.id]=true;
+  }
+  targetDeck.cards=targetDeck.cards.filter(c=>c.id!==card.id);
+  saveDeckData(targetDeckId,targetDeck);
   reviewQueue.splice(reviewIndex,1);
   if(reviewIndex>=reviewQueue.length&&reviewIndex>0)reviewIndex--;
   showCurrentCard();toast('Card deleted');
