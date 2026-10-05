@@ -126,7 +126,7 @@ if (!_routeId) location.replace(_basePath);
         <span class="cnt-due" id="cntDue">0 review</span>
       </div>
       <div id="diffBadgeWrap" style="flex:none"></div>
-      <div style="font-size:11px;opacity:.5;flex:none;white-space:nowrap" title="Shift+P to replay voice">⌨️ Shift+P = replay</div>
+      <div style="font-size:11px;opacity:.5;flex:none;white-space:nowrap" title="Shift+P to repeat card 30 times">⌨️ Shift+P = 🔁 repeat</div>
     </div>
     <div class="review-progress">
       <div class="review-progress-bar"><div class="review-progress-fill" id="reviewProgressFill"></div></div>
@@ -176,7 +176,10 @@ if (!_routeId) location.replace(_basePath);
       <div class="type-answer-input" id="speakTranscript" style="display:none;margin-bottom:8px;min-height:40px;text-align:center"></div>
       <div class="type-answer-result" id="speakResult" style="display:none"></div>
     </div>
-    <button class="btn-next-card" id="btnNextCard" style="display:none" onclick="nextAfterType()">Next card → (Enter)</button>
+    <div id="nextCardWrap" style="display:none;text-align:center">
+      <button class="btn-next-card" id="btnNextCard" onclick="nextAfterType()" style="display:block;width:100%">Next card → (Enter)</button>
+      <button class="btn btn-ghost btn-sm" onclick="startRepeatMode()" style="margin-top:6px;font-size:13px">🔁 Lặp lại 30 lần</button>
+    </div>
     <div class="review-done" id="reviewDone" style="display:none">
       <div class="done-icon">🎉</div>
       <h2>Complete!</h2>
@@ -468,7 +471,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js"></script>
-<script src="/ENGLISH/js/fm-shared.js?v=89"></script>
+<script src="/ENGLISH/js/fm-shared.js?v=90"></script>
 <script>
 (function(){
   if (_isDeckRoute) {

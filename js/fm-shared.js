@@ -1640,7 +1640,7 @@ function showCurrentCard(){
     document.getElementById('reviewActions').style.display='none';
     document.getElementById('typeAnswerWrap').style.display='none';
     document.getElementById('btnCheckAnswer').style.display='none';
-    document.getElementById('btnNextCard').style.display='none';
+    document.getElementById('nextCardWrap').style.display='none';
     document.getElementById('speakAnswerWrap').style.display='none';
     _killSpeechRec();_releaseMic();
     document.getElementById('reviewDone').style.display='block';
@@ -1861,11 +1861,11 @@ function showCurrentCard(){
   var msEl=document.getElementById('modeSpeak');if(msEl)msEl.classList.toggle('active',reviewMode==='speak');
 
   const hint=document.querySelector('.flashcard-hint');
-  const typeWrap=document.getElementById('typeAnswerWrap'),btnCheck=document.getElementById('btnCheckAnswer'),btnNext=document.getElementById('btnNextCard'),typeInput=document.getElementById('typeAnswerInput'),typeResult=document.getElementById('typeAnswerResult');
+  const typeWrap=document.getElementById('typeAnswerWrap'),btnCheck=document.getElementById('btnCheckAnswer'),nextWrap=document.getElementById('nextCardWrap'),typeInput=document.getElementById('typeAnswerInput'),typeResult=document.getElementById('typeAnswerResult');
   const typeViInput=document.getElementById('typeAnswerViInput'),typeViResult=document.getElementById('typeAnswerViResult');
   const speakWrap=document.getElementById('speakAnswerWrap'),btnCheckSpeak=document.getElementById('btnCheckSpeak');
   // Reset all mode UIs
-  typeWrap.style.display='none';btnCheck.style.display='none';btnNext.style.display='none';
+  typeWrap.style.display='none';btnCheck.style.display='none';if(nextWrap)nextWrap.style.display='none';
   speakWrap.style.display='none';
   if(reviewMode!=='speak')_killSpeechRec();
   if(reviewMode==='type'){
@@ -2502,9 +2502,9 @@ function checkTypedAnswer(){
     }
   }
   if(correct){answerCard(2);window._typeAnswered=true;}
-  document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('btnNextCard').style.display='block';
+  document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('nextCardWrap').style.display='block';
 }
-function nextAfterType(){if(!window._typeAnswered)answerCard(0);window._typeAnswered=false;showCurrentCard();}
+function nextAfterType(){if(_repeatActive){stopRepeatMode();}if(!window._typeAnswered)answerCard(0);window._typeAnswered=false;showCurrentCard();}
 
 // ===== TYPE-MIC (noi de dien vao o type) =====
 var _typeMicActive=false;
@@ -2753,7 +2753,7 @@ function checkSpokenAnswer(){
     result.style.display='block';
   }
   _advanceOffset();
-  document.getElementById('btnNextCard').style.display='block';
+  document.getElementById('nextCardWrap').style.display='block';
 }
 
 // ===== STREAK + XP SYSTEM =====
@@ -2905,18 +2905,30 @@ function undoAnswer(){
   saveCardOnly(currentDeckId,last.cardId);showCurrentCard();toast('Undone');
 }
 
-var _repeatActive=false,_repeatCount=0,_repeatMax=30,_repeatFlipped=false;
+var _repeatActive=false,_repeatCount=0,_repeatMax=30,_repeatFlipped=false,_repeatPrevMode=null;
 function startRepeatMode(){
   _repeatActive=true;_repeatCount=0;_repeatFlipped=false;
+  _repeatPrevMode=reviewMode;
   document.getElementById('reviewActions').style.display='none';
+  var nw=document.getElementById('nextCardWrap');if(nw)nw.style.display='none';
+  var tw=document.getElementById('typeAnswerWrap');if(tw)tw.style.display='none';
+  var bc=document.getElementById('btnCheckAnswer');if(bc)bc.style.display='none';
+  var sw=document.getElementById('speakAnswerWrap');if(sw)sw.style.display='none';
   var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='block';
-  toast('🔁 Repeat mode — lặp lại card này');
+  var fc=document.getElementById('flashcard');if(fc){fc.style.display='';fc.onclick=function(){repeatFlip();};}
+  toast('🔁 Repeat mode — Shift+P hoặc Esc để dừng');
   repeatShowFront();
 }
 function stopRepeatMode(){
   _repeatActive=false;_repeatCount=0;_repeatFlipped=false;
   var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';
-  document.getElementById('reviewActions').style.display='flex';
+  if(_repeatPrevMode==='type'||_repeatPrevMode==='speak'){
+    var nw=document.getElementById('nextCardWrap');if(nw)nw.style.display='block';
+  } else {
+    document.getElementById('reviewActions').style.display='flex';
+  }
+  var fc=document.getElementById('flashcard');if(fc)fc.onclick=(_repeatPrevMode==='type'||_repeatPrevMode==='speak')?null:flipCard;
+  _repeatPrevMode=null;
   toast('Đã dừng repeat');
 }
 function repeatShowFront(){
@@ -3261,14 +3273,14 @@ try{const _t=localStorage.getItem('flashmind_theme')||'auto';if(_t!=='auto'){doc
 document.addEventListener('keydown',e=>{
   var vr=document.getElementById('viewReview');
   if(vr&&vr.classList.contains('active')){
-    if(e.code==='KeyP'&&e.shiftKey){e.preventDefault();stopAllAudio();var c=reviewQueue[reviewIndex];if(c){var fc=document.getElementById('flashcard');if(fc&&fc.classList.contains('flipped'))speakText(c.back);else speakText(c.displayMode&&c.displayMode.startsWith('voice')?c.front:c.back);}return;}
+    if(e.code==='KeyP'&&e.shiftKey){e.preventDefault();if(_repeatActive){stopRepeatMode();}else{startRepeatMode();}return;}
     if((e.target.id==='typeAnswerInput'||e.target.id==='typeAnswerViInput')&&e.key==='Enter'){e.preventDefault();
-      const bc=document.getElementById('btnCheckAnswer'),bn=document.getElementById('btnNextCard');
+      const bc=document.getElementById('btnCheckAnswer'),nw=document.getElementById('nextCardWrap');
       if(bc.style.display!=='none'){
         var viIn=document.getElementById('typeAnswerViInput');
         if(e.target.id==='typeAnswerInput'&&viIn.style.display!=='none'){viIn.focus();return;}
         checkTypedAnswer();
-      } else if(bn.style.display!=='none')nextAfterType();return;}
+      } else if(nw&&nw.style.display!=='none')nextAfterType();return;}
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
     if(_repeatActive){if(e.code==='Space'||e.key==='Enter'){e.preventDefault();repeatFlip();}if(e.key==='Escape'){e.preventDefault();stopRepeatMode();}return;}
     if(e.code==='Space'){e.preventDefault();flipCard();}
