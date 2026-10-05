@@ -2504,7 +2504,7 @@ function checkTypedAnswer(){
   if(correct){answerCard(2);window._typeAnswered=true;}
   document.getElementById('btnCheckAnswer').style.display='none';document.getElementById('nextCardWrap').style.display='block';
 }
-function nextAfterType(){if(_repeatActive){stopRepeatMode();}if(!window._typeAnswered)answerCard(0);window._typeAnswered=false;showCurrentCard();}
+function nextAfterType(){if(!window._typeAnswered)answerCard(0);else if(_repeatActive){_repeatNext();window._typeAnswered=false;return;}window._typeAnswered=false;if(_repeatActive)return;showCurrentCard();}
 
 // ===== TYPE-MIC (noi de dien vao o type) =====
 var _typeMicActive=false;
@@ -2889,6 +2889,7 @@ function answerCard(quality){
   saveLocal();
   _scheduleR2Save();
 
+  if(_repeatActive){_repeatNext();return;}
   if(quality===0){const ri=Math.min(reviewQueue.length,reviewIndex+3+Math.floor(Math.random()*3));reviewQueue.splice(ri,0,card);}
   reviewIndex++;
   if(reviewMode==='flip')showCurrentCard();
@@ -2905,58 +2906,29 @@ function undoAnswer(){
   saveCardOnly(currentDeckId,last.cardId);showCurrentCard();toast('Undone');
 }
 
-var _repeatActive=false,_repeatCount=0,_repeatMax=30,_repeatFlipped=false,_repeatPrevMode=null;
+var _repeatActive=false,_repeatCount=0,_repeatMax=30;
 function startRepeatMode(){
-  _repeatActive=true;_repeatCount=0;_repeatFlipped=false;
-  _repeatPrevMode=reviewMode;
-  document.getElementById('reviewActions').style.display='none';
-  var nw=document.getElementById('nextCardWrap');if(nw)nw.style.display='none';
-  var tw=document.getElementById('typeAnswerWrap');if(tw)tw.style.display='none';
-  var bc=document.getElementById('btnCheckAnswer');if(bc)bc.style.display='none';
-  var sw=document.getElementById('speakAnswerWrap');if(sw)sw.style.display='none';
-  var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='block';
-  var fc=document.getElementById('flashcard');if(fc){fc.style.display='';fc.onclick=function(){repeatFlip();};}
-  toast('🔁 Repeat mode — Shift+P hoặc Esc để dừng');
-  repeatShowFront();
+  _repeatActive=true;_repeatCount=0;
+  var bar=document.getElementById('repeatModeBar');if(bar){bar.style.display='block';bar.querySelector('#repeatFlipBtn').style.display='none';}
+  _updateRepeatCounter();
+  toast('🔁 Repeat mode ('+_repeatMax+'x) — Shift+P hoặc Esc để dừng');
 }
 function stopRepeatMode(){
-  _repeatActive=false;_repeatCount=0;_repeatFlipped=false;
+  _repeatActive=false;_repeatCount=0;
   var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';
-  if(_repeatPrevMode==='type'||_repeatPrevMode==='speak'){
-    var nw=document.getElementById('nextCardWrap');if(nw)nw.style.display='block';
-  } else {
-    document.getElementById('reviewActions').style.display='flex';
-  }
-  var fc=document.getElementById('flashcard');if(fc)fc.onclick=(_repeatPrevMode==='type'||_repeatPrevMode==='speak')?null:flipCard;
-  _repeatPrevMode=null;
-  toast('Đã dừng repeat');
+  toast('Đã dừng repeat — chuyển card tiếp');
+  reviewIndex++;
+  showCurrentCard();
 }
-function repeatShowFront(){
-  _repeatCount++;_repeatFlipped=false;
+function _updateRepeatCounter(){
   var counter=document.getElementById('repeatCounter');
   if(counter)counter.textContent='🔁 '+_repeatCount+'/'+_repeatMax;
-  var btn=document.getElementById('repeatFlipBtn');if(btn)btn.textContent='🔄 Lật';
-  var fc=document.getElementById('flashcard');
-  if(fc)fc.classList.remove('flipped');
-  var card=reviewQueue[reviewIndex];
-  if(card){
-    stopAllAudio();
-    var dm=card.displayMode||'voice';
-    if(dm==='voice'||dm==='reverse-vi'){
-      setTimeout(function(){var card2=reviewQueue[reviewIndex];if(card2&&_repeatActive)speakText(card2.front||'');},300);
-    }
-  }
 }
-function repeatFlip(){
-  if(!_repeatActive)return;
-  if(!_repeatFlipped){
-    _repeatFlipped=true;
-    var fc=document.getElementById('flashcard');if(fc)fc.classList.add('flipped');
-    var btn=document.getElementById('repeatFlipBtn');if(btn)btn.textContent='▶ Tiếp';
-  } else {
-    if(_repeatCount>=_repeatMax){stopRepeatMode();toast('Đã lặp '+_repeatMax+' lần!');return;}
-    repeatShowFront();
-  }
+function _repeatNext(){
+  _repeatCount++;
+  _updateRepeatCounter();
+  if(_repeatCount>=_repeatMax){_repeatActive=false;var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';toast('Đã lặp '+_repeatMax+' lần!');reviewIndex++;showCurrentCard();return;}
+  showCurrentCard();
 }
 
 function updateReviewProgress(){
@@ -3282,7 +3254,7 @@ document.addEventListener('keydown',e=>{
         checkTypedAnswer();
       } else if(nw&&nw.style.display!=='none')nextAfterType();return;}
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
-    if(_repeatActive){if(e.code==='Space'||e.key==='Enter'){e.preventDefault();repeatFlip();}if(e.key==='Escape'){e.preventDefault();stopRepeatMode();}return;}
+    if(_repeatActive&&e.key==='Escape'){e.preventDefault();stopRepeatMode();return;}
     if(e.code==='Space'){e.preventDefault();flipCard();}
     if(e.key==='z'&&(e.ctrlKey||e.metaKey)){e.preventDefault();undoAnswer();}
     if(document.getElementById('reviewActions').style.display==='flex'){
