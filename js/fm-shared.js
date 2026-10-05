@@ -2905,6 +2905,48 @@ function undoAnswer(){
   saveCardOnly(currentDeckId,last.cardId);showCurrentCard();toast('Undone');
 }
 
+var _repeatActive=false,_repeatCount=0,_repeatMax=30,_repeatFlipped=false;
+function startRepeatMode(){
+  _repeatActive=true;_repeatCount=0;_repeatFlipped=false;
+  document.getElementById('reviewActions').style.display='none';
+  var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='block';
+  toast('🔁 Repeat mode — lặp lại card này');
+  repeatShowFront();
+}
+function stopRepeatMode(){
+  _repeatActive=false;_repeatCount=0;_repeatFlipped=false;
+  var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';
+  document.getElementById('reviewActions').style.display='flex';
+  toast('Đã dừng repeat');
+}
+function repeatShowFront(){
+  _repeatCount++;_repeatFlipped=false;
+  var counter=document.getElementById('repeatCounter');
+  if(counter)counter.textContent='🔁 '+_repeatCount+'/'+_repeatMax;
+  var btn=document.getElementById('repeatFlipBtn');if(btn)btn.textContent='🔄 Lật';
+  var fc=document.getElementById('flashcard');
+  if(fc)fc.classList.remove('flipped');
+  var card=reviewQueue[reviewIndex];
+  if(card){
+    stopAllAudio();
+    var dm=card.displayMode||'voice';
+    if(dm==='voice'||dm==='reverse-vi'){
+      setTimeout(function(){var card2=reviewQueue[reviewIndex];if(card2&&_repeatActive)speakText(card2.front||'');},300);
+    }
+  }
+}
+function repeatFlip(){
+  if(!_repeatActive)return;
+  if(!_repeatFlipped){
+    _repeatFlipped=true;
+    var fc=document.getElementById('flashcard');if(fc)fc.classList.add('flipped');
+    var btn=document.getElementById('repeatFlipBtn');if(btn)btn.textContent='▶ Tiếp';
+  } else {
+    if(_repeatCount>=_repeatMax){stopRepeatMode();toast('Đã lặp '+_repeatMax+' lần!');return;}
+    repeatShowFront();
+  }
+}
+
 function updateReviewProgress(){
   const done=Math.min(reviewIndex,reviewQueue.length);
   const pct=reviewQueue.length>0?(done/reviewQueue.length*100):100;
@@ -3228,6 +3270,7 @@ document.addEventListener('keydown',e=>{
         checkTypedAnswer();
       } else if(bn.style.display!=='none')nextAfterType();return;}
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+    if(_repeatActive){if(e.code==='Space'||e.key==='Enter'){e.preventDefault();repeatFlip();}if(e.key==='Escape'){e.preventDefault();stopRepeatMode();}return;}
     if(e.code==='Space'){e.preventDefault();flipCard();}
     if(e.key==='z'&&(e.ctrlKey||e.metaKey)){e.preventDefault();undoAnswer();}
     if(document.getElementById('reviewActions').style.display==='flex'){

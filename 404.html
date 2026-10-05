@@ -151,6 +151,14 @@ if (!_routeId) location.replace(_basePath);
       <button class="review-btn hard" onclick="answerCard(1)">Hard<span class="interval" id="intHard"></span></button>
       <button class="review-btn good" onclick="answerCard(2)">Good<span class="interval" id="intGood"></span></button>
       <button class="review-btn easy" onclick="answerCard(3)">Easy<span class="interval" id="intEasy"></span></button>
+      <button class="review-btn" onclick="startRepeatMode()" style="background:var(--primary);color:#fff;font-size:12px;min-width:48px" title="Lặp lại card 30 lần">🔁</button>
+    </div>
+    <div id="repeatModeBar" style="display:none;text-align:center;margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap">
+        <span id="repeatCounter" style="font-weight:700;font-size:15px;color:var(--primary)"></span>
+        <button class="btn btn-primary btn-sm" onclick="repeatFlip()" id="repeatFlipBtn" style="font-size:14px;padding:8px 20px">🔄 Lật</button>
+        <button class="btn btn-ghost btn-sm" onclick="stopRepeatMode()" style="font-size:14px;padding:8px 16px">⏹ Dừng</button>
+      </div>
     </div>
     <div class="type-answer-wrap" id="typeAnswerWrap" style="display:none">
       <div style="display:flex;gap:8px;align-items:center">
@@ -460,7 +468,7 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js"></script>
-<script src="/ENGLISH/js/fm-shared.js?v=88"></script>
+<script src="/ENGLISH/js/fm-shared.js?v=89"></script>
 <script>
 (function(){
   if (_isDeckRoute) {
