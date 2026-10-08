@@ -3247,6 +3247,7 @@ document.addEventListener('keydown',e=>{
   if(vr&&vr.classList.contains('active')){
     if(e.code==='KeyO'&&e.shiftKey){e.preventDefault();if(_repeatActive){stopRepeatMode();}else{startRepeatMode();}return;}
     if(e.code==='KeyP'&&e.shiftKey){e.preventDefault();var _rc=reviewQueue[reviewIndex];if(_rc){stopAllAudio();speakText((_rc.front||'').replace(/<[^>]*>/g,''));}return;}
+    if(e.shiftKey&&(e.code==='KeyD'||e.code==='KeyT'||e.code==='KeyK')){e.preventDefault();var _tc=reviewQueue[reviewIndex];if(_tc&&currentDeckId){var _deck=db.decks[currentDeckId];if(_deck){var _ci=_deck.cards?_deck.cards.findIndex(c=>c.id===_tc.id):-1;if(_ci>=0){var _card=_deck.cards[_ci];if(!_card.tags)_card.tags=[];var _tag=e.code==='KeyD'?'de':e.code==='KeyT'?'trung-binh':'kho';['de','trung-binh','kho'].forEach(t=>{var ti=_card.tags.indexOf(t);if(ti>=0)_card.tags.splice(ti,1);});if(!_card.tags.includes(_tag))_card.tags.push(_tag);saveLocal();_scheduleR2Save();toast(_tag==='de'?'Dễ ✅':_tag==='trung-binh'?'Trung bình 🟡':'Khó 🔴');}}}return;}
     if((e.target.id==='typeAnswerInput'||e.target.id==='typeAnswerViInput')&&e.key==='Enter'){e.preventDefault();
       const bc=document.getElementById('btnCheckAnswer'),nw=document.getElementById('nextCardWrap');
       if(bc.style.display!=='none'){
