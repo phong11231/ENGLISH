@@ -3246,6 +3246,7 @@ document.addEventListener('keydown',e=>{
   var vr=document.getElementById('viewReview');
   if(vr&&vr.classList.contains('active')){
     if(e.code==='KeyO'&&e.shiftKey){e.preventDefault();if(_repeatActive){stopRepeatMode();}else{startRepeatMode();}return;}
+    if(e.code==='KeyP'&&e.shiftKey){e.preventDefault();var _rc=reviewQueue[reviewIndex];if(_rc){stopAllAudio();speakText((_rc.front||'').replace(/<[^>]*>/g,''));}return;}
     if((e.target.id==='typeAnswerInput'||e.target.id==='typeAnswerViInput')&&e.key==='Enter'){e.preventDefault();
       const bc=document.getElementById('btnCheckAnswer'),nw=document.getElementById('nextCardWrap');
       if(bc.style.display!=='none'){
