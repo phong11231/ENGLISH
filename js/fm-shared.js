@@ -2911,7 +2911,7 @@ function startRepeatMode(){
   _repeatActive=true;_repeatCount=0;
   var bar=document.getElementById('repeatModeBar');if(bar){bar.style.display='block';bar.querySelector('#repeatFlipBtn').style.display='none';}
   _updateRepeatCounter();
-  toast('🔁 Repeat mode ('+_repeatMax+'x) — Shift+P hoặc Esc để dừng');
+  toast('🔁 Repeat mode ('+_repeatMax+'x) — Shift+O hoặc Esc để dừng');
 }
 function stopRepeatMode(){
   _repeatActive=false;_repeatCount=0;
@@ -3245,7 +3245,7 @@ try{const _t=localStorage.getItem('flashmind_theme')||'auto';if(_t!=='auto'){doc
 document.addEventListener('keydown',e=>{
   var vr=document.getElementById('viewReview');
   if(vr&&vr.classList.contains('active')){
-    if(e.code==='KeyP'&&e.shiftKey){e.preventDefault();if(_repeatActive){stopRepeatMode();}else{startRepeatMode();}return;}
+    if(e.code==='KeyO'&&e.shiftKey){e.preventDefault();if(_repeatActive){stopRepeatMode();}else{startRepeatMode();}return;}
     if((e.target.id==='typeAnswerInput'||e.target.id==='typeAnswerViInput')&&e.key==='Enter'){e.preventDefault();
       const bc=document.getElementById('btnCheckAnswer'),nw=document.getElementById('nextCardWrap');
       if(bc.style.display!=='none'){
