@@ -1501,7 +1501,8 @@ async function sendCardToTelegram(cardId){
     if(!adminKey)return;
   }
   try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId,botUrl,adminKey}));}catch(e){}
-  var card=db.cards[cardId];
+  var card=null;
+  Object.keys(db.decks).forEach(function(did){(db.decks[did].cards||[]).forEach(function(c){if(c.id===cardId)card=c;});});
   if(!card){toast('Card not found');return;}
   var text=(card.front||'').replace(/<[^>]*>/g,'').trim();
   if(!text){toast('Thẻ trống');return;}
