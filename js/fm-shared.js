@@ -1443,6 +1443,7 @@ function sleepChangeSpeed(delta){
 }
 
 function stopAllAudio(){
+  stopSpeakLoop();
   if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
@@ -2013,6 +2014,44 @@ function speakText(text){
     return;
   }
   speakFallback(text);
+}
+
+function speakTextWithCb(text,cb){
+  if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+  const btn=document.querySelector('.voice-play-btn');
+  if(btn)btn.classList.add('speaking');
+  const done=()=>{if(btn)btn.classList.remove('speaking');if(cb)cb();};
+  let provider=db.settings.voiceProvider||'edge';
+  let voiceId=db.settings.voiceId||'en-US-JennyNeural';
+  if(!['edge','google-translate','browser'].includes(provider))provider='edge';
+  if((db.settings.randomVoice!==false)&&provider==='edge'&&edgeVoicesCache&&edgeVoicesCache.length>1){
+    let rv;do{rv=edgeVoicesCache[Math.floor(Math.random()*edgeVoicesCache.length)];}while(rv.id===window._lastRandomVoice&&edgeVoicesCache.length>1);
+    voiceId=rv.id;window._lastRandomVoice=rv.id;
+  }
+  if(provider==='browser'){
+    if(!window.speechSynthesis||!text){done();return;}
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=db.settings.speechRate||1;u.volume=1;
+    const voices=speechSynthesis.getVoices();
+    const preferred=voices.find(v=>v.name.includes('Google US English'))||voices.find(v=>v.lang.startsWith('en'));
+    if(preferred)u.voice=preferred;
+    u.onend=done;u.onerror=done;
+    speechSynthesis.speak(u);return;
+  }
+  if(provider==='google-translate'){
+    try{const audio=googleTranslateTTS(text,voiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
+      let fell=false;const fb=()=>{if(fell)return;fell=true;done();};
+      audio.onended=done;audio.onerror=fb;audio.play().catch(fb);
+    }catch(e){done();}return;
+  }
+  if(provider==='edge'){
+    try{const audio=edgeTTS(text,voiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
+      let fell=false;const fb=()=>{if(fell)return;fell=true;done();};
+      audio.onended=done;audio.onerror=fb;audio.play().catch(fb);
+    }catch(e){done();}return;
+  }
+  done();
 }
 
 function speakTextAs(text,forceVoiceId){
@@ -2907,14 +2946,17 @@ function undoAnswer(){
 }
 
 var _repeatActive=false,_repeatCount=0,_repeatMax=30;
+var _speakLoopActive=false,_speakLoopTimer=null;
 function startRepeatMode(){
   _repeatActive=true;_repeatCount=0;
   var bar=document.getElementById('repeatModeBar');if(bar){bar.style.display='block';bar.querySelector('#repeatFlipBtn').style.display='none';}
   _updateRepeatCounter();
-  toast('🔁 Repeat mode ('+_repeatMax+'x) — Shift+O hoặc Esc để dừng');
+  toast('🔁 Repeat mode ('+_repeatMax+'x) — đọc liên tục. Shift+O / Esc để dừng');
+  startSpeakLoop();
 }
 function stopRepeatMode(){
   _repeatActive=false;_repeatCount=0;
+  stopSpeakLoop();
   var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';
   toast('Đã dừng repeat — chuyển card tiếp');
   reviewIndex++;
@@ -2929,6 +2971,35 @@ function _repeatNext(){
   _updateRepeatCounter();
   if(_repeatCount>=_repeatMax){_repeatActive=false;var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';toast('Đã lặp '+_repeatMax+' lần!');reviewIndex++;showCurrentCard();return;}
   showCurrentCard();
+  startSpeakLoop();
+}
+
+function startSpeakLoop(){
+  _speakLoopActive=true;
+  _doSpeakLoop();
+}
+function stopSpeakLoop(){
+  _speakLoopActive=false;
+  if(_speakLoopTimer){clearTimeout(_speakLoopTimer);_speakLoopTimer=null;}
+}
+function _doSpeakLoop(){
+  if(!_speakLoopActive)return;
+  var c=reviewQueue[reviewIndex];
+  if(!c){stopSpeakLoop();return;}
+  var text=(c.front||'').replace(/<[^>]*>/g,'');
+  if(!text){stopSpeakLoop();return;}
+  speakTextWithCb(text,function(){
+    if(!_speakLoopActive)return;
+    if(_repeatActive){
+      _repeatCount++;_updateRepeatCounter();
+      if(_repeatCount>=_repeatMax){
+        _repeatActive=false;_speakLoopActive=false;
+        var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';
+        toast('Đã lặp '+_repeatMax+' lần!');reviewIndex++;showCurrentCard();return;
+      }
+    }
+    _speakLoopTimer=setTimeout(_doSpeakLoop,800);
+  });
 }
 
 function updateReviewProgress(){
@@ -3246,7 +3317,7 @@ document.addEventListener('keydown',e=>{
   var vr=document.getElementById('viewReview');
   if(vr&&vr.classList.contains('active')){
     if(e.code==='KeyO'&&e.shiftKey){e.preventDefault();if(_repeatActive){stopRepeatMode();}else{startRepeatMode();}return;}
-    if(e.code==='KeyP'&&e.shiftKey){e.preventDefault();var _rc=reviewQueue[reviewIndex];if(_rc){stopAllAudio();speakText((_rc.front||'').replace(/<[^>]*>/g,''));}return;}
+    if(e.code==='KeyP'&&e.shiftKey){e.preventDefault();if(_speakLoopActive){stopAllAudio();toast('⏹ Dừng đọc');}else{var _rc=reviewQueue[reviewIndex];if(_rc){stopAllAudio();startSpeakLoop();}}return;}
     if(e.shiftKey&&(e.code==='KeyD'||e.code==='KeyT'||e.code==='KeyK')){e.preventDefault();var _tc=reviewQueue[reviewIndex];if(_tc){var _lv=e.code==='KeyD'?'easy':e.code==='KeyT'?'medium':'hard';setCardDifficulty(_tc.id,_lv);toast(_lv==='easy'?'Dễ ✅':_lv==='medium'?'Trung bình 🟡':'Khó 🔴');}return;}
     if((e.target.id==='typeAnswerInput'||e.target.id==='typeAnswerViInput')&&e.key==='Enter'){e.preventDefault();
       const bc=document.getElementById('btnCheckAnswer'),nw=document.getElementById('nextCardWrap');
