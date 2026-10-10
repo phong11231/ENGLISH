@@ -1458,11 +1458,16 @@ async function sendDeckRadioToTelegram(deckId){
     var text=(c.front||'').replace(/<[^>]*>/g,'').trim();
     if(!text)continue;
     var title=(i+1)+'. '+text.substring(0,60);
+    var vid=voiceId;
+    if((db.settings.randomVoice!==false)&&provider==='edge'&&edgeVoicesCache&&edgeVoicesCache.length>1){
+      var rv;do{rv=edgeVoicesCache[Math.floor(Math.random()*edgeVoicesCache.length)];}while(rv.id===window._lastRadioVoice&&edgeVoicesCache.length>1);
+      vid=rv.id;window._lastRadioVoice=rv.id;
+    }
     var audioUrl;
     if(provider==='google-translate'){
       audioUrl='https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q='+encodeURIComponent(text.substring(0,200));
     }else{
-      audioUrl=EDGE_TTS_API+'?text='+encodeURIComponent(text.substring(0,1000))+'&voice='+voiceId;
+      audioUrl=EDGE_TTS_API+'?text='+encodeURIComponent(text.substring(0,1000))+'&voice='+vid;
     }
     try{
       var resp=await fetch(audioUrl);
