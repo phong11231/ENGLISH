@@ -1432,9 +1432,18 @@ async function sendCardToTelegram(){
 }
 async function sendDeckRadioToTelegram(deckId){
   var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_tele'));}catch(e){}
-  if(!saved||!saved.chatId||!saved.adminKey){toast('Mở Sleep Listen > Telegram để cài Chat ID & Admin Key trước');return;}
-  var chatId=saved.chatId,adminKey=saved.adminKey;
-  var botUrl=saved.botUrl||'https://flashmind-tele-bot.yosua-4131.workers.dev';
+  var chatId=saved?.chatId||'';
+  var adminKey=saved?.adminKey||'';
+  var botUrl=saved?.botUrl||'https://flashmind-tele-bot.yosua-4131.workers.dev';
+  if(!chatId){
+    chatId=prompt('Nhập Telegram Chat ID (mở bot @FlashMindSleepBot bấm /start để lấy):');
+    if(!chatId)return;
+  }
+  if(!adminKey){
+    adminKey=prompt('Nhập Admin Key:');
+    if(!adminKey)return;
+  }
+  try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId,botUrl,adminKey}));}catch(e){}
   var deck=db.decks[deckId];
   if(!deck){toast('Deck not found');return;}
   var cards=getDeckCards(deckId);
