@@ -893,6 +893,7 @@ function renderCardBrowser(){
           <button class="card-edit-btn" onclick="openCardModal('${c.id}')" title="Edit">✏️</button>
           <button class="card-edit-btn" onclick="toggleSuspend('${c.id}')" title="${c.suspended?'Unsuspend':'Suspend'}">${c.suspended?'👁':'⏸'}</button>
           <button class="card-edit-btn" onclick="copyCardToDeck('${c.id}')" title="Copy to deck">📋</button>
+          <button class="card-edit-btn" onclick="sendCardToTelegram('${c.id}')" title="Gửi Telegram">📤</button>
           <button class="card-edit-btn" onclick="deleteCard('${c.id}')" title="Delete" style="color:var(--red)">🗑️</button>
         </td></tr>`;
     }).join('')}</tbody></table></div>`;
@@ -1484,6 +1485,54 @@ async function sendDeckRadioToTelegram(deckId){
     if(i<cards.length-1)await new Promise(r=>setTimeout(r,300));
   }
   toast('📻 Đã gửi '+sent+'/'+total+' tracks qua Telegram!');
+}
+
+async function sendCardToTelegram(cardId){
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_tele'));}catch(e){}
+  var chatId=saved?.chatId||'';
+  var adminKey=saved?.adminKey||'';
+  var botUrl=saved?.botUrl||'https://flashmind-tele-bot.yosua-4131.workers.dev';
+  if(!chatId){
+    chatId=prompt('Nhập Telegram Chat ID (mở bot @FlashMindSleepBot bấm /start để lấy):');
+    if(!chatId)return;
+  }
+  if(!adminKey){
+    adminKey=prompt('Nhập Admin Key:');
+    if(!adminKey)return;
+  }
+  try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId,botUrl,adminKey}));}catch(e){}
+  var card=db.cards[cardId];
+  if(!card){toast('Card not found');return;}
+  var text=(card.front||'').replace(/<[^>]*>/g,'').trim();
+  if(!text){toast('Thẻ trống');return;}
+  var voiceId=db.settings.voiceId||'en-US-JennyNeural';
+  var provider=db.settings.voiceProvider||'edge';
+  if(provider!=='edge'&&provider!=='google-translate'){toast('Chỉ hỗ trợ Edge/Google TTS');return;}
+  var vid=voiceId;
+  if((db.settings.randomVoice!==false)&&provider==='edge'&&edgeVoicesCache&&edgeVoicesCache.length>1){
+    var rv;do{rv=edgeVoicesCache[Math.floor(Math.random()*edgeVoicesCache.length)];}while(rv.id===window._lastRadioVoice&&edgeVoicesCache.length>1);
+    vid=rv.id;window._lastRadioVoice=rv.id;
+  }
+  var title=text.substring(0,60);
+  var audioUrl;
+  if(provider==='google-translate'){
+    audioUrl='https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q='+encodeURIComponent(text.substring(0,200));
+  }else{
+    audioUrl=EDGE_TTS_API+'?text='+encodeURIComponent(text.substring(0,1000))+'&voice='+vid;
+  }
+  toast('📤 Đang gửi thẻ...');
+  try{
+    var resp=await fetch(audioUrl);
+    if(!resp.ok){toast('Lỗi TTS');return;}
+    var buf=await resp.arrayBuffer();
+    var ct=resp.headers.get('content-type')||'audio/mp3';
+    var r=await fetch(botUrl+'/send-audio-file?chatId='+encodeURIComponent(chatId)+'&title='+encodeURIComponent(title),{
+      method:'POST',headers:{'X-Admin-Key':adminKey,'Content-Type':ct},body:buf
+    });
+    var d=await r.json();
+    if(d.ok)toast('✅ Đã gửi qua Telegram!');
+    else toast('Lỗi gửi Telegram');
+  }catch(e){console.error('Send card error:',e);toast('Lỗi: '+e.message);}
 }
 
 function applySleepSpeed(){
