@@ -491,6 +491,7 @@ function renderDecks(){
         <button class="deck-action-btn" onclick="openBrowser('${id}')" title="View cards">📋</button>
         <button class="deck-action-btn" onclick="openCustomStudyForDeck('${id}')" title="Custom study">🎯</button>
         <button class="deck-action-btn" onclick="startSleepListen('${id}',true)" title="Sleep Listen">🌙</button>
+        <button class="deck-action-btn" onclick="sendDeckRadioToTelegram('${id}')" title="Radio → Telegram">📻</button>
         <button class="deck-action-btn" onclick="openEditDeck('${id}')" title="Edit">✏️</button>
         <button class="deck-action-btn delete" onclick="deleteDeck('${id}')" title="Delete">🗑️</button>
       </div>
@@ -1429,6 +1430,48 @@ async function sendCardToTelegram(){
     }else{st.textContent='❌ Trim failed';}
   }catch(e){st.textContent='❌ Error: '+e.message;}
 }
+async function sendDeckRadioToTelegram(deckId){
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_tele'));}catch(e){}
+  if(!saved||!saved.chatId||!saved.adminKey){toast('Mở Sleep Listen > Telegram để cài Chat ID & Admin Key trước');return;}
+  var chatId=saved.chatId,adminKey=saved.adminKey;
+  var botUrl=saved.botUrl||'https://flashmind-tele-bot.yosua-4131.workers.dev';
+  var deck=db.decks[deckId];
+  if(!deck){toast('Deck not found');return;}
+  var cards=getDeckCards(deckId);
+  if(cards.length===0){toast('Deck trống');return;}
+  var voiceId=db.settings.voiceId||'en-US-JennyNeural';
+  var provider=db.settings.voiceProvider||'edge';
+  if(provider!=='edge'&&provider!=='google-translate'){toast('Radio chỉ hỗ trợ Edge/Google TTS');return;}
+  var total=cards.length,sent=0;
+  toast('📻 Generating radio '+total+' tracks...');
+  for(var i=0;i<cards.length;i++){
+    var c=cards[i];
+    var text=(c.front||'').replace(/<[^>]*>/g,'').trim();
+    if(!text)continue;
+    var title=(i+1)+'. '+text.substring(0,60);
+    var audioUrl;
+    if(provider==='google-translate'){
+      audioUrl='https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q='+encodeURIComponent(text.substring(0,200));
+    }else{
+      audioUrl=EDGE_TTS_API+'?text='+encodeURIComponent(text.substring(0,1000))+'&voice='+voiceId;
+    }
+    try{
+      var resp=await fetch(audioUrl);
+      if(!resp.ok)continue;
+      var buf=await resp.arrayBuffer();
+      var ct=resp.headers.get('content-type')||'audio/mp3';
+      var ext=ct.includes('wav')?'.wav':'.mp3';
+      var r=await fetch(botUrl+'/send-audio-file?chatId='+encodeURIComponent(chatId)+'&title='+encodeURIComponent(title),{
+        method:'POST',headers:{'X-Admin-Key':adminKey,'Content-Type':ct},body:buf
+      });
+      var d=await r.json();
+      if(d.ok)sent++;
+    }catch(e){console.error('Radio send error:',i,e);}
+    if(i<cards.length-1)await new Promise(r=>setTimeout(r,300));
+  }
+  toast('📻 Đã gửi '+sent+'/'+total+' tracks qua Telegram!');
+}
+
 function applySleepSpeed(){
   const driveVideo=document.getElementById('sleepDriveVideo');
   if(driveVideo){driveVideo.playbackRate=sleepSpeed;return;}
