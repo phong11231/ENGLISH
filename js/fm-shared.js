@@ -919,8 +919,9 @@ function updateSelectedCount(){
   if(n>0){
     bar.style.display='flex';
     bar.innerHTML='<span style="font-weight:700;font-size:14px">'+n+' cards selected</span>'+
-      '<button class="btn btn-primary btn-sm" onclick="reviewSelectedCards()">🔁 Loop selected</button>'+
+      '<button class="btn btn-primary btn-sm" onclick="reviewSelectedCards()">🔁 Loop</button>'+
       '<button class="btn btn-ghost btn-sm" onclick="reviewSelectedCards(\'reverse-vi\')">🇻🇳 Loop reverse</button>'+
+      '<button class="btn btn-ghost btn-sm" onclick="sendSelectedToTelegram()">📤 Telegram</button>'+
       '<button class="btn btn-ghost btn-sm" onclick="window._selectedCardIds.clear();renderCardBrowser()">✕ Clear</button>';
   }else{bar.style.display='none';}
 }
@@ -932,6 +933,48 @@ function reviewSelectedCards(displayOverride){
   var url=_basePath+currentDeckId+'/review?mode=all&loop=1&cards='+encodeURIComponent(ids);
   if(displayOverride)url+='&display='+displayOverride;
   location.href=url;
+}
+async function sendSelectedToTelegram(){
+  if(!window._selectedCardIds||window._selectedCardIds.size===0){toast('Chọn ít nhất 1 thẻ');return;}
+  var cards=getDeckCards(currentDeckId).filter(function(c){return window._selectedCardIds.has(c.id);});
+  if(cards.length===0){toast('Không tìm thấy thẻ');return;}
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_tele'));}catch(e){}
+  var chatId=saved?.chatId||'';
+  var adminKey=saved?.adminKey||'';
+  var botUrl=saved?.botUrl||'https://flashmind-tele-bot.yosua-4131.workers.dev';
+  if(!chatId){chatId=prompt('Nhập Telegram Chat ID:');if(!chatId)return;}
+  if(!adminKey){adminKey=prompt('Nhập Admin Key:');if(!adminKey)return;}
+  try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId,botUrl,adminKey}));}catch(e){}
+  var voiceId=db.settings.voiceId||'en-US-JennyNeural';
+  var provider=db.settings.voiceProvider||'edge';
+  if(provider!=='edge'&&provider!=='google-translate'){toast('Chỉ hỗ trợ Edge/Google TTS');return;}
+  var total=cards.length,sent=0;
+  toast('📤 Đang gửi '+total+' thẻ qua Telegram...');
+  for(var i=0;i<cards.length;i++){
+    var c=cards[i];
+    var text=(c.front||'').replace(/<[^>]*>/g,'').trim();
+    if(!text)continue;
+    var title=(i+1)+'. '+text.substring(0,60);
+    var vid=voiceId;
+    if((db.settings.randomVoice!==false)&&provider==='edge'&&edgeVoicesCache&&edgeVoicesCache.length>1){
+      var rv;do{rv=edgeVoicesCache[Math.floor(Math.random()*edgeVoicesCache.length)];}while(rv.id===window._lastRadioVoice&&edgeVoicesCache.length>1);
+      vid=rv.id;window._lastRadioVoice=rv.id;
+    }
+    var audioUrl;
+    if(provider==='google-translate'){audioUrl='https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q='+encodeURIComponent(text.substring(0,200));}
+    else{audioUrl=EDGE_TTS_API+'?text='+encodeURIComponent(text.substring(0,1000))+'&voice='+vid;}
+    try{
+      var resp=await fetch(audioUrl);if(!resp.ok)continue;
+      var buf=await resp.arrayBuffer();
+      var ct=resp.headers.get('content-type')||'audio/mp3';
+      var r=await fetch(botUrl+'/send-audio-file?chatId='+encodeURIComponent(chatId)+'&title='+encodeURIComponent(title),{
+        method:'POST',headers:{'X-Admin-Key':adminKey,'Content-Type':ct},body:buf
+      });
+      var d=await r.json();if(d.ok)sent++;
+    }catch(e){console.error('Send selected error:',i,e);}
+    if(i<cards.length-1)await new Promise(r=>setTimeout(r,300));
+  }
+  toast('📤 Đã gửi '+sent+'/'+total+' thẻ qua Telegram!');
 }
 
 function _quickSetDiff(cardId){
