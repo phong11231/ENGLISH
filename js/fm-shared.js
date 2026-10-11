@@ -3002,7 +3002,9 @@ function answerCard(quality){
   const realCard=deck.cards.find(c=>c.id===card.id);
   if(realCard){
     undoStack.push({cardId:card.id,prev:JSON.parse(JSON.stringify(realCard)),index:reviewIndex,prevStreak:streak,prevXp:sessionXp,prevCorrect:sessionCorrect});
+    var _savedDisplay=card.displayMode;
     fsrs(realCard,quality);Object.assign(card,realCard);
+    if(_savedDisplay)card.displayMode=_savedDisplay;
   }
   addReviewLog({date:Date.now(),deckId:currentDeckId,cardId:card.id,quality});
   saveCardOnly(currentDeckId,card.id);
