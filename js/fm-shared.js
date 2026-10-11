@@ -3056,7 +3056,7 @@ var _repeatActive=false,_repeatCount=0,_repeatMax=30;
 var _speakLoopActive=false,_speakLoopTimer=null;
 function startRepeatMode(){
   _repeatActive=true;_repeatCount=0;
-  var bar=document.getElementById('repeatModeBar');if(bar){bar.style.display='block';bar.querySelector('#repeatFlipBtn').style.display='none';}
+  var bar=document.getElementById('repeatModeBar');if(bar){bar.style.display='block';var rfb=bar.querySelector('#repeatFlipBtn');if(rfb)rfb.style.display='none';}
   _updateRepeatCounter();
   toast('🔁 Repeat mode ('+_repeatMax+'x) — đọc liên tục. Shift+O / Esc để dừng');
   startSpeakLoop();
