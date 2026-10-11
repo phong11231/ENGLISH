@@ -164,7 +164,7 @@ async function _loadUserFromR2(){
         if(sp.defaultDisplayMode)deck.defaultDisplayMode=sp.defaultDisplayMode;
         if(sp.defaultReviewMode)deck.defaultReviewMode=sp.defaultReviewMode;
         var cardMap={};(deck.cards||[]).forEach(function(c){cardMap[c.id]=c;});
-        for(var cid in (sp.cards||{})){var pc=sp.cards[cid];var ec=cardMap[cid];if(ec){Object.assign(ec,pc);}}
+        for(var cid in (sp.cards||{})){var pc=sp.cards[cid];var ec=cardMap[cid];if(ec){var _ld=ec.difficultyLevel,_lm=ec.displayMode,_lr=ec.reviewMode,_le=ec._edited,_lf=ec.front,_lfs=ec.fronts,_lb=ec.back,_lbv=ec.backVi;Object.assign(ec,pc);if(_ld)ec.difficultyLevel=_ld;if(_lm)ec.displayMode=_lm;if(_lr)ec.reviewMode=_lr;if(_le){ec._edited=true;ec.front=_lf;ec.fronts=_lfs;ec.back=_lb;ec.backVi=_lbv;}}}
         if(sp.userCards&&sp.userCards.length>0){
           var existIds=new Set((deck.cards||[]).map(function(c){return c.id;}));
           sp.userCards.forEach(function(uc){uc._userAdded=true;if(!existIds.has(uc.id)){deck.cards.push(uc);}});
