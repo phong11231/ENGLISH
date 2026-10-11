@@ -873,7 +873,7 @@ function renderCardBrowser(){
     return;
   }
   wrap.innerHTML=`<div style="overflow-x:auto"><table class="card-table">
-    <thead><tr><th>Front</th><th>Back</th><th>Mode</th><th>Diff</th><th>Tags</th><th>Status</th><th>Next</th><th></th></tr></thead>
+    <thead><tr><th style="width:30px"><input type="checkbox" id="selectAllCards" onchange="toggleSelectAllCards(this.checked)" title="Select all"></th><th>Front</th><th>Back</th><th>Mode</th><th>Diff</th><th>Tags</th><th>Status</th><th>Next</th><th></th></tr></thead>
     <tbody>${filtered.map(c=>{
       const sc=c.suspended?'status-suspended':c.status==='new'?'status-new':c.status==='learning'?'status-learning':'status-review';
       const st=c.suspended?'Suspended':c.status==='new'?'New':c.status==='learning'?'Learning':'Review';
@@ -883,7 +883,8 @@ function renderCardBrowser(){
       const modeLabel=c.reviewMode==='type'?'⌨️':'🔄';const dispLabel=c.displayMode==='voice'?'🔊':c.displayMode==='voice-repeat'?'🔁':c.displayMode==='voice-translate'?'🌐':c.displayMode==='reverse-vi'?'🇻🇳':c.displayMode==='quiz'?'🎯':c.displayMode==='quiz-text'?'📋':'';
       const displayFront=c.front;
       const diffLbl=c.difficultyLevel==='easy'?'🟢':c.difficultyLevel==='medium'?'🟡':c.difficultyLevel==='hard'?'🔴':'—';
-      return`<tr><td class="card-front-col">${esc(displayFront)}</td><td class="card-back-col">${esc(c.back)}</td>
+      const checked=window._selectedCardIds&&window._selectedCardIds.has(c.id)?'checked':'';
+      return`<tr><td><input type="checkbox" class="card-select-cb" data-card-id="${c.id}" ${checked} onchange="updateSelectedCount()"></td><td class="card-front-col">${esc(displayFront)}</td><td class="card-back-col">${esc(c.back)}</td>
         <td style="text-align:center;font-size:16px" title="${c.reviewMode==='type'?'Type answer':'Flip card'}${c.displayMode==='voice'?' · Listen & Answer':c.displayMode==='voice-repeat'?' · Listen & Repeat':c.displayMode==='voice-translate'?' · Listen & Translate':c.displayMode==='reverse-vi'?' · Reverse VN':c.displayMode==='quiz'?' · Quiz (Listen)':c.displayMode==='quiz-text'?' · Quiz (Read)':''}">${modeLabel}${dispLabel}</td>
         <td style="text-align:center;cursor:pointer" onclick="event.stopPropagation();_quickSetDiff('${c.id}')" title="Click to set difficulty">${diffLbl}</td>
         <td><div class="tag-list">${tagHTML}${leechHTML}</div></td>
@@ -900,6 +901,38 @@ function renderCardBrowser(){
 }
 
 function filterCards(){renderCardBrowser();}
+
+if(!window._selectedCardIds)window._selectedCardIds=new Set();
+function toggleSelectAllCards(checked){
+  document.querySelectorAll('.card-select-cb').forEach(function(cb){cb.checked=checked;if(checked)window._selectedCardIds.add(cb.dataset.cardId);else window._selectedCardIds.delete(cb.dataset.cardId);});
+  updateSelectedCount();
+}
+function updateSelectedCount(){
+  document.querySelectorAll('.card-select-cb').forEach(function(cb){if(cb.checked)window._selectedCardIds.add(cb.dataset.cardId);else window._selectedCardIds.delete(cb.dataset.cardId);});
+  var bar=document.getElementById('selectedBar');
+  if(!bar){
+    bar=document.createElement('div');bar.id='selectedBar';
+    bar.style.cssText='display:none;align-items:center;gap:8px;padding:8px 12px;background:var(--primary-bg,rgba(99,102,241,.1));border:1px solid var(--primary,#6366f1);border-radius:10px;margin-bottom:8px;flex-wrap:wrap';
+    var wrap=document.getElementById('cardTableWrap');if(wrap)wrap.parentElement.insertBefore(bar,wrap);
+  }
+  var n=window._selectedCardIds.size;
+  if(n>0){
+    bar.style.display='flex';
+    bar.innerHTML='<span style="font-weight:700;font-size:14px">'+n+' cards selected</span>'+
+      '<button class="btn btn-primary btn-sm" onclick="reviewSelectedCards()">🔁 Loop selected</button>'+
+      '<button class="btn btn-ghost btn-sm" onclick="reviewSelectedCards(\'reverse-vi\')">🇻🇳 Loop reverse</button>'+
+      '<button class="btn btn-ghost btn-sm" onclick="window._selectedCardIds.clear();renderCardBrowser()">✕ Clear</button>';
+  }else{bar.style.display='none';}
+}
+function reviewSelectedCards(displayOverride){
+  if(!window._selectedCardIds||window._selectedCardIds.size===0){toast('Chọn ít nhất 1 thẻ');return;}
+  var cards=getDeckCards(currentDeckId).filter(function(c){return window._selectedCardIds.has(c.id);});
+  if(cards.length===0){toast('Không tìm thấy thẻ');return;}
+  var ids=Array.from(window._selectedCardIds).join(',');
+  var url=_basePath+currentDeckId+'/review?mode=all&loop=1&cards='+encodeURIComponent(ids);
+  if(displayOverride)url+='&display='+displayOverride;
+  location.href=url;
+}
 
 function _quickSetDiff(cardId){
   var deck=db.decks[currentDeckId];if(!deck)return;
@@ -1744,6 +1777,13 @@ function previewYtClip(){
 function showCurrentCard(){
   stopAllAudio();cleanupDialogueLayout();
   if(reviewIndex>=reviewQueue.length){
+    if(window._loopMode&&window._loopCards&&window._loopCards.length>0){
+      reviewQueue=window._loopCards.map(function(c){return Object.assign({},c);});
+      for(var _li=reviewQueue.length-1;_li>0;_li--){var _lj=Math.floor(Math.random()*(_li+1));var _lt=reviewQueue[_li];reviewQueue[_li]=reviewQueue[_lj];reviewQueue[_lj]=_lt;}
+      reviewIndex=0;
+      toast('🔁 Loop lại '+reviewQueue.length+' thẻ!');
+      showCurrentCard();return;
+    }
     document.getElementById('flashcard').style.display='none';
     document.getElementById('reviewActions').style.display='none';
     document.getElementById('typeAnswerWrap').style.display='none';
