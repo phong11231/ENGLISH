@@ -2264,17 +2264,18 @@ function speakTextWithCb(text,cb){
     u.onend=done;u.onerror=done;
     speechSynthesis.speak(u);return;
   }
+  var _fbCb=function(){if(!window.speechSynthesis||!text){done();return;}speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=db.settings.speechRate||1;u.volume=1;var voices=speechSynthesis.getVoices();var preferred=voices.find(function(v){return v.name.includes('Google US English');})||voices.find(function(v){return v.lang.startsWith('en');});if(preferred)u.voice=preferred;u.onend=done;u.onerror=done;speechSynthesis.speak(u);};
   if(provider==='google-translate'){
     try{const audio=googleTranslateTTS(text,voiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
-      let fell=false;const fb=()=>{if(fell)return;fell=true;done();};
+      let fell=false;const fb=()=>{if(fell)return;fell=true;_fbCb();};
       audio.onended=done;audio.onerror=fb;audio.play().catch(fb);
-    }catch(e){done();}return;
+    }catch(e){_fbCb();}return;
   }
   if(provider==='edge'){
     try{const audio=edgeTTS(text,voiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
-      let fell=false;const fb=()=>{if(fell)return;fell=true;done();};
+      let fell=false;const fb=()=>{if(fell)return;fell=true;_fbCb();};
       audio.onended=done;audio.onerror=fb;audio.play().catch(fb);
-    }catch(e){done();}return;
+    }catch(e){_fbCb();}return;
   }
   done();
 }
