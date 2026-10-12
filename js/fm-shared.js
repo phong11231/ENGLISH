@@ -2114,7 +2114,7 @@ function showCurrentCard(){
 }
 
 let currentAudio=null;
-const EDGE_TTS_API='https://edge-tts-api-gold.vercel.app/api/tts';
+const EDGE_TTS_API='https://edge-tts.yosua-4131.workers.dev/tts';
 const LOCALE_FLAGS={'en-US':'🇺🇸 US','en-GB':'🇬🇧 UK','en-AU':'🇦🇺 Australia','en-CA':'🇨🇦 Canada','en-IN':'🇮🇳 India','en-IE':'🇮🇪 Ireland','en-NZ':'🇳🇿 New Zealand','en-SG':'🇸🇬 Singapore','en-ZA':'🇿🇦 South Africa','en-PH':'🇵🇭 Philippines','en-HK':'🇭🇰 Hong Kong','en-KE':'🇰🇪 Kenya','en-NG':'🇳🇬 Nigeria','en-TZ':'🇹🇿 Tanzania'};
 let edgeVoicesCache=null;
 const VOICE_OPTIONS={
@@ -2130,7 +2130,7 @@ const VOICE_OPTIONS={
 async function loadEdgeVoices(){
   if(edgeVoicesCache)return edgeVoicesCache;
   try{
-    const r=await fetch('https://edge-tts-api-gold.vercel.app/api/voices?lang=en');
+    const r=await fetch('https://edge-tts.yosua-4131.workers.dev/voices?lang=en');
     const voices=await r.json();
     edgeVoicesCache=voices.filter(v=>!v.id.includes('Multilingual')).map(v=>{
       const name=v.id.split('-').pop().replace('Neural','');
@@ -2176,34 +2176,12 @@ function updateVoiceList(){
 
 async function edgeTTS(text,voiceId){
   var voice=voiceId||'en-US-JennyNeural';
-  if(typeof EdgeTTSModule!=='undefined'||typeof EdgeTTS!=='undefined'){
-    var Cls=typeof EdgeTTSModule!=='undefined'?EdgeTTSModule.EdgeTTS:(typeof EdgeTTS==='function'?EdgeTTS:null);
-    if(Cls){
-      var tts=new Cls();
-      await tts.synthesize(text.substring(0,1000),voice);
-      var data=tts.getAudioData();
-      var blob=new Blob([data],{type:'audio/mpeg'});
-      var url=URL.createObjectURL(blob);
-      var audio=new Audio(url);
-      audio._blobUrl=url;
-      audio.onended=function(){URL.revokeObjectURL(url);};
-      return audio;
-    }
-  }
   var encoded=encodeURIComponent(text.substring(0,1000));
   var apiUrl=EDGE_TTS_API+'?text='+encoded+'&voice='+voice;
   return new Audio(apiUrl);
 }
 async function edgeTTSBuffer(text,voiceId){
   var voice=voiceId||'en-US-JennyNeural';
-  if(typeof EdgeTTSModule!=='undefined'||typeof EdgeTTS!=='undefined'){
-    var Cls=typeof EdgeTTSModule!=='undefined'?EdgeTTSModule.EdgeTTS:(typeof EdgeTTS==='function'?EdgeTTS:null);
-    if(Cls){
-      var tts=new Cls();
-      await tts.synthesize(text.substring(0,1000),voice);
-      return tts.getAudioData().buffer;
-    }
-  }
   var encoded=encodeURIComponent(text.substring(0,1000));
   var r=await fetch(EDGE_TTS_API+'?text='+encoded+'&voice='+voice);
   if(!r.ok)throw new Error('TTS fetch failed');
