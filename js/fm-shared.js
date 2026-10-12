@@ -3286,7 +3286,11 @@ function openSettings(){
   vpSel.value=validProviders.includes(savedProvider)?savedProvider:'edge';
   updateVoiceList();
   if(db.settings.voiceId)document.getElementById('voiceIdSelect').value=db.settings.voiceId;
-  document.getElementById('randomVoiceToggle').checked=db.settings.randomVoice!==false;
+  var _rvt=document.getElementById('randomVoiceToggle');
+  _rvt.checked=db.settings.randomVoice!==false;
+  var _rvl=document.getElementById('randomVoiceLabel');
+  if(_rvl)_rvl.textContent=_rvt.checked?'Random voice each card (ON)':'Random voice each card (OFF)';
+  _rvt.onchange=function(){if(_rvl)_rvl.textContent=_rvt.checked?'Random voice each card (ON)':'Random voice each card (OFF)';};
   document.getElementById('voiceTestStatus').textContent='';
   if(isAdmin){document.getElementById('aiKeyGroup').style.display='block';fetchGeminiConfig().then(function(k){document.getElementById('geminiKeyInput').value=k;});}
   else{document.getElementById('aiKeyGroup').style.display='none';}
