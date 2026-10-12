@@ -3288,9 +3288,17 @@ function openSettings(){
   if(db.settings.voiceId)document.getElementById('voiceIdSelect').value=db.settings.voiceId;
   var _rvt=document.getElementById('randomVoiceToggle');
   _rvt.checked=db.settings.randomVoice!==false;
-  var _rvl=document.getElementById('randomVoiceLabel');
-  if(_rvl)_rvl.textContent=_rvt.checked?'Random voice each card (ON)':'Random voice each card (OFF)';
-  _rvt.onchange=function(){if(_rvl)_rvl.textContent=_rvt.checked?'Random voice each card (ON)':'Random voice each card (OFF)';};
+  function _updateRvToggle(){
+    var on=_rvt.checked;
+    var track=document.getElementById('randomVoiceTrack');
+    var knob=document.getElementById('randomVoiceKnob');
+    var lbl=document.getElementById('randomVoiceLabel');
+    if(track)track.style.background=on?'var(--primary,#16a34a)':'#ccc';
+    if(knob)knob.style.left=on?'23px':'3px';
+    if(lbl)lbl.textContent=on?'Random voice (ON)':'Random voice (OFF)';
+  }
+  _updateRvToggle();
+  _rvt.onchange=_updateRvToggle;
   document.getElementById('voiceTestStatus').textContent='';
   if(isAdmin){document.getElementById('aiKeyGroup').style.display='block';fetchGeminiConfig().then(function(k){document.getElementById('geminiKeyInput').value=k;});}
   else{document.getElementById('aiKeyGroup').style.display='none';}

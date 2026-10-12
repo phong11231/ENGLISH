@@ -114,18 +114,13 @@
       <div class="form-group"><label>Daily goal (cards)</label><input type="number" id="dailyGoalInput" value="20" min="1" max="500"></div>
       <div class="form-group"><label>Leech threshold (fails)</label><input type="number" id="leechThreshold" value="8" min="3" max="50"></div>
       <div class="form-group"><label>AI speech rate: <span id="speechRateLabel">1x</span></label><input type="range" id="speechRateInput" min="0.5" max="2" step="0.1" value="1" oninput="document.getElementById('speechRateLabel').textContent=this.value+'x'" style="width:100%"></div>
-      <div class="form-group" style="display:flex;align-items:center;gap:12px">
-        <label for="randomVoiceToggle" style="margin:0;cursor:pointer;position:relative;width:48px;height:26px;flex-shrink:0">
-          <input type="checkbox" id="randomVoiceToggle" style="opacity:0;width:0;height:0;position:absolute">
-          <span style="position:absolute;inset:0;background:#ccc;border-radius:26px;transition:.3s"></span>
-          <span style="position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span>
-        </label>
-        <label for="randomVoiceToggle" style="margin:0;cursor:pointer;font-size:14px" id="randomVoiceLabel">Random voice each card</label>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="var c=document.getElementById('randomVoiceToggle');c.checked=!c.checked;c.dispatchEvent(new Event('change'));">
+        <div id="randomVoiceTrack" style="width:44px;height:24px;border-radius:12px;background:#ccc;position:relative;flex-shrink:0;transition:background .2s">
+          <div id="randomVoiceKnob" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+        </div>
+        <input type="checkbox" id="randomVoiceToggle" style="display:none">
+        <span id="randomVoiceLabel" style="font-size:14px;user-select:none">Random voice each card</span>
       </div>
-      <style>
-        #randomVoiceToggle:checked+span{background:var(--primary,#16a34a)}
-        #randomVoiceToggle:checked~span:last-child{left:25px}
-      </style>
       <div class="form-group"><label>AI Voice</label>
         <select id="voiceProviderSelect" onchange="updateVoiceList()" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--ink);margin-bottom:8px">
           <option value="edge">🎙️ Edge TTS — Natural voice, fast (best)</option>
