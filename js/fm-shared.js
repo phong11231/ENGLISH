@@ -2449,6 +2449,7 @@ function flipCard(){
   if(reviewMode==='type')return;
   var curCard=reviewQueue[reviewIndex];
   if(curCard&&(curCard.displayMode==='quiz'||curCard.displayMode==='quiz-text')&&(curCard.fronts&&curCard.fronts.length>1))return;
+  stopSpeakLoop();
   if(currentAudio){currentAudio.onended=null;currentAudio.onerror=null;currentAudio.pause();currentAudio.src='';currentAudio=null;}
   if('speechSynthesis' in window)speechSynthesis.cancel();
   if(window._dialogueTimer){clearTimeout(window._dialogueTimer);window._dialogueTimer=null;}
@@ -2740,7 +2741,7 @@ function diffWords(typed,answer){
   return html;
 }
 function checkTypedAnswer(){
-  _killTypeMic();
+  _killTypeMic();stopSpeakLoop();
   const card=reviewQueue[reviewIndex];const typed=document.getElementById('typeAnswerInput').value;
   const correctEn=normalize(card.back)===normalize(typed);
   const input=document.getElementById('typeAnswerInput'),result=document.getElementById('typeAnswerResult');
