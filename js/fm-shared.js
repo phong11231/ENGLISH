@@ -1004,7 +1004,7 @@ async function sendSelectedToTelegram(){
       });
       var d=await r.json();if(d.ok)sent++;
     }catch(e){console.error('Send selected error:',i,e);}
-    if(i<cards.length-1)await new Promise(r=>setTimeout(r,300));
+    if(i<cards.length-1)await new Promise(r=>setTimeout(r,500));
   }
   toast('📤 Đã gửi '+sent+'/'+total+' thẻ qua Telegram!');
 }
@@ -1583,7 +1583,7 @@ async function sendDeckRadioToTelegram(deckId){
       var d=await r.json();
       if(d.ok)sent++;
     }catch(e){console.error('Radio send error:',i,e);}
-    if(i<cards.length-1)await new Promise(r=>setTimeout(r,300));
+    if(i<cards.length-1)await new Promise(r=>setTimeout(r,500));
   }
   toast('📻 Đã gửi '+sent+'/'+total+' tracks qua Telegram!');
 }
@@ -2183,9 +2183,18 @@ async function edgeTTS(text,voiceId){
 async function edgeTTSBuffer(text,voiceId){
   var voice=voiceId||'en-US-JennyNeural';
   var encoded=encodeURIComponent(text.substring(0,1000));
-  var r=await fetch(EDGE_TTS_API+'?text='+encoded+'&voice='+voice);
-  if(!r.ok)throw new Error('TTS fetch failed');
-  return await r.arrayBuffer();
+  var apiUrl=EDGE_TTS_API+'?text='+encoded+'&voice='+voice;
+  for(var attempt=0;attempt<3;attempt++){
+    try{
+      var r=await fetch(apiUrl);
+      if(r.ok)return await r.arrayBuffer();
+      if(r.status>=500&&attempt<2){await new Promise(function(res){setTimeout(res,(attempt+1)*800);});continue;}
+      throw new Error('TTS fetch failed: '+r.status);
+    }catch(e){
+      if(attempt>=2)throw e;
+      await new Promise(function(res){setTimeout(res,(attempt+1)*800);});
+    }
+  }
 }
 
 function googleTranslateTTS(text,lang){
@@ -3187,7 +3196,7 @@ function _updateRepeatCounter(){
 function _repeatNext(){
   _repeatCount++;
   _updateRepeatCounter();
-  if(_repeatCount>=_repeatMax){_repeatActive=false;var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';toast('Đã lặp '+_repeatMax+' lần!');reviewIndex++;showCurrentCard();return;}
+  if(_repeatCount>=_repeatMax){_repeatActive=false;stopSpeakLoop();var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';toast('Đã ôn '+_repeatMax+' lần!');reviewIndex++;showCurrentCard();return;}
   showCurrentCard();
   startSpeakLoop();
 }
@@ -3208,14 +3217,6 @@ function _doSpeakLoop(){
   if(!text){stopSpeakLoop();return;}
   speakTextWithCb(text,function(){
     if(!_speakLoopActive)return;
-    if(_repeatActive){
-      _repeatCount++;_updateRepeatCounter();
-      if(_repeatCount>=_repeatMax){
-        _repeatActive=false;_speakLoopActive=false;
-        var bar=document.getElementById('repeatModeBar');if(bar)bar.style.display='none';
-        toast('Đã lặp '+_repeatMax+' lần!');reviewIndex++;showCurrentCard();return;
-      }
-    }
     _speakLoopTimer=setTimeout(_doSpeakLoop,800);
   });
 }
