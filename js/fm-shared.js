@@ -2713,7 +2713,7 @@ function showDialogueAnswer(){
 }
 
 function normalize(s){
-  s=s.trim().toLowerCase().replace(/[.,!?;:'"()\-]/g,'').replace(/\s+/g,' ');
+  s=s.trim().toLowerCase().replace(/[.,!?;:'"()‘’“”\-]/g,'').replace(/\s+/g,' ');
   s=s.replace(/\bdont\b/g,"do not").replace(/\bdoesnt\b/g,"does not").replace(/\bdidnt\b/g,"did not");
   s=s.replace(/\bwont\b/g,"will not").replace(/\bcant\b/g,"cannot").replace(/\bcannot\b/g,"can not");
   s=s.replace(/\bwouldnt\b/g,"would not").replace(/\bcouldnt\b/g,"could not").replace(/\bshouldnt\b/g,"should not");
@@ -2722,7 +2722,7 @@ function normalize(s){
   s=s.replace(/\bim\b/g,"i am").replace(/\byoure\b/g,"you are").replace(/\bhes\b/g,"he is").replace(/\bshes\b/g,"she is").replace(/\bwere\b/g,"we are").replace(/\btheyre\b/g,"they are");
   s=s.replace(/\bive\b/g,"i have").replace(/\byouve\b/g,"you have").replace(/\bweve\b/g,"we have").replace(/\btheyve\b/g,"they have");
   s=s.replace(/\bill\b/g,"i will").replace(/\byoull\b/g,"you will").replace(/\bhell\b/g,"he will").replace(/\bshell\b/g,"she will").replace(/\bwell\b/g,"we will").replace(/\btheyll\b/g,"they will");
-  s=s.replace(/\blets\b/g,"let us").replace(/\bthats\b/g,"that is").replace(/\bwhats\b/g,"what is").replace(/\bwhos\b/g,"who is");
+  s=s.replace(/\blets\b/g,"let us").replace(/\bthats\b/g,"that is").replace(/\bwhats\b/g,"what is").replace(/\bwhos\b/g,"who is").replace(/\btheres\b/g,"there is").replace(/\bheres\b/g,"here is").replace(/\bits\b/g,"it is");
   return s;
 }
 
