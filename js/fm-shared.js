@@ -2185,7 +2185,15 @@ async function edgeTTS(text,voiceId){
     var buf=await _edgeTTSClientWS(text,voiceId);
     var blob=new Blob([buf],{type:'audio/mpeg'});
     return new Audio(URL.createObjectURL(blob));
-  }catch(e){console.warn('Client WS edgeTTS failed:',e.message);throw e;}
+  }catch(e){console.warn('Client WS edgeTTS failed, trying CF worker:',e.message);}
+  var voice=voiceId||'en-US-JennyNeural';
+  var encoded=encodeURIComponent(text.substring(0,1000));
+  var apiUrl=EDGE_TTS_API+'?text='+encoded+'&voice='+voice;
+  var r=await fetch(apiUrl);
+  if(!r.ok)throw new Error('CF worker TTS failed: '+r.status);
+  var buf=await r.arrayBuffer();
+  var blob=new Blob([buf],{type:'audio/mpeg'});
+  return new Audio(URL.createObjectURL(blob));
 }
 async function _edgeTTSClientWS(text,voiceId){
   var _TK='6A5AA1D4EAFF4E9FB37E23D68491D6F4';
