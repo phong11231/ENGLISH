@@ -2396,11 +2396,14 @@ function testVoice(){
       if(currentAudio)currentAudio.pause();
       currentAudio=audio;audio.playbackRate=parseFloat(document.getElementById('speechRateInput').value)||1;
       audio.onended=()=>{status.textContent='✅ Done';};
-      audio.onerror=()=>{status.textContent='❌ Error — try Google Translate';btn.disabled=false;btn.textContent='▶ Preview';};
+      audio.onerror=()=>{status.textContent='🔊 Browser voice...';speakFallback(text,()=>{status.textContent='✅ Done';});};
       status.textContent='🔊 Playing...';
-      audio.play().catch(()=>{status.textContent='❌ Playback error';btn.disabled=false;btn.textContent='▶ Preview';});
+      audio.play().catch(()=>{status.textContent='🔊 Browser voice...';speakFallback(text,()=>{status.textContent='✅ Done';});});
       btn.disabled=false;btn.textContent='▶ Preview';
-    }).catch(function(){status.textContent='❌ Error';btn.disabled=false;btn.textContent='▶ Preview';});
+    }).catch(function(){
+      status.textContent='🔊 Browser voice...';btn.disabled=false;btn.textContent='▶ Preview';
+      speakFallback(text,()=>{status.textContent='✅ Done';});
+    });
     return;
   }
   status.textContent='❌ Provider not supported';btn.disabled=false;btn.textContent='▶ Preview';
