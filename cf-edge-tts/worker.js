@@ -13,10 +13,6 @@ const cors = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-function uuid() {
-  return 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.replace(/x/g, () => (Math.random() * 16 | 0).toString(16));
-}
-function rfc1123() { return new Date().toUTCString(); }
 function escXml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -44,12 +40,12 @@ function voiceToLang(voice) {
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
     if (url.pathname === '/voices') return handleVoices(url);
-    if (url.pathname === '/tts') return handleTTS(url);
-    return new Response('Edge TTS Worker\n/tts?text=hello&voice=en-US-JennyNeural\n/voices?lang=en', {
+    if (url.pathname === '/tts') return handleTTS(url, env);
+    return new Response('Edge TTS Worker\n/tts?text=hello&voice=en-IN-NeerjaNeural\n/voices?lang=en', {
       headers: { ...cors, 'Content-Type': 'text/plain' }
     });
   }
@@ -96,7 +92,7 @@ async function handleVoices(url) {
 }
 
 // --- tts ---
-async function handleTTS(url) {
+async function handleTTS(url, env) {
   const text = url.searchParams.get('text');
   const voice = url.searchParams.get('voice') || 'en-US-JennyNeural';
   const rate = url.searchParams.get('rate') || '+0%';
@@ -106,7 +102,17 @@ async function handleTTS(url) {
 
   const errors = [];
 
-  // 1) Google Translate TTS (simple HTTP GET, reliable)
+  // 1) Azure Speech Services REST API (same voices as Edge TTS, never blocked)
+  if (env.AZURE_KEY && env.AZURE_REGION) {
+    try {
+      const result = await azureTTS(text, voice, rate, pitch, env.AZURE_KEY, env.AZURE_REGION);
+      if (result) return result;
+    } catch (e) {
+      errors.push('azure: ' + e.message);
+    }
+  }
+
+  // 2) Google Translate TTS (fallback, different voices)
   try {
     const lang = voiceToLang(voice);
     const chunks = splitText(text.substring(0, 1000));
@@ -143,7 +149,7 @@ async function handleTTS(url) {
     errors.push('google: ' + e.message);
   }
 
-  // 2) Edge WebSocket (fallback)
+  // 3) Edge WebSocket (last resort, currently blocked from cloud IPs)
   const gec = await secMsGec();
   const connId = uuid();
   for (const ep of [
@@ -164,6 +170,35 @@ async function handleTTS(url) {
   return new Response('All endpoints failed: ' + errors.join(' | '), { status: 502, headers: cors });
 }
 
+// --- Azure Speech REST API ---
+async function azureTTS(text, voice, rate, pitch, key, region) {
+  const ssml = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">' +
+    '<voice name="' + voice + '">' +
+    '<prosody pitch="' + pitch + '" rate="' + rate + '" volume="+0%">' +
+    escXml(text.substring(0, 2000)) +
+    '</prosody></voice></speak>';
+
+  const r = await fetch('https://' + region + '.tts.speech.microsoft.com/cognitiveservices/v1', {
+    method: 'POST',
+    headers: {
+      'Ocp-Apim-Subscription-Key': key,
+      'Content-Type': 'application/ssml+xml',
+      'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+      'User-Agent': 'EdgeTTSWorker',
+    },
+    body: ssml,
+  });
+
+  if (!r.ok) throw new Error(r.status + ' ' + r.statusText);
+
+  const buf = await r.arrayBuffer();
+  if (buf.byteLength < 50) throw new Error('empty audio');
+
+  return new Response(buf, {
+    headers: { ...cors, 'Content-Type': 'audio/mpeg', 'Cache-Control': 'public, max-age=86400' }
+  });
+}
+
 function splitText(text) {
   if (text.length <= 200) return [text];
   const parts = [];
@@ -179,7 +214,12 @@ function splitText(text) {
   return parts;
 }
 
-// --- WebSocket TTS ---
+function uuid() {
+  return 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.replace(/x/g, () => (Math.random() * 16 | 0).toString(16));
+}
+function rfc1123() { return new Date().toUTCString(); }
+
+// --- WebSocket TTS (fallback) ---
 async function tryWebSocket(wsUrl, text, voice, rate, pitch, connId) {
   const wsResp = await fetch(wsUrl, {
     headers: {
