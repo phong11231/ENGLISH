@@ -2181,12 +2181,59 @@ function updateVoiceList(){
 }
 
 async function edgeTTS(text,voiceId){
+  try{
+    var buf=await _edgeTTSClientWS(text,voiceId);
+    var blob=new Blob([buf],{type:'audio/mpeg'});
+    return new Audio(URL.createObjectURL(blob));
+  }catch(e){console.warn('Client WS edgeTTS failed:',e.message);}
   var voice=voiceId||'en-US-JennyNeural';
   var encoded=encodeURIComponent(text.substring(0,1000));
   var apiUrl=EDGE_TTS_API+'?text='+encoded+'&voice='+voice;
   return new Audio(apiUrl);
 }
+async function _edgeTTSClientWS(text,voiceId){
+  var _TK='6A5AA1D4EAFF4E9FB37E23D68491D6F4';
+  var _CV='131.0.2903.86';
+  var epoch=BigInt(Math.floor(Date.now()/1000))+11644473600n;
+  var rounded=(epoch-epoch%300n)*10000000n;
+  var data=new TextEncoder().encode(rounded.toString()+_TK);
+  var hash=await crypto.subtle.digest('SHA-256',data);
+  var gec=Array.from(new Uint8Array(hash)).map(function(b){return b.toString(16).padStart(2,'0');}).join('').toUpperCase();
+  var connId=(crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16);})).replace(/-/g,'');
+  var voice=voiceId||'en-US-JennyNeural';
+  var wsUrl='wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken='+_TK+'&Sec-MS-GEC='+gec+'&Sec-MS-GEC-Version=1-'+_CV+'&ConnectionId='+connId;
+  return new Promise(function(resolve,reject){
+    var ws;try{ws=new WebSocket(wsUrl);}catch(e){reject(e);return;}
+    ws.binaryType='arraybuffer';
+    var chunks=[];var done=false;var timer;
+    function finish(){if(done)return;done=true;try{ws.close();}catch(e){}
+      if(chunks.length===0){reject(new Error('no audio'));return;}
+      var len=0;for(var i=0;i<chunks.length;i++)len+=chunks[i].length;
+      var merged=new Uint8Array(len);var off=0;
+      for(var i=0;i<chunks.length;i++){merged.set(chunks[i],off);off+=chunks[i].length;}
+      resolve(merged.buffer);
+    }
+    ws.onopen=function(){
+      ws.send('X-Timestamp:'+new Date().toUTCString()+'\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":false},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}');
+      var esc=text.substring(0,2000).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      var ssml='<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US"><voice name="'+voice+'"><prosody rate="+0%" pitch="+0Hz" volume="+0%">'+esc+'</prosody></voice></speak>';
+      ws.send('X-RequestId:'+connId+'\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:'+new Date().toUTCString()+'\r\nPath:ssml\r\n\r\n'+ssml);
+      timer=setTimeout(function(){finish();},15000);
+    };
+    ws.onmessage=function(ev){
+      clearTimeout(timer);timer=setTimeout(function(){finish();},5000);
+      if(typeof ev.data==='string'){if(ev.data.indexOf('Path:turn.end')!==-1){clearTimeout(timer);finish();}}
+      else{
+        var d=new Uint8Array(ev.data);var marker=[80,97,116,104,58,97,117,100,105,111,13,10];
+        for(var i=0;i<=d.length-marker.length;i++){var ok=true;for(var j=0;j<marker.length;j++){if(d[i+j]!==marker[j]){ok=false;break;}}if(ok){chunks.push(d.slice(i+marker.length));break;}}
+      }
+    };
+    ws.onerror=function(){clearTimeout(timer);if(chunks.length>0)finish();else{done=true;reject(new Error('ws error'));}};
+    ws.onclose=function(){clearTimeout(timer);if(!done){if(chunks.length>0)finish();else{done=true;reject(new Error('ws closed'));}}};
+  });
+}
 async function edgeTTSBuffer(text,voiceId){
+  try{return await _edgeTTSClientWS(text,voiceId);}catch(e){console.warn('Client WS failed, trying CF worker:',e.message);}
   var voice=voiceId||'en-US-JennyNeural';
   var encoded=encodeURIComponent(text.substring(0,1000));
   var apiUrl=EDGE_TTS_API+'?text='+encoded+'&voice='+voice;
