@@ -2185,11 +2185,7 @@ async function edgeTTS(text,voiceId){
     var buf=await _edgeTTSClientWS(text,voiceId);
     var blob=new Blob([buf],{type:'audio/mpeg'});
     return new Audio(URL.createObjectURL(blob));
-  }catch(e){console.warn('Client WS edgeTTS failed:',e.message);}
-  var voice=voiceId||'en-US-JennyNeural';
-  var encoded=encodeURIComponent(text.substring(0,1000));
-  var apiUrl=EDGE_TTS_API+'?text='+encoded+'&voice='+voice;
-  return new Audio(apiUrl);
+  }catch(e){console.warn('Client WS edgeTTS failed:',e.message);throw e;}
 }
 async function _edgeTTSClientWS(text,voiceId){
   var _TK='6A5AA1D4EAFF4E9FB37E23D68491D6F4';
@@ -2305,17 +2301,8 @@ function speakTextWithCb(text,cb){
     let rv;do{rv=edgeVoicesCache[Math.floor(Math.random()*edgeVoicesCache.length)];}while(rv.id===window._lastRandomVoice&&edgeVoicesCache.length>1);
     voiceId=rv.id;window._lastRandomVoice=rv.id;
   }
-  if(provider==='browser'){
-    if(!window.speechSynthesis||!text){done();return;}
-    speechSynthesis.cancel();
-    var u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=db.settings.speechRate||1;u.volume=1;
-    const voices=speechSynthesis.getVoices();
-    const preferred=voices.find(v=>v.name.includes('Google US English'))||voices.find(v=>v.lang.startsWith('en'));
-    if(preferred)u.voice=preferred;
-    u.onend=done;u.onerror=done;
-    speechSynthesis.speak(u);return;
-  }
-  var _fbCb=function(){if(!window.speechSynthesis||!text){done();return;}speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=db.settings.speechRate||1;u.volume=1;var voices=speechSynthesis.getVoices();var preferred=voices.find(function(v){return v.name.includes('Google US English');})||voices.find(function(v){return v.lang.startsWith('en');});if(preferred)u.voice=preferred;u.onend=done;u.onerror=done;speechSynthesis.speak(u);};
+  if(provider==='browser'){speakFallback(text,done);return;}
+  var _fbCb=function(){speakFallback(text,done);};
   if(provider==='google-translate'){
     try{const audio=googleTranslateTTS(text,voiceId);currentAudio=audio;audio.playbackRate=db.settings.speechRate||1;
       let fell=false;const fb=()=>{if(fell)return;fell=true;_fbCb();};
@@ -2434,18 +2421,24 @@ function initSpeedBtn(){
   if(btn)btn.textContent='🔊 '+(db.settings.speechRate||1)+'x';
 }
 
-function speakFallback(text){
-  if(!('speechSynthesis' in window))return;
+function speakFallback(text,cb){
+  if(!('speechSynthesis' in window)){if(cb)cb();return;}
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
   u.lang='en-US';u.rate=db.settings.speechRate||1;u.pitch=1;
   const voices=speechSynthesis.getVoices();
-  const preferred=voices.find(v=>v.name.includes('Google US English'))||voices.find(v=>v.name.includes('Google UK English'))||voices.find(v=>v.lang.startsWith('en')&&v.localService===false)||voices.find(v=>v.lang.startsWith('en'));
-  if(preferred)u.voice=preferred;
+  const enVoices=voices.filter(v=>v.lang&&v.lang.startsWith('en'));
+  if(db.settings.randomVoice!==false&&enVoices.length>1){
+    var rv;do{rv=enVoices[Math.floor(Math.random()*enVoices.length)];}while(rv.name===window._lastBrowserVoice&&enVoices.length>1);
+    u.voice=rv;window._lastBrowserVoice=rv.name;
+  }else{
+    const preferred=voices.find(v=>v.name.includes('Google US English'))||voices.find(v=>v.name.includes('Google UK English'))||enVoices.find(v=>!v.localService)||enVoices[0];
+    if(preferred)u.voice=preferred;
+  }
   const btn=document.querySelector('.voice-play-btn');
   if(btn)btn.classList.add('speaking');
-  u.onend=()=>{if(btn)btn.classList.remove('speaking');};
-  u.onerror=()=>{if(btn)btn.classList.remove('speaking');};
+  u.onend=()=>{if(btn)btn.classList.remove('speaking');if(cb)cb();};
+  u.onerror=()=>{if(btn)btn.classList.remove('speaking');if(cb)cb();};
   speechSynthesis.speak(u);
 }
 if('speechSynthesis' in window)speechSynthesis.getVoices();
