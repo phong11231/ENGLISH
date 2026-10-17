@@ -980,15 +980,12 @@ function reviewSelectedCards(displayOverride){
 }
 async function sendSelectedToTelegram(){
   if(!window._selectedCardIds||window._selectedCardIds.size===0){toast('Chọn ít nhất 1 thẻ');return;}
+  _pickBot(function(cfg){_doSendSelected(cfg);});
+}
+async function _doSendSelected(cfg){
+  var chatId=cfg.chatId,adminKey=cfg.adminKey,botUrl=cfg.botUrl;
   var cards=getDeckCards(currentDeckId).filter(function(c){return window._selectedCardIds.has(c.id);});
   if(cards.length===0){toast('Không tìm thấy thẻ');return;}
-  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_tele'));}catch(e){}
-  var chatId=saved?.chatId||'';
-  var adminKey=saved?.adminKey||'';
-  var botUrl=saved?.botUrl||'https://flashmind-tele-bot.yosua-4131.workers.dev';
-  if(!chatId){chatId=prompt('Nhập Telegram Chat ID:');if(!chatId)return;}
-  if(!adminKey){adminKey=prompt('Nhập Admin Key:');if(!adminKey)return;}
-  try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId,botUrl,adminKey}));}catch(e){}
   var voiceId=db.settings.voiceId||'en-US-JennyNeural';
   var provider=db.settings.voiceProvider||'edge';
   if(provider!=='edge'&&provider!=='google-translate'){toast('Chỉ hỗ trợ Edge/Google TTS');return;}
@@ -1548,20 +1545,48 @@ async function sendCardToTelegram(){
     }else{st.textContent='❌ Trim failed';}
   }catch(e){st.textContent='❌ Error: '+e.message;}
 }
+var _botList=[
+  {name:'Bot 1 — Sleep Listen',key:'flashmind_tele',url:'https://flashmind-tele-bot.yosua-4131.workers.dev',startBot:'@flashbott_bot'},
+  {name:'Bot 2 — Flashcard',key:'flashmind_pushbot',url:'https://flashmind-flashcard-bot.yosua-4131.workers.dev',startBot:'@flashbottt_bot'}
+];
+function _pickBot(callback){
+  var existing=document.getElementById('pickBotOverlay');if(existing)existing.remove();
+  var overlay=document.createElement('div');
+  overlay.id='pickBotOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px';
+  var btns=_botList.map(function(b,i){
+    return '<button onclick="window._pickBotCB('+i+')" style="width:100%;padding:14px;margin:4px 0;border-radius:8px;border:1px solid rgba(0,136,204,0.3);background:transparent;color:#0088cc;cursor:pointer;font-size:15px;font-weight:600">'+b.name+'</button>';
+  }).join('');
+  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border-radius:16px;padding:20px;min-width:280px;max-width:360px;color:var(--ink,#fff)">'+
+    '<div style="font-weight:700;margin-bottom:8px;font-size:16px">📨 Push vào bot nào?</div>'+
+    btns+
+    '<button onclick="document.getElementById(\'pickBotOverlay\').remove()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--ink-dim,#aaa);cursor:pointer;font-size:14px">Cancel</button>'+
+    '</div>';
+  window._pickBotCB=function(idx){
+    var el=document.getElementById('pickBotOverlay');if(el)el.remove();
+    var b=_botList[idx];
+    var saved=null;try{saved=JSON.parse(localStorage.getItem(b.key));}catch(e){}
+    if(!saved)saved={};
+    if(!saved.botUrl)saved.botUrl=b.url;
+    if(!saved.chatId){
+      saved.chatId=prompt('Nhập Chat ID (mở '+b.startBot+' bấm /start để lấy):');
+      if(!saved.chatId)return;
+    }
+    if(!saved.adminKey){
+      saved.adminKey=prompt('Nhập Admin Key:');
+      if(!saved.adminKey)return;
+    }
+    try{localStorage.setItem(b.key,JSON.stringify(saved));}catch(e){}
+    callback({chatId:saved.chatId,adminKey:saved.adminKey,botUrl:saved.botUrl});
+  };
+  document.body.appendChild(overlay);
+}
+
 async function sendDeckRadioToTelegram(deckId){
-  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_tele'));}catch(e){}
-  var chatId=saved?.chatId||'';
-  var adminKey=saved?.adminKey||'';
-  var botUrl=saved?.botUrl||'https://flashmind-tele-bot.yosua-4131.workers.dev';
-  if(!chatId){
-    chatId=prompt('Nhập Telegram Chat ID (mở bot @FlashMindSleepBot bấm /start để lấy):');
-    if(!chatId)return;
-  }
-  if(!adminKey){
-    adminKey=prompt('Nhập Admin Key:');
-    if(!adminKey)return;
-  }
-  try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId,botUrl,adminKey}));}catch(e){}
+  _pickBot(function(cfg){_doSendDeckRadio(deckId,cfg);});
+}
+async function _doSendDeckRadio(deckId,cfg){
+  var chatId=cfg.chatId,adminKey=cfg.adminKey,botUrl=cfg.botUrl;
   var deck=db.decks[deckId];
   if(!deck){toast('Deck not found');return;}
   var cards=getDeckCards(deckId);
@@ -1598,19 +1623,10 @@ async function sendDeckRadioToTelegram(deckId){
 }
 
 async function sendCardToTelegram(cardId){
-  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_tele'));}catch(e){}
-  var chatId=saved?.chatId||'';
-  var adminKey=saved?.adminKey||'';
-  var botUrl=saved?.botUrl||'https://flashmind-tele-bot.yosua-4131.workers.dev';
-  if(!chatId){
-    chatId=prompt('Nhập Telegram Chat ID (mở bot @FlashMindSleepBot bấm /start để lấy):');
-    if(!chatId)return;
-  }
-  if(!adminKey){
-    adminKey=prompt('Nhập Admin Key:');
-    if(!adminKey)return;
-  }
-  try{localStorage.setItem('flashmind_tele',JSON.stringify({chatId,botUrl,adminKey}));}catch(e){}
+  _pickBot(function(cfg){_doSendCard(cardId,cfg);});
+}
+async function _doSendCard(cardId,cfg){
+  var chatId=cfg.chatId,adminKey=cfg.adminKey,botUrl=cfg.botUrl;
   var card=null;
   Object.keys(db.decks).forEach(function(did){(db.decks[did].cards||[]).forEach(function(c){if(c.id===cardId)card=c;});});
   if(!card){toast('Card not found');return;}
@@ -1639,50 +1655,68 @@ async function sendCardToTelegram(cardId){
   }catch(e){console.error('Send card error:',e);toast('Lỗi: '+e.message);}
 }
 
+function _getPushBotConfig(){
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
+  if(!saved)saved={};
+  if(!saved.botUrl)saved.botUrl='https://flashmind-flashcard-bot.yosua-4131.workers.dev';
+  if(!saved.chatId){
+    saved.chatId=prompt('Nhập Telegram Chat ID (mở @flashbottt_bot bấm /start để lấy):');
+    if(!saved.chatId)return null;
+  }
+  if(!saved.adminKey){
+    saved.adminKey=prompt('Nhập Admin Key:');
+    if(!saved.adminKey)return null;
+  }
+  try{localStorage.setItem('flashmind_pushbot',JSON.stringify(saved));}catch(e){}
+  return saved;
+}
+function _getDeckNames(){
+  var names=[];
+  Object.keys(db.decks).forEach(function(did){
+    var d=db.decks[did];if(d&&d.name)names.push(d.name);
+  });
+  return names;
+}
+function _showTopicPopup(title,subtitle,onPick){
+  var existing=document.getElementById('pushTopicOverlay');if(existing)existing.remove();
+  var deckNames=_getDeckNames();
+  var overlay=document.createElement('div');
+  overlay.id='pushTopicOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px';
+  var btns=deckNames.map(function(name){
+    var safe=name.replace(/'/g,"\\'");
+    return '<button onclick="window._pushTopicCB(\''+safe+'\')" style="width:100%;padding:12px;margin:4px 0;border-radius:8px;border:1px solid rgba(0,136,204,0.3);background:transparent;color:#0088cc;cursor:pointer;font-size:15px;font-weight:600">📂 '+name+'</button>';
+  }).join('');
+  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border-radius:16px;padding:20px;min-width:280px;max-width:360px;color:var(--ink,#fff)">'+
+    '<div style="font-weight:700;margin-bottom:4px;font-size:16px">'+title+'</div>'+
+    '<div style="font-size:13px;color:var(--ink-dim,#aaa);margin-bottom:12px">'+subtitle+'</div>'+
+    btns+
+    '<button onclick="document.getElementById(\'pushTopicOverlay\').remove()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--ink-dim,#aaa);cursor:pointer;font-size:14px">Cancel</button>'+
+    '</div>';
+  window._pushTopicCB=function(topic){
+    var el=document.getElementById('pushTopicOverlay');if(el)el.remove();
+    onPick(topic);
+  };
+  document.body.appendChild(overlay);
+}
+
 function pushDeckToTopic(deckId){
   var deck=db.decks[deckId];if(!deck){toast('Deck not found');return;}
   var cards=(deck.cards||[]).filter(function(c){return !c.suspended;});
   if(cards.length===0){toast('Deck trống');return;}
-  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
-  var adminKey=saved?.adminKey||'';
-  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
-  var topics=saved?.topics||['book','idioms','collocations','writing'];
-  if(!adminKey){
-    adminKey=prompt('Nhập Admin Key cho Flashcard Bot:');
-    if(!adminKey)return;
-    try{localStorage.setItem('flashmind_pushbot',JSON.stringify({adminKey,botUrl,topics}));}catch(e){}
-  }
-  var overlay=document.createElement('div');
-  overlay.id='pushTopicOverlay';
-  overlay.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px';
-  var btns=topics.map(function(t){return '<button onclick="doPushDeckToTopic(\''+t+'\',\''+deckId+'\')" style="width:100%;padding:12px;margin:4px 0;border-radius:8px;border:1px solid rgba(0,136,204,0.3);background:transparent;color:#0088cc;cursor:pointer;font-size:15px;font-weight:600">📂 '+t+'</button>';}).join('');
-  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border-radius:16px;padding:20px;min-width:280px;max-width:360px;color:var(--ink,#fff)">'+
-    '<div style="font-weight:700;margin-bottom:4px;font-size:16px">📨 Push Deck</div>'+
-    '<div style="font-size:13px;color:var(--ink-dim,#aaa);margin-bottom:12px">'+(deck.name||'Deck')+' — '+cards.length+' thẻ</div>'+
-    btns+
-    '<button onclick="document.getElementById(\'pushTopicOverlay\').remove()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--ink-dim,#aaa);cursor:pointer;font-size:14px">Cancel</button>'+
-    '</div>';
-  document.body.appendChild(overlay);
-}
-async function doPushDeckToTopic(topic,deckId){
-  var el=document.getElementById('pushTopicOverlay');if(el)el.remove();
-  var deck=db.decks[deckId];if(!deck){toast('Deck not found');return;}
-  var cards=(deck.cards||[]).filter(function(c){return !c.suspended;});
-  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
-  var adminKey=saved?.adminKey||'';
-  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
-  var batch=cards.map(function(c){return{front:(c.front||'').replace(/<[^>]*>/g,'').trim(),back:(c.back||'').replace(/<[^>]*>/g,'').trim()};}).filter(function(c){return c.front&&c.back;});
-  toast('📨 Đang gửi '+batch.length+' thẻ...');
-  try{
-    var r=await fetch(botUrl+'/push-cards',{
+  var cfg=_getPushBotConfig();if(!cfg)return;
+  _showTopicPopup('📨 Push Deck',(deck.name||'Deck')+' — '+cards.length+' thẻ',function(topic){
+    var batch=cards.map(function(c){return{front:(c.front||'').replace(/<[^>]*>/g,'').trim(),back:(c.back||'').replace(/<[^>]*>/g,'').trim()};}).filter(function(c){return c.front&&c.back;});
+    toast('📨 Đang gửi '+batch.length+' thẻ...');
+    fetch(cfg.botUrl+'/push-cards',{
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
-      body:JSON.stringify({topic:topic,cards:batch})
-    });
-    var d=await r.json();
-    if(d.ok)toast('✅ Đã push '+d.sent+'/'+d.total+' thẻ vào "'+topic+'"!');
-    else toast('Lỗi: '+(d.error||'unknown'));
-  }catch(e){console.error('Push deck error:',e);toast('Lỗi: '+e.message);}
+      headers:{'Content-Type':'application/json','X-Admin-Key':cfg.adminKey},
+      body:JSON.stringify({chatId:cfg.chatId,topic:topic,cards:batch})
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.ok)toast('✅ Đã push '+d.sent+'/'+d.total+' thẻ vào "'+topic+'"!');
+      else toast('Lỗi: '+(d.error||'unknown'));
+    }).catch(function(e){toast('Lỗi: '+e.message);});
+  });
 }
 
 function pushCardToTopic(cardId){
@@ -1692,94 +1726,37 @@ function pushCardToTopic(cardId){
   var front=(card.front||'').replace(/<[^>]*>/g,'').trim();
   var back=(card.back||'').replace(/<[^>]*>/g,'').trim();
   if(!front){toast('Thẻ trống');return;}
-  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
-  var adminKey=saved?.adminKey||'';
-  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
-  var topics=saved?.topics||['book','idioms','collocations','writing'];
-  if(!adminKey){
-    adminKey=prompt('Nhập Admin Key cho Flashcard Bot:');
-    if(!adminKey)return;
-    try{localStorage.setItem('flashmind_pushbot',JSON.stringify({adminKey,botUrl,topics}));}catch(e){}
-  }
-  var overlay=document.createElement('div');
-  overlay.id='pushTopicOverlay';
-  overlay.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px';
-  var btns=topics.map(function(t){return '<button onclick="doPushToTopic(\''+t+'\',\''+cardId+'\')" style="width:100%;padding:12px;margin:4px 0;border-radius:8px;border:1px solid rgba(0,136,204,0.3);background:transparent;color:#0088cc;cursor:pointer;font-size:15px;font-weight:600">📂 '+t+'</button>';}).join('');
-  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border-radius:16px;padding:20px;min-width:280px;max-width:360px;color:var(--ink,#fff)">'+
-    '<div style="font-weight:700;margin-bottom:4px;font-size:16px">📨 Push to Topic</div>'+
-    '<div style="font-size:13px;color:var(--ink-dim,#aaa);margin-bottom:12px">'+front.substring(0,50)+'</div>'+
-    btns+
-    '<button onclick="document.getElementById(\'pushTopicOverlay\').remove()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--ink-dim,#aaa);cursor:pointer;font-size:14px">Cancel</button>'+
-    '</div>';
-  document.body.appendChild(overlay);
+  var cfg=_getPushBotConfig();if(!cfg)return;
+  _showTopicPopup('📨 Push Card',front.substring(0,50),function(topic){
+    toast('📨 Đang gửi...');
+    fetch(cfg.botUrl+'/push-card',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Key':cfg.adminKey},
+      body:JSON.stringify({chatId:cfg.chatId,topic:topic,front:front,back:back})
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.ok)toast('✅ Đã push vào "'+topic+'"!');
+      else toast('Lỗi: '+(d.error||'unknown'));
+    }).catch(function(e){toast('Lỗi: '+e.message);});
+  });
 }
+
 function pushSelectedToTopic(){
   if(!window._selectedCardIds||window._selectedCardIds.size===0){toast('Chọn ít nhất 1 thẻ');return;}
   var cards=getDeckCards(currentDeckId).filter(function(c){return window._selectedCardIds.has(c.id);});
   if(cards.length===0){toast('Không tìm thấy thẻ');return;}
-  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
-  var adminKey=saved?.adminKey||'';
-  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
-  var topics=saved?.topics||['book','idioms','collocations','writing'];
-  if(!adminKey){
-    adminKey=prompt('Nhập Admin Key cho Flashcard Bot:');
-    if(!adminKey)return;
-    try{localStorage.setItem('flashmind_pushbot',JSON.stringify({adminKey,botUrl,topics}));}catch(e){}
-  }
-  var overlay=document.createElement('div');
-  overlay.id='pushTopicOverlay';
-  overlay.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px';
-  var btns=topics.map(function(t){return '<button onclick="doPushSelectedToTopic(\''+t+'\')" style="width:100%;padding:12px;margin:4px 0;border-radius:8px;border:1px solid rgba(0,136,204,0.3);background:transparent;color:#0088cc;cursor:pointer;font-size:15px;font-weight:600">📂 '+t+'</button>';}).join('');
-  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border-radius:16px;padding:20px;min-width:280px;max-width:360px;color:var(--ink,#fff)">'+
-    '<div style="font-weight:700;margin-bottom:4px;font-size:16px">📨 Push '+cards.length+' thẻ</div>'+
-    '<div style="font-size:13px;color:var(--ink-dim,#aaa);margin-bottom:12px">Chọn topic để gửi:</div>'+
-    btns+
-    '<button onclick="document.getElementById(\'pushTopicOverlay\').remove()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--ink-dim,#aaa);cursor:pointer;font-size:14px">Cancel</button>'+
-    '</div>';
-  document.body.appendChild(overlay);
-}
-async function doPushSelectedToTopic(topic){
-  var el=document.getElementById('pushTopicOverlay');if(el)el.remove();
-  var cards=getDeckCards(currentDeckId).filter(function(c){return window._selectedCardIds.has(c.id);});
-  if(cards.length===0){toast('Không tìm thấy thẻ');return;}
-  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
-  var adminKey=saved?.adminKey||'';
-  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
-  var batch=cards.map(function(c){return{front:(c.front||'').replace(/<[^>]*>/g,'').trim(),back:(c.back||'').replace(/<[^>]*>/g,'').trim()};}).filter(function(c){return c.front&&c.back;});
-  toast('📨 Đang gửi '+batch.length+' thẻ...');
-  try{
-    var r=await fetch(botUrl+'/push-cards',{
+  var cfg=_getPushBotConfig();if(!cfg)return;
+  _showTopicPopup('📨 Push '+cards.length+' thẻ','Chọn deck để gắn label:',function(topic){
+    var batch=cards.map(function(c){return{front:(c.front||'').replace(/<[^>]*>/g,'').trim(),back:(c.back||'').replace(/<[^>]*>/g,'').trim()};}).filter(function(c){return c.front&&c.back;});
+    toast('📨 Đang gửi '+batch.length+' thẻ...');
+    fetch(cfg.botUrl+'/push-cards',{
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
-      body:JSON.stringify({topic:topic,cards:batch})
-    });
-    var d=await r.json();
-    if(d.ok)toast('✅ Đã push '+d.sent+'/'+d.total+' thẻ vào "'+topic+'"!');
-    else toast('Lỗi: '+(d.error||'unknown'));
-  }catch(e){console.error('Push batch error:',e);toast('Lỗi: '+e.message);}
-}
-
-async function doPushToTopic(topic,cardId){
-  var el=document.getElementById('pushTopicOverlay');if(el)el.remove();
-  var card=null;
-  Object.keys(db.decks).forEach(function(did){(db.decks[did].cards||[]).forEach(function(c){if(c.id===cardId)card=c;});});
-  if(!card){toast('Card not found');return;}
-  var front=(card.front||'').replace(/<[^>]*>/g,'').trim();
-  var back=(card.back||'').replace(/<[^>]*>/g,'').trim();
-  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
-  var adminKey=saved?.adminKey||'';
-  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
-  toast('📨 Đang gửi...');
-  try{
-    var r=await fetch(botUrl+'/push-card',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
-      body:JSON.stringify({topic:topic,front:front,back:back})
-    });
-    var d=await r.json();
-    if(d.ok)toast('✅ Đã push "'+topic+'"!');
-    else toast('Lỗi: '+(d.error||'unknown'));
-  }catch(e){console.error('Push topic error:',e);toast('Lỗi: '+e.message);}
+      headers:{'Content-Type':'application/json','X-Admin-Key':cfg.adminKey},
+      body:JSON.stringify({chatId:cfg.chatId,topic:topic,cards:batch})
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.ok)toast('✅ Đã push '+d.sent+'/'+d.total+' thẻ vào "'+topic+'"!');
+      else toast('Lỗi: '+(d.error||'unknown'));
+    }).catch(function(e){toast('Lỗi: '+e.message);});
+  });
 }
 
 function applySleepSpeed(){
