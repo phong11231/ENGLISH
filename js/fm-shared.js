@@ -492,6 +492,7 @@ function renderDecks(){
         <button class="deck-action-btn" onclick="openCustomStudyForDeck('${id}')" title="Custom study">🎯</button>
         <button class="deck-action-btn" onclick="startSleepListen('${id}',true)" title="Sleep Listen">🌙</button>
         <button class="deck-action-btn" onclick="sendDeckRadioToTelegram('${id}')" title="Radio → Telegram">📻</button>
+        <button class="deck-action-btn" onclick="pushDeckToTopic('${id}')" title="Push Deck → Topic">📨</button>
         <button class="deck-action-btn" onclick="openEditDeck('${id}')" title="Edit">✏️</button>
         <button class="deck-action-btn delete" onclick="deleteDeck('${id}')" title="Delete">🗑️</button>
       </div>
@@ -1636,6 +1637,52 @@ async function sendCardToTelegram(cardId){
     if(d.ok)toast('✅ Đã gửi qua Telegram!');
     else toast('Lỗi gửi Telegram');
   }catch(e){console.error('Send card error:',e);toast('Lỗi: '+e.message);}
+}
+
+function pushDeckToTopic(deckId){
+  var deck=db.decks[deckId];if(!deck){toast('Deck not found');return;}
+  var cards=(deck.cards||[]).filter(function(c){return !c.suspended;});
+  if(cards.length===0){toast('Deck trống');return;}
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
+  var adminKey=saved?.adminKey||'';
+  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
+  var topics=saved?.topics||['book','idioms','collocations','writing'];
+  if(!adminKey){
+    adminKey=prompt('Nhập Admin Key cho Flashcard Bot:');
+    if(!adminKey)return;
+    try{localStorage.setItem('flashmind_pushbot',JSON.stringify({adminKey,botUrl,topics}));}catch(e){}
+  }
+  var overlay=document.createElement('div');
+  overlay.id='pushTopicOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px';
+  var btns=topics.map(function(t){return '<button onclick="doPushDeckToTopic(\''+t+'\',\''+deckId+'\')" style="width:100%;padding:12px;margin:4px 0;border-radius:8px;border:1px solid rgba(0,136,204,0.3);background:transparent;color:#0088cc;cursor:pointer;font-size:15px;font-weight:600">📂 '+t+'</button>';}).join('');
+  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border-radius:16px;padding:20px;min-width:280px;max-width:360px;color:var(--ink,#fff)">'+
+    '<div style="font-weight:700;margin-bottom:4px;font-size:16px">📨 Push Deck</div>'+
+    '<div style="font-size:13px;color:var(--ink-dim,#aaa);margin-bottom:12px">'+(deck.name||'Deck')+' — '+cards.length+' thẻ</div>'+
+    btns+
+    '<button onclick="document.getElementById(\'pushTopicOverlay\').remove()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--ink-dim,#aaa);cursor:pointer;font-size:14px">Cancel</button>'+
+    '</div>';
+  document.body.appendChild(overlay);
+}
+async function doPushDeckToTopic(topic,deckId){
+  var el=document.getElementById('pushTopicOverlay');if(el)el.remove();
+  var deck=db.decks[deckId];if(!deck){toast('Deck not found');return;}
+  var cards=(deck.cards||[]).filter(function(c){return !c.suspended;});
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
+  var adminKey=saved?.adminKey||'';
+  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
+  var batch=cards.map(function(c){return{front:(c.front||'').replace(/<[^>]*>/g,'').trim(),back:(c.back||'').replace(/<[^>]*>/g,'').trim()};}).filter(function(c){return c.front&&c.back;});
+  toast('📨 Đang gửi '+batch.length+' thẻ...');
+  try{
+    var r=await fetch(botUrl+'/push-cards',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+      body:JSON.stringify({topic:topic,cards:batch})
+    });
+    var d=await r.json();
+    if(d.ok)toast('✅ Đã push '+d.sent+'/'+d.total+' thẻ vào "'+topic+'"!');
+    else toast('Lỗi: '+(d.error||'unknown'));
+  }catch(e){console.error('Push deck error:',e);toast('Lỗi: '+e.message);}
 }
 
 function pushCardToTopic(cardId){
