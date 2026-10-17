@@ -4059,8 +4059,6 @@ function initPushNotification(){
     console.log('[SW] registered');
     if(Notification.permission==='granted'){
       subscribePush(reg);
-    } else if(Notification.permission!=='denied' && !_pushAsked){
-      setTimeout(function(){ showNotificationPrompt(reg); }, 3000);
     }
   }).catch(function(e){ console.error('[SW] register failed:',e); });
 }
