@@ -904,7 +904,8 @@ function renderCardBrowser(){
           <button class="card-edit-btn" onclick="openCardModal('${c.id}')" title="Edit">✏️</button>
           <button class="card-edit-btn" onclick="toggleSuspend('${c.id}')" title="${c.suspended?'Unsuspend':'Suspend'}">${c.suspended?'👁':'⏸'}</button>
           <button class="card-edit-btn" onclick="copyCardToDeck('${c.id}')" title="Copy to deck">📋</button>
-          <button class="card-edit-btn" onclick="sendCardToTelegram('${c.id}')" title="Gửi Telegram">📤</button>
+          <button class="card-edit-btn" onclick="sendCardToTelegram('${c.id}')" title="Gửi Telegram Audio">📤</button>
+          <button class="card-edit-btn" onclick="pushCardToTopic('${c.id}')" title="Push Topic" style="color:#0088cc">📨</button>
           <button class="card-edit-btn" onclick="deleteCard('${c.id}')" title="Delete" style="color:var(--red)">🗑️</button>
         </td></tr>`;
     }).join('')}</tbody></table></div>`;
@@ -958,6 +959,7 @@ function updateSelectedCount(){
       '<button class="btn btn-primary btn-sm" onclick="reviewSelectedCards()">🔁 Loop</button>'+
       '<button class="btn btn-ghost btn-sm" onclick="reviewSelectedCards(\'reverse-vi\')">🇻🇳 Reverse</button>'+
       '<button class="btn btn-ghost btn-sm" onclick="sendSelectedToTelegram()">📤 Tele</button>'+
+      '<button class="btn btn-ghost btn-sm" onclick="pushSelectedToTopic()" style="color:#0088cc">📨 Push</button>'+
       '<button class="btn btn-ghost btn-sm" onclick="window._selectedCardIds.clear();renderCardBrowser()">✕</button>';
   }else{
     bar.style.display='flex';
@@ -1634,6 +1636,103 @@ async function sendCardToTelegram(cardId){
     if(d.ok)toast('✅ Đã gửi qua Telegram!');
     else toast('Lỗi gửi Telegram');
   }catch(e){console.error('Send card error:',e);toast('Lỗi: '+e.message);}
+}
+
+function pushCardToTopic(cardId){
+  var card=null;
+  Object.keys(db.decks).forEach(function(did){(db.decks[did].cards||[]).forEach(function(c){if(c.id===cardId)card=c;});});
+  if(!card){toast('Card not found');return;}
+  var front=(card.front||'').replace(/<[^>]*>/g,'').trim();
+  var back=(card.back||'').replace(/<[^>]*>/g,'').trim();
+  if(!front){toast('Thẻ trống');return;}
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
+  var adminKey=saved?.adminKey||'';
+  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
+  var topics=saved?.topics||['book','idioms','collocations','writing'];
+  if(!adminKey){
+    adminKey=prompt('Nhập Admin Key cho Flashcard Bot:');
+    if(!adminKey)return;
+    try{localStorage.setItem('flashmind_pushbot',JSON.stringify({adminKey,botUrl,topics}));}catch(e){}
+  }
+  var overlay=document.createElement('div');
+  overlay.id='pushTopicOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px';
+  var btns=topics.map(function(t){return '<button onclick="doPushToTopic(\''+t+'\',\''+cardId+'\')" style="width:100%;padding:12px;margin:4px 0;border-radius:8px;border:1px solid rgba(0,136,204,0.3);background:transparent;color:#0088cc;cursor:pointer;font-size:15px;font-weight:600">📂 '+t+'</button>';}).join('');
+  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border-radius:16px;padding:20px;min-width:280px;max-width:360px;color:var(--ink,#fff)">'+
+    '<div style="font-weight:700;margin-bottom:4px;font-size:16px">📨 Push to Topic</div>'+
+    '<div style="font-size:13px;color:var(--ink-dim,#aaa);margin-bottom:12px">'+front.substring(0,50)+'</div>'+
+    btns+
+    '<button onclick="document.getElementById(\'pushTopicOverlay\').remove()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--ink-dim,#aaa);cursor:pointer;font-size:14px">Cancel</button>'+
+    '</div>';
+  document.body.appendChild(overlay);
+}
+function pushSelectedToTopic(){
+  if(!window._selectedCardIds||window._selectedCardIds.size===0){toast('Chọn ít nhất 1 thẻ');return;}
+  var cards=getDeckCards(currentDeckId).filter(function(c){return window._selectedCardIds.has(c.id);});
+  if(cards.length===0){toast('Không tìm thấy thẻ');return;}
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
+  var adminKey=saved?.adminKey||'';
+  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
+  var topics=saved?.topics||['book','idioms','collocations','writing'];
+  if(!adminKey){
+    adminKey=prompt('Nhập Admin Key cho Flashcard Bot:');
+    if(!adminKey)return;
+    try{localStorage.setItem('flashmind_pushbot',JSON.stringify({adminKey,botUrl,topics}));}catch(e){}
+  }
+  var overlay=document.createElement('div');
+  overlay.id='pushTopicOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:16px';
+  var btns=topics.map(function(t){return '<button onclick="doPushSelectedToTopic(\''+t+'\')" style="width:100%;padding:12px;margin:4px 0;border-radius:8px;border:1px solid rgba(0,136,204,0.3);background:transparent;color:#0088cc;cursor:pointer;font-size:15px;font-weight:600">📂 '+t+'</button>';}).join('');
+  overlay.innerHTML='<div style="background:var(--surface,#1a1a2e);border-radius:16px;padding:20px;min-width:280px;max-width:360px;color:var(--ink,#fff)">'+
+    '<div style="font-weight:700;margin-bottom:4px;font-size:16px">📨 Push '+cards.length+' thẻ</div>'+
+    '<div style="font-size:13px;color:var(--ink-dim,#aaa);margin-bottom:12px">Chọn topic để gửi:</div>'+
+    btns+
+    '<button onclick="document.getElementById(\'pushTopicOverlay\').remove()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--ink-dim,#aaa);cursor:pointer;font-size:14px">Cancel</button>'+
+    '</div>';
+  document.body.appendChild(overlay);
+}
+async function doPushSelectedToTopic(topic){
+  var el=document.getElementById('pushTopicOverlay');if(el)el.remove();
+  var cards=getDeckCards(currentDeckId).filter(function(c){return window._selectedCardIds.has(c.id);});
+  if(cards.length===0){toast('Không tìm thấy thẻ');return;}
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
+  var adminKey=saved?.adminKey||'';
+  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
+  var batch=cards.map(function(c){return{front:(c.front||'').replace(/<[^>]*>/g,'').trim(),back:(c.back||'').replace(/<[^>]*>/g,'').trim()};}).filter(function(c){return c.front&&c.back;});
+  toast('📨 Đang gửi '+batch.length+' thẻ...');
+  try{
+    var r=await fetch(botUrl+'/push-cards',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+      body:JSON.stringify({topic:topic,cards:batch})
+    });
+    var d=await r.json();
+    if(d.ok)toast('✅ Đã push '+d.sent+'/'+d.total+' thẻ vào "'+topic+'"!');
+    else toast('Lỗi: '+(d.error||'unknown'));
+  }catch(e){console.error('Push batch error:',e);toast('Lỗi: '+e.message);}
+}
+
+async function doPushToTopic(topic,cardId){
+  var el=document.getElementById('pushTopicOverlay');if(el)el.remove();
+  var card=null;
+  Object.keys(db.decks).forEach(function(did){(db.decks[did].cards||[]).forEach(function(c){if(c.id===cardId)card=c;});});
+  if(!card){toast('Card not found');return;}
+  var front=(card.front||'').replace(/<[^>]*>/g,'').trim();
+  var back=(card.back||'').replace(/<[^>]*>/g,'').trim();
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('flashmind_pushbot'));}catch(e){}
+  var adminKey=saved?.adminKey||'';
+  var botUrl=saved?.botUrl||'https://flashmind-flashcard-bot.yosua-4131.workers.dev';
+  toast('📨 Đang gửi...');
+  try{
+    var r=await fetch(botUrl+'/push-card',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+      body:JSON.stringify({topic:topic,front:front,back:back})
+    });
+    var d=await r.json();
+    if(d.ok)toast('✅ Đã push "'+topic+'"!');
+    else toast('Lỗi: '+(d.error||'unknown'));
+  }catch(e){console.error('Push topic error:',e);toast('Lỗi: '+e.message);}
 }
 
 function applySleepSpeed(){
