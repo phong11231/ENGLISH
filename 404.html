@@ -542,6 +542,11 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
       else if(_diff==='medium') { cards=cards.filter(function(c){return c.difficultyLevel==='medium';}); label+=' (TB)'; }
       else if(_diff==='hard') { cards=cards.filter(function(c){return c.difficultyLevel==='hard';}); label+=' (Khó)'; }
       else if(_diff==='unset') { cards=cards.filter(function(c){return !c.difficultyLevel;}); label+=' (Chưa PL)'; }
+      // Loc card den han (due <= now) hoac card new, tru mode all/custom/selected
+      if(_mode!=='all'&&_mode!=='custom'&&!_params.get('cards')){
+        var _now=Date.now();
+        cards=cards.filter(function(c){return c.status==='new'||!c.due||c.due<=_now;});
+      }
       if(cards.length===0){
         toast('No cards to review!');
         location.href=_basePath+_deckId;
@@ -563,7 +568,19 @@ B: Just studying English." style="width:100%;min-height:200px;padding:12px;borde
         if(_displayOverride==='reverse-vi') label += ' 🇻🇳 Reverse';
       }
       if(_isLoop){label='🔁 '+label;window._loopCards=reviewQueue.map(function(c){return Object.assign({},c);});}
-      for(var i=reviewQueue.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=reviewQueue[i];reviewQueue[i]=reviewQueue[j];reviewQueue[j]=tmp;}
+      // Sort theo retrievability (R thap nhat truoc = sap quen nhat)
+      var _sortNow=Date.now(),_DAY=86400000;
+      reviewQueue.sort(function(a,b){
+        var sa=a.stability||0,sb=b.stability||0;
+        if(!sa&&!sb)return 0;
+        if(!sa)return -1;
+        if(!sb)return 1;
+        var ea=a.lastReview?Math.max(0,(_sortNow-a.lastReview)/_DAY):0;
+        var eb=b.lastReview?Math.max(0,(_sortNow-b.lastReview)/_DAY):0;
+        var ra=_fsrsRetrievability(ea,sa);
+        var rb=_fsrsRetrievability(eb,sb);
+        return ra-rb;
+      });
       reviewIndex = 0;
       undoStack = [];
       streak=0;bestStreak=0;sessionXp=0;sessionCorrect=0;sessionTotal=0;
