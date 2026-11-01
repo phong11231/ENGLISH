@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSRS Optimizer — Training Demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#0f0f1a;color:#e0e0e0;padding:20px;max-width:1000px;margin:0 auto}
+h1{text-align:center;font-size:24px;margin-bottom:4px;background:linear-gradient(135deg,#8b5cf6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{text-align:center;color:#888;font-size:13px;margin-bottom:24px}
+.card{background:#1a1a2e;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #2a2a3e}
+.card h2{font-size:16px;color:#8b5cf6;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:#12121e;border-radius:8px;padding:12px;text-align:center}
+.stat .val{font-size:24px;font-weight:700;color:#8b5cf6}
+.stat .label{font-size:11px;color:#888;margin-top:2px}
+.btn{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;padding:12px 32px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;display:block;margin:0 auto;transition:all .2s}
+.btn:hover{transform:scale(1.03);box-shadow:0 4px 20px rgba(139,92,246,.4)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+#lossCanvas{width:100%;height:250px;background:#12121e;border-radius:8px;border:1px solid #2a2a3e}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:6px 8px;color:#8b5cf6;border-bottom:1px solid #2a2a3e;font-size:11px;text-transform:uppercase}
+td{padding:6px 8px;border-bottom:1px solid #1a1a2e}
+td.better{color:#22c55e}
+td.worse{color:#ef4444}
+#log{background:#0a0a12;border-radius:8px;padding:12px;font-family:'Courier New',monospace;font-size:12px;max-height:200px;overflow-y:auto;line-height:1.6;color:#aaa}
+.progress{background:#1a1a2e;border-radius:4px;height:6px;margin:8px 0}
+.progress-bar{background:linear-gradient(90deg,#8b5cf6,#06b6d4);height:100%;border-radius:4px;transition:width .3s}
+</style>
+</head>
+<body>
+<h1>🧠 FSRS Optimizer</h1>
+<p class="sub">Huấn luyện 19 tham số FSRS từ dataset review logs bằng Gradient Descent</p>
+
+<div class="card">
+  <h2>📊 Dataset Info</h2>
+  <div class="stats">
+    <div class="stat"><div class="val" id="nReviews">—</div><div class="label">Review logs</div></div>
+    <div class="stat"><div class="val" id="nCards">—</div><div class="label">Cards</div></div>
+    <div class="stat"><div class="val" id="nDays">—</div><div class="label">Days span</div></div>
+    <div class="stat"><div class="val" id="dataSource">—</div><div class="label">Source</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>⚡ Training</h2>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+    <label style="font-size:13px">Learning rate: <input type="number" id="lr" value="0.05" step="0.01" min="0.001" max="1" style="width:70px;background:#12121e;border:1px solid #2a2a3e;color:#fff;padding:4px 8px;border-radius:4px"></label>
+    <label style="font-size:13px">Epochs: <input type="number" id="epochs" value="100" min="10" max="1000" style="width:70px;background:#12121e;border:1px solid #2a2a3e;color:#fff;padding:4px 8px;border-radius:4px"></label>
+  </div>
+  <div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+  <button class="btn" id="trainBtn" onclick="startTraining()">▶ Bắt đầu Training</button>
+</div>
+
+<div class="card">
+  <h2>📉 Loss Curve</h2>
+  <canvas id="lossCanvas"></canvas>
+</div>
+
+<div class="card">
+  <h2>🔢 Kết quả: 19 Tham số</h2>
+  <div style="overflow-x:auto">
+    <table id="paramsTable">
+      <tr><th>Param</th><th>Ý nghĩa</th><th>Mặc định</th><th>Sau training</th><th>Thay đổi</th></tr>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📋 Training Log</h2>
+  <div id="log">Chưa bắt đầu training...</div>
+</div>
+
+<script>
+const DEFAULT_W=[0.4072,1.1829,3.1262,15.4722,7.2102,0.5316,1.0651,0.0589,1.5747,0.1280,1.0507,29.8148,0.2800,0.2093,2.7849,0.5188,0.8511,2.5790,0.0990];
+const PARAM_NAMES=['S₀(Again)','S₀(Hard)','S₀(Good)','S₀(Easy)','D₀ init','D₀ scale','D update','Mean reversion','S\' recall e^w8','S\' recall w9','S\' recall w10','S\' lapse w11','S\' lapse w12','S\' lapse w13','S\' lapse w14','Hard penalty','Easy bonus','Short-term scale','Short-term decay'];
+let reviewData=[];
+let trainedW=null;
+let lossHistory=[];
+
+// Load dataset
+fetch('sample_revlog.json').then(r=>r.json()).then(data=>{
+  reviewData=data;
+  const cards=new Set(data.map(r=>r.card_id));
+  const maxDay=Math.max(...data.map(r=>r.day_offset));
+  document.getElementById('nReviews').textContent=data.length.toLocaleString();
+  document.getElementById('nCards').textContent=cards.size;
+  document.getElementById('nDays').textContent=maxDay;
+  document.getElementById('dataSource').textContent='open-revlog';
+  log('Dataset loaded: '+data.length+' reviews, '+cards.size+' cards, '+maxDay+' days');
+});
+
+function log(msg){
+  const el=document.getElementById('log');
+  el.innerHTML+='<div>'+msg+'</div>';
+  el.scrollTop=el.scrollHeight;
+}
+
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+// FSRS formulas
+function retrievability(t,S){return Math.pow(1+t/(9*S),-0.5);}
+
+function initS(w,rating){return Math.max(0.1,w[rating]);}
+
+function initD(w,rating){return clamp(w[4]-Math.exp(w[5]*(rating-1))+1,1,10);}
+
+function nextD(w,D,rating){
+  const d0=w[4]-Math.exp(w[5]*(rating-1))+1;
+  return clamp(w[7]*d0+(1-w[7])*(D-w[6]*(rating-3)),1,10);
+}
+
+function nextSRecall(w,S,D,R,rating){
+  let s=S*(1+Math.exp(w[8])*(11-D)*Math.pow(S,-w[9])*(Math.exp(w[10]*(1-R))-1));
+  if(rating===2)s*=w[15]; // hardPenalty
+  if(rating===4)s*=w[16]; // easyBonus
+  return Math.max(0.1,s);
+}
+
+function nextSLapse(w,S,D,R){
+  return Math.max(0.1,w[11]*Math.pow(D,-w[12])*(Math.pow(S+1,w[13])-1)*Math.exp(w[14]*(1-R)));
+}
+
+// Compute loss for given weights
+function computeLoss(w){
+  const cardGroups={};
+  reviewData.forEach(r=>{
+    if(!cardGroups[r.card_id])cardGroups[r.card_id]=[];
+    cardGroups[r.card_id].push(r);
+  });
+
+  let totalLoss=0,count=0;
+  for(const cid in cardGroups){
+    const reviews=cardGroups[cid];
+    let S=null,D=null;
+    for(let i=0;i<reviews.length;i++){
+      const r=reviews[i];
+      if(i===0){
+        S=initS(w,r.rating-1);
+        D=initD(w,r.rating);
+        continue;
+      }
+      const t=r.elapsed_days||1;
+      const R=retrievability(t,S);
+      const y=r.rating>=2?1:0; // remembered or not
+
+      // Binary cross-entropy
+      const eps=1e-7;
+      const Rc=clamp(R,eps,1-eps);
+      totalLoss+=-(y*Math.log(Rc)+(1-y)*Math.log(1-Rc));
+      count++;
+
+      // Update S,D
+      if(r.rating>=2){S=nextSRecall(w,S,D,R,r.rating);}
+      else{S=nextSLapse(w,S,D,R);}
+      D=nextD(w,D,r.rating);
+      S=clamp(S,0.1,3650);
+    }
+  }
+  return count>0?totalLoss/count:0;
+}
+
+// Numerical gradient
+function numericalGradient(w,eps){
+  const grad=new Array(19);
+  const baseLoss=computeLoss(w);
+  for(let i=0;i<19;i++){
+    const wPlus=[...w];
+    wPlus[i]+=eps;
+    grad[i]=(computeLoss(wPlus)-baseLoss)/eps;
+  }
+  return grad;
+}
+
+// Draw loss curve
+function drawLoss(){
+  const canvas=document.getElementById('lossCanvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth*2;
+  canvas.height=canvas.offsetHeight*2;
+  ctx.scale(2,2);
+  const W=canvas.offsetWidth,H=canvas.offsetHeight;
+
+  ctx.fillStyle='#12121e';
+  ctx.fillRect(0,0,W,H);
+
+  if(lossHistory.length<2)return;
+  const minL=Math.min(...lossHistory)*0.95;
+  const maxL=Math.max(...lossHistory)*1.05;
+  const pad={t:20,r:20,b:30,l:50};
+
+  // Grid
+  ctx.strokeStyle='#2a2a3e';ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+(H-pad.t-pad.b)*i/4;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle='#666';ctx.font='10px Inter';ctx.textAlign='right';
+    ctx.fillText((maxL-(maxL-minL)*i/4).toFixed(4),pad.l-4,y+3);
+  }
+
+  // Loss line
+  const gradient=ctx.createLinearGradient(0,0,W,0);
+  gradient.addColorStop(0,'#8b5cf6');gradient.addColorStop(1,'#06b6d4');
+  ctx.strokeStyle=gradient;ctx.lineWidth=2;
+  ctx.beginPath();
+  lossHistory.forEach((l,i)=>{
+    const x=pad.l+(W-pad.l-pad.r)*i/(lossHistory.length-1);
+    const y=pad.t+(H-pad.t-pad.b)*(1-(l-minL)/(maxL-minL));
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle='#888';ctx.font='10px Inter';ctx.textAlign='center';
+  ctx.fillText('Epoch 0',pad.l,H-8);
+  ctx.fillText('Epoch '+lossHistory.length,W-pad.r,H-8);
+  ctx.fillText('Loss',pad.l,pad.t-6);
+}
+
+async function startTraining(){
+  if(!reviewData.length){log('⚠️ Dataset chưa load!');return;}
+  const btn=document.getElementById('trainBtn');
+  btn.disabled=true;btn.textContent='⏳ Đang training...';
+
+  const lr=parseFloat(document.getElementById('lr').value);
+  const epochs=parseInt(document.getElementById('epochs').value);
+  let w=[...DEFAULT_W];
+  lossHistory=[];
+
+  log('');
+  log('══════════════════════════════════');
+  log('🚀 Bắt đầu training FSRS');
+  log('Learning rate: '+lr+' | Epochs: '+epochs);
+  log('Dataset: '+reviewData.length+' reviews');
+  log('══════════════════════════════════');
+
+  const initLoss=computeLoss(w);
+  lossHistory.push(initLoss);
+  log('Epoch 0 — Loss: '+initLoss.toFixed(6));
+
+  for(let e=1;e<=epochs;e++){
+    await new Promise(r=>setTimeout(r,0)); // yield to UI
+
+    const grad=numericalGradient(w,1e-4);
+    for(let i=0;i<19;i++){
+      w[i]-=lr*grad[i];
+    }
+    // Clamp params
+    for(let i=0;i<4;i++)w[i]=clamp(w[i],0.01,100);
+    w[4]=clamp(w[4],1,10);w[5]=clamp(w[5],0.01,5);
+    w[6]=clamp(w[6],0.01,5);w[7]=clamp(w[7],0,1);
+    for(let i=8;i<15;i++)w[i]=clamp(w[i],0.001,50);
+    w[15]=clamp(w[15],0.01,3);w[16]=clamp(w[16],0.01,3);
+    w[17]=clamp(w[17],0.01,10);w[18]=clamp(w[18],0.001,2);
+
+    const loss=computeLoss(w);
+    lossHistory.push(loss);
+
+    const pct=Math.round(e/epochs*100);
+    document.getElementById('progressBar').style.width=pct+'%';
+
+    if(e%10===0||e===epochs){
+      log('Epoch '+e+' — Loss: '+loss.toFixed(6)+' (Δ='+(lossHistory[lossHistory.length-2]-loss).toFixed(6)+')');
+      drawLoss();
+    }
+  }
+
+  trainedW=w;
+  const finalLoss=lossHistory[lossHistory.length-1];
+  log('══════════════════════════════════');
+  log('✅ Training hoàn tất!');
+  log('Loss: '+initLoss.toFixed(6)+' → '+finalLoss.toFixed(6)+' (giảm '+(((initLoss-finalLoss)/initLoss)*100).toFixed(1)+'%)');
+  log('══════════════════════════════════');
+
+  updateParamsTable(w);
+  drawLoss();
+  btn.disabled=false;btn.textContent='🔄 Train lại';
+}
+
+function updateParamsTable(w){
+  const table=document.getElementById('paramsTable');
+  table.innerHTML='<tr><th>Param</th><th>Ý nghĩa</th><th>Mặc định</th><th>Sau training</th><th>Thay đổi</th></tr>';
+  for(let i=0;i<19;i++){
+    const diff=w[i]-DEFAULT_W[i];
+    const pct=(diff/DEFAULT_W[i]*100).toFixed(1);
+    const cls=Math.abs(diff)<0.001?'':(diff>0?'better':'worse');
+    const sign=diff>0?'+':'';
+    table.innerHTML+=`<tr><td>w[${i}]</td><td>${PARAM_NAMES[i]}</td><td>${DEFAULT_W[i].toFixed(4)}</td><td>${w[i].toFixed(4)}</td><td class="${cls}">${sign}${diff.toFixed(4)} (${sign}${pct}%)</td></tr>`;
+  }
+}
+</script>
+</body>
+</html>
