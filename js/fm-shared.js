@@ -832,6 +832,13 @@ function saveCard(){
     } else if(fronts.length===0||(fronts.length===1&&!back)){toast('Enter both front and back');return;}
     var front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
     front=ensurePunctuation(front);var _back=ensurePunctuation(back);var _backVi=ensurePunctuation(backVi);
+    if(typeof EnWordValidator!=='undefined'&&EnWordValidator.isLoaded()){
+      const _frontRaw=front.replace(/[^a-zA-Z\s]/g,'').trim();
+      if(_frontRaw&&/^[a-zA-Z\s]+$/.test(_frontRaw)){
+        const chk=EnWordValidator.checkPhrase(_frontRaw);
+        if(!chk.valid&&!confirm('⚠️ Từ có thể không phải tiếng Anh: "'+chk.invalidWords.join('", "')+'".\n\nBạn có chắc muốn lưu?')){return;}
+      }
+    }
     if(editingCardId){
       const card=deck.cards.find(c=>c.id===editingCardId);
       card.front=front;card.fronts=fronts;card.back=_back;card.backVi=_backVi;card.type=type;card.tags=tags;card.reviewMode=cardReviewMode;card.displayMode=cardDisplayMode;card.youtubeUrl=ytUrl;card.ytStart=ytStart;card.ytEnd=ytEnd;card.driveUrl=driveUrl;card.cakeUrl=cakeUrl;card.cardName=cardName;card.definition=definition;
