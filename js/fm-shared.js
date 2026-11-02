@@ -4477,10 +4477,11 @@ function drawOptLoss(data){
   ctx.textAlign='right';ctx.fillStyle='#06b6d4';ctx.fillText(data[data.length-1].toFixed(4),ep.x-8,ep.y-4);
 
   ctx.fillStyle='#999';ctx.font='10px -apple-system,system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+  var totalEp=data.length;
   [0,25,50,75,100].forEach(function(pct){
-    var ep2=Math.round(data.length*pct/100);if(ep2>=data.length)ep2=data.length-1;
-    var ex=pad.l+plotW*ep2/(data.length-1);
-    ctx.fillText(ep2,ex,pad.t+plotH+6);
+    var epIdx=Math.round((totalEp-1)*pct/100);
+    var ex=pad.l+plotW*epIdx/(totalEp-1);
+    ctx.fillText(Math.round(totalEp*pct/100),ex,pad.t+plotH+6);
   });
   ctx.fillText('Epoch',pad.l+plotW/2,H-6);
 
