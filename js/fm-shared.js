@@ -833,15 +833,22 @@ function saveCard(){
     var front=typeof fronts[0]==='object'?fronts[0].text:fronts[0];
     front=ensurePunctuation(front);var _back=ensurePunctuation(back);var _backVi=ensurePunctuation(backVi);
     if(typeof EnWordValidator!=='undefined'&&EnWordValidator.isLoaded()){
-      const _frontRaw=front.replace(/[^a-zA-Z\s]/g,'').trim();
-      if(_frontRaw&&/^[a-zA-Z\s]+$/.test(_frontRaw)){
-        const chk=EnWordValidator.checkPhrase(_frontRaw);
-        if(!chk.valid){
-          let msg='⚠️ Từ có thể không phải tiếng Anh: "'+chk.invalidWords.join('", "')+'".';
-          chk.invalidWords.forEach(w=>{const s=EnWordValidator.suggest(w);if(s.length)msg+='\n\n💡 Gợi ý cho "'+w+'": '+s.join(', ');});
-          msg+='\n\nBạn có chắc muốn lưu?';
-          if(!confirm(msg)){return;}
+      var _allInvalid=[];
+      [['Front',front],['Back',_back]].forEach(function(pair){
+        var raw=pair[1].replace(/[^a-zA-Z\s]/g,'').trim();
+        if(raw&&/^[a-zA-Z\s]+$/.test(raw)){
+          var chk=EnWordValidator.checkPhrase(raw);
+          if(!chk.valid)chk.invalidWords.forEach(function(w){_allInvalid.push({label:pair[0],word:w});});
         }
+      });
+      if(_allInvalid.length){
+        var msg='⚠️ Từ có thể không phải tiếng Anh:';
+        _allInvalid.forEach(function(item){
+          msg+='\n\n['+item.label+'] "'+item.word+'"';
+          var s=EnWordValidator.suggest(item.word);if(s.length)msg+=' → Gợi ý: '+s.join(', ');
+        });
+        msg+='\n\nBạn có chắc muốn lưu?';
+        if(!confirm(msg)){return;}
       }
     }
     if(editingCardId){
