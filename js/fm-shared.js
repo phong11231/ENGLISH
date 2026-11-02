@@ -4307,20 +4307,18 @@ function closeOptimizerModal(){document.getElementById('optimizerModal').classLi
 function runFSRSOptimizer(){
   var rl=Array.isArray(db.reviewLog)?db.reviewLog:[];
   if(rl.length<10){toast('Cần ít nhất 10 review logs để train');return;}
-  var trainData=[];
+  var cardGroups={};
   var sortedLogs=rl.filter(function(e){return e.date&&(e.quality!==undefined||e.rating!==undefined);}).sort(function(a,b){return a.date-b.date;});
-  var lastReviewByCard={};
   sortedLogs.forEach(function(e){
-    var cid=e.cardId||'';
+    var cid=e.cardId||'unknown';
     var rating=e.rating||(e.quality!==undefined?e.quality+1:0);
     if(!rating||rating<1||rating>4)return;
-    var elapsed=0;
-    if(lastReviewByCard[cid]){elapsed=Math.max(0,(e.date-lastReviewByCard[cid])/86400000);}
-    lastReviewByCard[cid]=e.date;
-    var recalled=(rating>=3)?1:0;
-    trainData.push({elapsed:elapsed,recalled:recalled,rating:rating});
+    if(!cardGroups[cid])cardGroups[cid]=[];
+    cardGroups[cid].push({date:e.date,rating:rating});
   });
-  if(trainData.length<10){toast('Cần ít nhất 10 review logs để train (hiện có '+trainData.length+')');return;}
+  var totalReviews=0;
+  for(var k in cardGroups)totalReviews+=cardGroups[k].length;
+  if(totalReviews<10){toast('Cần ít nhất 10 review logs để train (hiện có '+totalReviews+')');return;}
 
   var btn=document.getElementById('optTrainBtn');btn.disabled=true;btn.textContent='⏳ Training...';
   var canvas=document.getElementById('optLossCanvas');canvas.style.display='block';
@@ -4334,16 +4332,32 @@ function runFSRSOptimizer(){
 
   function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
   function retrievability(t,s){return Math.pow(1+t/(9*s),-0.5);}
+  function initS(w,r){return Math.max(0.1,w[r]);}
+  function initD(w,r){return clamp(w[4]-Math.exp(w[5]*(r-1))+1,1,10);}
+  function nextD(w,D,r){var d0=w[4]-Math.exp(w[5]*(r-1))+1;return clamp(w[7]*d0+(1-w[7])*(D-w[6]*(r-3)),1,10);}
+  function nextSRecall(w,S,D,R,r){var s=S*(1+Math.exp(w[8])*(11-D)*Math.pow(S,-w[9])*(Math.exp(w[10]*(1-R))-1));if(r===2)s*=w[15];if(r===4)s*=w[16];return Math.max(0.1,s);}
+  function nextSLapse(w,S,D,R){return Math.max(0.1,w[11]*Math.pow(D,-w[12])*(Math.pow(S+1,w[13])-1)*Math.exp(w[14]*(1-R)));}
   function computeLoss(params){
-    var total=0;
-    for(var i=0;i<trainData.length;i++){
-      var d=trainData[i];
-      var s=params[d.rating-1>3?3:d.rating-1];if(s<0.01)s=0.01;
-      var r=retrievability(d.elapsed,s);
-      r=clamp(r,1e-6,1-1e-6);
-      total+=-(d.recalled*Math.log(r)+(1-d.recalled)*Math.log(1-r));
+    var total=0,count=0;
+    for(var cid in cardGroups){
+      var reviews=cardGroups[cid];
+      var S=null,D=null;
+      for(var i=0;i<reviews.length;i++){
+        var rv=reviews[i];
+        if(i===0){S=initS(params,rv.rating-1);D=initD(params,rv.rating);continue;}
+        var elapsed=Math.max(0,(rv.date-reviews[i-1].date)/86400000)||0.01;
+        var R=retrievability(elapsed,S);
+        var y=rv.rating>=3?1:0;
+        var Rc=clamp(R,1e-7,1-1e-7);
+        total+=-(y*Math.log(Rc)+(1-y)*Math.log(1-Rc));
+        count++;
+        if(rv.rating>=2){S=nextSRecall(params,S,D,R,rv.rating);}
+        else{S=nextSLapse(params,S,D,R);}
+        D=nextD(params,D,rv.rating);
+        S=clamp(S,0.1,3650);
+      }
     }
-    return total/trainData.length;
+    return count>0?total/count:0;
   }
   function numericalGradient(params,eps){
     var grad=new Array(17);
