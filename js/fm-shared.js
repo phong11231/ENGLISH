@@ -4308,13 +4308,19 @@ function runFSRSOptimizer(){
   var rl=Array.isArray(db.reviewLog)?db.reviewLog:[];
   if(rl.length<10){toast('Cần ít nhất 10 review logs để train');return;}
   var trainData=[];
-  rl.forEach(function(e){
-    if(!e.elapsed||!e.rating)return;
-    var elapsed=e.elapsed/86400000;if(elapsed<0)elapsed=0;
-    var recalled=(e.rating>=3)?1:0;
-    trainData.push({elapsed:elapsed,recalled:recalled,rating:e.rating});
+  var sortedLogs=rl.filter(function(e){return e.date&&(e.quality!==undefined||e.rating!==undefined);}).sort(function(a,b){return a.date-b.date;});
+  var lastReviewByCard={};
+  sortedLogs.forEach(function(e){
+    var cid=e.cardId||'';
+    var rating=e.rating||(e.quality!==undefined?e.quality+1:0);
+    if(!rating||rating<1||rating>4)return;
+    var elapsed=0;
+    if(lastReviewByCard[cid]){elapsed=Math.max(0,(e.date-lastReviewByCard[cid])/86400000);}
+    lastReviewByCard[cid]=e.date;
+    var recalled=(rating>=3)?1:0;
+    trainData.push({elapsed:elapsed,recalled:recalled,rating:rating});
   });
-  if(trainData.length<10){toast('Không đủ dữ liệu hợp lệ (cần elapsed + rating)');return;}
+  if(trainData.length<10){toast('Cần ít nhất 10 review logs để train (hiện có '+trainData.length+')');return;}
 
   var btn=document.getElementById('optTrainBtn');btn.disabled=true;btn.textContent='⏳ Training...';
   var canvas=document.getElementById('optLossCanvas');canvas.style.display='block';
