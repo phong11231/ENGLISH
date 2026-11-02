@@ -31,7 +31,7 @@ td.worse{color:#ef4444}
 </head>
 <body>
 <h1>🧠 FSRS Optimizer</h1>
-<p class="sub">Huấn luyện 19 tham số FSRS từ dataset review logs bằng Gradient Descent</p>
+<p class="sub">Huấn luyện 17 tham số FSRS từ dataset review logs bằng Gradient Descent</p>
 
 <div class="card">
   <h2>📊 Dataset Info</h2>
@@ -59,7 +59,7 @@ td.worse{color:#ef4444}
 </div>
 
 <div class="card">
-  <h2>🔢 Kết quả: 19 Tham số</h2>
+  <h2>🔢 Kết quả: 17 Tham số</h2>
   <div style="overflow-x:auto">
     <table id="paramsTable">
       <tr><th>Param</th><th>Ý nghĩa</th><th>Mặc định</th><th>Sau training</th><th>Thay đổi</th></tr>
@@ -73,8 +73,8 @@ td.worse{color:#ef4444}
 </div>
 
 <script>
-const DEFAULT_W=[0.4072,1.1829,3.1262,15.4722,7.2102,0.5316,1.0651,0.0589,1.5747,0.1280,1.0507,29.8148,0.2800,0.2093,2.7849,0.5188,0.8511,2.5790,0.0990];
-const PARAM_NAMES=['S₀(Again)','S₀(Hard)','S₀(Good)','S₀(Easy)','D₀ init','D₀ scale','D update','Mean reversion','S\' recall e^w8','S\' recall w9','S\' recall w10','S\' lapse w11','S\' lapse w12','S\' lapse w13','S\' lapse w14','Hard penalty','Easy bonus','Short-term scale','Short-term decay'];
+const DEFAULT_W=[0.4072,1.1829,3.1262,15.4722,7.2102,0.5316,1.0651,0.0589,1.5747,0.1280,1.0507,29.8148,0.2800,0.2093,2.7849,0.5188,0.8511];
+const PARAM_NAMES=['S₀(Again)','S₀(Hard)','S₀(Good)','S₀(Easy)','D₀ init','D₀ scale','D update','Mean reversion','S\' recall e^w8','S\' recall w9','S\' recall w10','S\' lapse w11','S\' lapse w12','S\' lapse w13','S\' lapse w14','Hard penalty','Easy bonus'];
 let reviewData=[];
 let trainedW=null;
 let lossHistory=[];
@@ -163,9 +163,9 @@ function computeLoss(w){
 
 // Numerical gradient
 function numericalGradient(w,eps){
-  const grad=new Array(19);
+  const grad=new Array(17);
   const baseLoss=computeLoss(w);
-  for(let i=0;i<19;i++){
+  for(let i=0;i<17;i++){
     const wPlus=[...w];
     wPlus[i]+=eps;
     grad[i]=(computeLoss(wPlus)-baseLoss)/eps;
@@ -243,7 +243,7 @@ async function startTraining(){
     await new Promise(r=>setTimeout(r,0)); // yield to UI
 
     const grad=numericalGradient(w,1e-4);
-    for(let i=0;i<19;i++){
+    for(let i=0;i<17;i++){
       w[i]-=lr*grad[i];
     }
     // Clamp params
@@ -252,7 +252,6 @@ async function startTraining(){
     w[6]=clamp(w[6],0.01,5);w[7]=clamp(w[7],0,1);
     for(let i=8;i<15;i++)w[i]=clamp(w[i],0.001,50);
     w[15]=clamp(w[15],0.01,3);w[16]=clamp(w[16],0.01,3);
-    w[17]=clamp(w[17],0.01,10);w[18]=clamp(w[18],0.001,2);
 
     const loss=computeLoss(w);
     lossHistory.push(loss);
@@ -281,7 +280,7 @@ async function startTraining(){
 function updateParamsTable(w){
   const table=document.getElementById('paramsTable');
   table.innerHTML='<tr><th>Param</th><th>Ý nghĩa</th><th>Mặc định</th><th>Sau training</th><th>Thay đổi</th></tr>';
-  for(let i=0;i<19;i++){
+  for(let i=0;i<17;i++){
     const diff=w[i]-DEFAULT_W[i];
     const pct=(diff/DEFAULT_W[i]*100).toFixed(1);
     const cls=Math.abs(diff)<0.001?'':(diff>0?'better':'worse');
