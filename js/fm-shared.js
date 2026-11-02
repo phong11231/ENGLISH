@@ -122,7 +122,7 @@ async function _saveUserToR2(){
   if(!currentUser)return;
   var sharedBase={};
   try{var sc=localStorage.getItem('_sdCache');if(sc){var sp=JSON.parse(sc);for(var sid in sp){if(sp[sid].cards)sharedBase[sid]=new Set(sp[sid].cards.map(function(c){return c.id;}));}}}catch(e){}
-  var data={decks:{},sharedProgress:{},settings:db.settings,reviewLog:(Array.isArray(db.reviewLog)?db.reviewLog:[]).slice(-5000)};
+  var data={decks:{},sharedProgress:{},settings:db.settings,reviewLog:(Array.isArray(db.reviewLog)?db.reviewLog:[])};
   for(var id in db.decks){
     if(!db.decks[id]._shared){data.decks[id]=db.decks[id];}
     else{
@@ -195,7 +195,6 @@ async function _loadUserFromR2(){
       db.reviewLog.forEach(function(e){existingDates.add(e.date+'_'+e.cardId);});
       cloudLogs.forEach(function(e){if(!existingDates.has(e.date+'_'+e.cardId))db.reviewLog.push(e);});
       db.reviewLog.sort(function(a,b){return(a.date||0)-(b.date||0);});
-      db.reviewLog=db.reviewLog.slice(-5000);
     }
     saveLocal();renderCurrentView();
     console.log('[R2] user data loaded, decks='+Object.keys(cloudDecks).length+', sharedProgress='+Object.keys(cloudSharedProgress).length);
@@ -4261,7 +4260,7 @@ window.addEventListener('beforeunload',function(){
     var sharedBase={};
     try{var sc=localStorage.getItem('_sdCache');if(sc){var sp=JSON.parse(sc);for(var sid in sp){if(sp[sid].cards)sharedBase[sid]=new Set(sp[sid].cards.map(function(c){return c.id;}));}}}catch(e){}
     var rl=Array.isArray(db.reviewLog)?db.reviewLog:[];
-    var data={decks:{},sharedProgress:{},settings:db.settings,reviewLog:rl.slice(-5000)};
+    var data={decks:{},sharedProgress:{},settings:db.settings,reviewLog:rl};
     for(var id in db.decks){
       if(!db.decks[id]._shared){data.decks[id]=db.decks[id];}
       else{
