@@ -836,7 +836,12 @@ function saveCard(){
       const _frontRaw=front.replace(/[^a-zA-Z\s]/g,'').trim();
       if(_frontRaw&&/^[a-zA-Z\s]+$/.test(_frontRaw)){
         const chk=EnWordValidator.checkPhrase(_frontRaw);
-        if(!chk.valid&&!confirm('⚠️ Từ có thể không phải tiếng Anh: "'+chk.invalidWords.join('", "')+'".\n\nBạn có chắc muốn lưu?')){return;}
+        if(!chk.valid){
+          let msg='⚠️ Từ có thể không phải tiếng Anh: "'+chk.invalidWords.join('", "')+'".';
+          chk.invalidWords.forEach(w=>{const s=EnWordValidator.suggest(w);if(s.length)msg+='\n\n💡 Gợi ý cho "'+w+'": '+s.join(', ');});
+          msg+='\n\nBạn có chắc muốn lưu?';
+          if(!confirm(msg)){return;}
+        }
       }
     }
     if(editingCardId){
