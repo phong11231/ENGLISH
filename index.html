@@ -38,6 +38,7 @@
     <button class="user-menu-item" onclick="openAdminModal()">🔑 Admin</button>
     <button class="user-menu-item" id="adminPushBtn" onclick="pushDecksToAll()" style="display:none">📢 Push decks to all users</button>
     <button class="user-menu-item" id="adminNotifyBtn" onclick="openAdminNotifyModal()" style="display:none">🔔 Gui thong bao</button>
+    <button class="user-menu-item" id="adminOptimizerBtn" onclick="openOptimizerModal()" style="display:none">🧠 FSRS Optimizer</button>
     <button class="user-menu-item danger" onclick="signOutUser()">🚪 Sign out</button>
   </div>
 </nav>
@@ -170,6 +171,35 @@
       <div class="form-group"><label>Admin password</label><input type="password" id="adminPassInput" placeholder="Enter admin password"></div>
       <div id="adminError" style="color:var(--red);font-size:13px;margin-top:4px;display:none"></div>
       <div class="form-actions"><button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button><button class="btn btn-primary" onclick="verifyAdminPass()">Unlock</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- FSRS OPTIMIZER MODAL -->
+<div class="modal-overlay" id="optimizerModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header"><h2>🧠 FSRS Optimizer</h2><button class="modal-close" onclick="closeOptimizerModal()">✕</button></div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;text-align:center">
+        <div style="background:var(--surface);padding:12px;border-radius:8px"><div style="font-size:20px;font-weight:700" id="optReviews">—</div><div style="font-size:11px;color:var(--ink-dim)">Review logs</div></div>
+        <div style="background:var(--surface);padding:12px;border-radius:8px"><div style="font-size:20px;font-weight:700" id="optCards">—</div><div style="font-size:11px;color:var(--ink-dim)">Cards</div></div>
+        <div style="background:var(--surface);padding:12px;border-radius:8px"><div style="font-size:20px;font-weight:700" id="optDays">—</div><div style="font-size:11px;color:var(--ink-dim)">Days span</div></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <label style="font-size:13px">Learning rate: <input type="number" id="optLR" value="0.05" step="0.01" min="0.001" max="1" style="width:70px;padding:4px 8px;border-radius:4px;border:1px solid var(--line)"></label>
+        <label style="font-size:13px">Epochs: <input type="number" id="optEpochs" value="100" min="10" max="1000" style="width:70px;padding:4px 8px;border-radius:4px;border:1px solid var(--line)"></label>
+      </div>
+      <button class="btn btn-primary" id="optTrainBtn" onclick="runFSRSOptimizer()" style="width:100%;margin-bottom:16px">🚀 Train</button>
+      <canvas id="optLossCanvas" width="660" height="200" style="width:100%;height:200px;background:var(--surface);border-radius:8px;margin-bottom:12px;display:none"></canvas>
+      <div id="optParamsTable" style="display:none;margin-bottom:12px">
+        <h3 style="font-size:14px;margin-bottom:8px">17 Tham số</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="text-align:left;padding:4px">#</th><th style="text-align:left;padding:4px">Tên</th><th style="text-align:right;padding:4px">Default</th><th style="text-align:right;padding:4px">Optimized</th><th style="text-align:right;padding:4px">Thay đổi</th></tr></thead><tbody id="optParamsBody"></tbody></table>
+      </div>
+      <div id="optLog" style="display:none;background:var(--surface);border-radius:8px;padding:12px;font-family:monospace;font-size:11px;max-height:150px;overflow-y:auto;white-space:pre-wrap"></div>
+      <div id="optSavedParams" style="margin-top:12px">
+        <h3 style="font-size:14px;margin-bottom:8px">Tham số hiện tại</h3>
+        <div id="optCurrentParams" style="font-size:12px;color:var(--ink-dim)">Default (chưa train)</div>
+      </div>
     </div>
   </div>
 </div>
