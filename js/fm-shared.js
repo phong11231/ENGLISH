@@ -4420,21 +4420,97 @@ function runFSRSOptimizer(){
 function drawOptLoss(data){
   var canvas=document.getElementById('optLossCanvas');
   var ctx=canvas.getContext('2d');
-  var W=canvas.width,H=canvas.height;
+  var dpr=window.devicePixelRatio||1;
+  var cssW=canvas.clientWidth,cssH=canvas.clientHeight;
+  canvas.width=cssW*dpr;canvas.height=cssH*dpr;
+  ctx.scale(dpr,dpr);
+  var W=cssW,H=cssH;
   ctx.clearRect(0,0,W,H);
   if(data.length<2)return;
+
+  var isDark=document.documentElement.getAttribute('data-theme')==='dark'||window.matchMedia('(prefers-color-scheme:dark)').matches;
+  var bgColor=isDark?'#1a1a2e':'#fafbfc';
+  var gridColor=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  var textColor=isDark?'#999':'#777';
+  var lineColor1='#8b5cf6';
+  var lineColor2='#06b6d4';
+  var fillTop=isDark?'rgba(139,92,246,0.25)':'rgba(139,92,246,0.12)';
+  var fillBot=isDark?'rgba(139,92,246,0.02)':'rgba(139,92,246,0.01)';
+  var dotBg=isDark?'#1a1a2e':'#fff';
+
+  ctx.fillStyle=bgColor;ctx.beginPath();
+  var rad=12;ctx.moveTo(rad,0);ctx.lineTo(W-rad,0);ctx.quadraticCurveTo(W,0,W,rad);
+  ctx.lineTo(W,H-rad);ctx.quadraticCurveTo(W,H,W-rad,H);ctx.lineTo(rad,H);
+  ctx.quadraticCurveTo(0,H,0,H-rad);ctx.lineTo(0,rad);ctx.quadraticCurveTo(0,0,rad,0);
+  ctx.fill();ctx.save();ctx.clip();
+
+  var pad={t:35,r:20,b:35,l:60};
   var min=Math.min.apply(null,data),max=Math.max.apply(null,data);
-  if(max===min)max=min+0.001;
-  ctx.strokeStyle='#8b5cf6';ctx.lineWidth=2;ctx.beginPath();
-  for(var i=0;i<data.length;i++){
-    var x=i/(data.length-1)*(W-40)+20;
-    var y=H-20-(data[i]-min)/(max-min)*(H-40);
-    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  var range=max-min;if(range<0.001)range=0.001;
+  min-=range*0.05;max+=range*0.05;range=max-min;
+
+  var gridLines=5;
+  ctx.strokeStyle=gridColor;ctx.lineWidth=1;
+  ctx.setLineDash([4,4]);
+  for(var g=0;g<=gridLines;g++){
+    var gy=pad.t+(H-pad.t-pad.b)*g/gridLines;
+    ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(W-pad.r,gy);ctx.stroke();
   }
+  ctx.setLineDash([]);
+
+  ctx.fillStyle=textColor;ctx.font='11px system-ui,sans-serif';ctx.textAlign='right';
+  for(var g=0;g<=gridLines;g++){
+    var gy=pad.t+(H-pad.t-pad.b)*g/gridLines;
+    var val=max-range*g/gridLines;
+    ctx.fillText(val.toFixed(3),pad.l-8,gy+4);
+  }
+
+  function getXY(i){
+    return{x:pad.l+(W-pad.l-pad.r)*i/(data.length-1),y:pad.t+(H-pad.t-pad.b)*(1-(data[i]-min)/range)};
+  }
+
+  var grad=ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+  grad.addColorStop(0,fillTop);grad.addColorStop(1,fillBot);
+  ctx.fillStyle=grad;ctx.beginPath();
+  var p0=getXY(0);ctx.moveTo(p0.x,H-pad.b);ctx.lineTo(p0.x,p0.y);
+  for(var i=1;i<data.length;i++){var p=getXY(i);ctx.lineTo(p.x,p.y);}
+  var pn=getXY(data.length-1);ctx.lineTo(pn.x,H-pad.b);ctx.closePath();ctx.fill();
+
+  var lineGrad=ctx.createLinearGradient(pad.l,0,W-pad.r,0);
+  lineGrad.addColorStop(0,lineColor1);lineGrad.addColorStop(1,lineColor2);
+  ctx.strokeStyle=lineGrad;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
+  for(var i=0;i<data.length;i++){var p=getXY(i);if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);}
   ctx.stroke();
-  ctx.fillStyle='var(--ink-dim,#888)';ctx.font='10px sans-serif';
-  ctx.fillText(max.toFixed(4),2,15);ctx.fillText(min.toFixed(4),2,H-5);
-  ctx.fillText('Epoch 0',20,H-2);ctx.fillText('Epoch '+data.length,W-60,H-2);
+
+  var startP=getXY(0),endP=getXY(data.length-1);
+  ctx.fillStyle=lineColor1;ctx.beginPath();ctx.arc(startP.x,startP.y,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=dotBg;ctx.beginPath();ctx.arc(startP.x,startP.y,2,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=lineColor2;ctx.beginPath();ctx.arc(endP.x,endP.y,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=dotBg;ctx.beginPath();ctx.arc(endP.x,endP.y,2,0,Math.PI*2);ctx.fill();
+
+  ctx.font='bold 11px system-ui,sans-serif';ctx.textAlign='center';
+  ctx.fillStyle=lineColor1;ctx.fillText(data[0].toFixed(4),startP.x,startP.y-10);
+  ctx.fillStyle=lineColor2;ctx.fillText(data[data.length-1].toFixed(4),endP.x,endP.y-10);
+
+  ctx.font='11px system-ui,sans-serif';ctx.fillStyle=textColor;ctx.textAlign='center';
+  var epLabels=[0,Math.round(data.length*0.25),Math.round(data.length*0.5),Math.round(data.length*0.75),data.length];
+  for(var e=0;e<epLabels.length;e++){
+    var ex=pad.l+(W-pad.l-pad.r)*epLabels[e]/(data.length);
+    ctx.fillText(epLabels[e],ex,H-pad.b+18);
+  }
+  ctx.fillText('Epoch',W/2,H-5);
+
+  ctx.textAlign='center';ctx.save();ctx.translate(14,H/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText('Loss (BCE)',0,0);ctx.restore();
+
+  var reduction=((data[0]-data[data.length-1])/data[0]*100).toFixed(1);
+  ctx.font='bold 12px system-ui,sans-serif';ctx.textAlign='right';
+  ctx.fillStyle=reduction>0?'#22c55e':'#ef4444';
+  ctx.fillText((reduction>0?'↓ ':'')+reduction+'%',W-pad.r,pad.t-12);
+  ctx.font='11px system-ui,sans-serif';ctx.fillStyle=textColor;ctx.textAlign='left';
+  ctx.fillText('📉 Loss Curve',pad.l,pad.t-12);
+
+  ctx.restore();
 }
 
 // ===== INIT =====
