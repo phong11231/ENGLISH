@@ -61,7 +61,6 @@ const EnWordValidator = (() => {
         if (Math.abs(d.length - w.length) > 2) continue;
         const dist = _levenshtein(w, d);
         if (dist <= 2) results.push({ word: d, distance: dist });
-        if (results.length >= max * 3) break;
       }
       return results.sort((a, b) => a.distance - b.distance).slice(0, max).map(r => r.word);
     },
