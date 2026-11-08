@@ -4402,7 +4402,8 @@ function runFSRSOptimizer(){
 
   var lr=parseFloat(document.getElementById('optLR').value)||0.05;
   var epochs=parseInt(document.getElementById('optEpochs').value)||100;
-  var w=FSRS_DEFAULT_W.slice();
+  var wStart=_fsrsW();
+  var w=wStart.slice();
   var lossHistory=[];
 
   function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
@@ -4476,8 +4477,8 @@ function runFSRSOptimizer(){
     tableDiv.style.display='block';
     var tbody=document.getElementById('optParamsBody');tbody.innerHTML='';
     for(var i=0;i<17;i++){
-      var diff=w[i]-FSRS_DEFAULT_W[i];
-      var pct=(diff/FSRS_DEFAULT_W[i]*100).toFixed(1);
+      var diff=w[i]-wStart[i];
+      var pct=(diff/wStart[i]*100).toFixed(1);
       var cls=diff>0?'color:green':'color:red';
       var sign=diff>0?'+':'';
       tbody.innerHTML+='<tr><td style="padding:4px">w['+i+']</td><td style="padding:4px">'+FSRS_PARAM_NAMES[i]+'</td><td style="padding:4px;text-align:right">'+FSRS_DEFAULT_W[i].toFixed(4)+'</td><td style="padding:4px;text-align:right">'+w[i].toFixed(4)+'</td><td style="padding:4px;text-align:right;'+cls+'">'+sign+diff.toFixed(4)+' ('+sign+pct+'%)</td></tr>';
