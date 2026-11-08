@@ -213,7 +213,81 @@ async function syncToCloud(){if(!currentUser){toast('Sign in first');return;}awa
 function saveDeckData(id,data){saveLocal();_scheduleR2Save();}
 function saveCardOnly(deckId,cardId){saveLocal();_scheduleR2Save();}
 function deleteDeckData(id){saveLocal();_scheduleR2Save();}
-function addReviewLog(entry){if(!Array.isArray(db.reviewLog))db.reviewLog=[];db.reviewLog.push(entry);saveLocal();_scheduleR2Save();}
+function addReviewLog(entry){if(!Array.isArray(db.reviewLog))db.reviewLog=[];db.reviewLog.push(entry);saveLocal();_scheduleR2Save();_checkAutoTrain();}
+
+var _autoTrainRunning=false;
+function _checkAutoTrain(){
+  var rl=Array.isArray(db.reviewLog)?db.reviewLog:[];
+  var lastTrain=db.settings._lastAutoTrainCount||0;
+  if(rl.length-lastTrain>=100&&!_autoTrainRunning&&rl.length>=100){
+    _autoTrainRunning=true;
+    setTimeout(function(){_runAutoTrain();},500);
+  }
+}
+function _runAutoTrain(){
+  var rl=Array.isArray(db.reviewLog)?db.reviewLog:[];
+  if(rl.length<10){_autoTrainRunning=false;return;}
+  var cardGroups={};
+  var sortedLogs=rl.filter(function(e){return e.date&&(e.quality!==undefined||e.rating!==undefined);}).sort(function(a,b){return a.date-b.date;});
+  sortedLogs.forEach(function(e){
+    var cid=e.cardId||'unknown';
+    var rating=e.rating||(e.quality!==undefined?e.quality+1:0);
+    if(!rating||rating<1||rating>4)return;
+    if(!cardGroups[cid])cardGroups[cid]=[];
+    cardGroups[cid].push({date:e.date,rating:rating});
+  });
+  function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+  function retrievability(t,s){return Math.pow(1+t/(9*s),-0.5);}
+  function initS(w,r){return Math.max(0.1,w[r]);}
+  function initD(w,r){return clamp(w[4]-Math.exp(w[5]*(r-1))+1,1,10);}
+  function nextD(w,D,r){var d0=w[4]-Math.exp(w[5]*(r-1))+1;return clamp(w[7]*d0+(1-w[7])*(D-w[6]*(r-3)),1,10);}
+  function nextSRecall(w,S,D,R,r){var s=S*(1+Math.exp(w[8])*(11-D)*Math.pow(S,-w[9])*(Math.exp(w[10]*(1-R))-1));if(r===2)s*=w[15];if(r===4)s*=w[16];return Math.max(0.1,s);}
+  function nextSLapse(w,S,D,R){return Math.max(0.1,w[11]*Math.pow(D,-w[12])*(Math.pow(S+1,w[13])-1)*Math.exp(w[14]*(1-R)));}
+  function computeLoss(params){
+    var total=0,count=0;
+    for(var cid in cardGroups){
+      var reviews=cardGroups[cid];
+      var S=null,D=null;
+      for(var i=0;i<reviews.length;i++){
+        var rv=reviews[i];
+        if(i===0){S=initS(params,rv.rating-1);D=initD(params,rv.rating);continue;}
+        var elapsed=Math.max(0,(rv.date-reviews[i-1].date)/86400000)||0.01;
+        var R=retrievability(elapsed,S);
+        var y=rv.rating>=3?1:0;
+        var Rc=clamp(R,1e-7,1-1e-7);
+        total+=-(y*Math.log(Rc)+(1-y)*Math.log(1-Rc));
+        count++;
+        if(rv.rating>=2){S=nextSRecall(params,S,D,R,rv.rating);}
+        else{S=nextSLapse(params,S,D,R);}
+        D=nextD(params,D,rv.rating);
+        S=clamp(S,0.1,3650);
+      }
+    }
+    return count>0?total/count:0;
+  }
+  var w=FSRS_DEFAULT_W.slice();
+  var lr=0.05,epochs=100;
+  for(var ep=0;ep<epochs;ep++){
+    var grad=new Array(17);
+    for(var i=0;i<17;i++){
+      var saved=w[i];
+      w[i]=saved+1e-4;var lPlus=computeLoss(w);
+      w[i]=saved-1e-4;var lMinus=computeLoss(w);
+      w[i]=saved;
+      grad[i]=(lPlus-lMinus)/2e-4;
+    }
+    for(var i=0;i<17;i++)w[i]-=lr*grad[i];
+    for(var i=0;i<4;i++)w[i]=clamp(w[i],0.01,100);
+    w[4]=clamp(w[4],1,10);w[5]=clamp(w[5],0.01,5);w[6]=clamp(w[6],0.01,5);w[7]=clamp(w[7],0,1);
+    for(var i=8;i<15;i++)w[i]=clamp(w[i],0.001,50);
+    w[15]=clamp(w[15],0.01,3);w[16]=clamp(w[16],0.01,3);
+  }
+  db.settings.fsrsParams=w.slice();
+  db.settings._lastAutoTrainCount=db.reviewLog.length;
+  saveLocal();_scheduleR2Save();
+  _autoTrainRunning=false;
+  console.log('[FSRS Auto-Train] Done. Loss:',computeLoss(w).toFixed(4),'after',db.reviewLog.length,'logs');
+}
 
 // ===== FSRS v5 (Free Spaced Repetition Scheduler) =====
 var FSRS_DECAY=-0.5;
@@ -222,6 +296,7 @@ var FSRS_TARGET_R=0.9;
 var FSRS_W_DEFAULT=[0.4072,1.1829,3.1262,15.4722,7.2102,0.5316,1.0651,0.0589,1.5747,0.1280,1.0507,29.8148,0.2800,0.2093,2.7849,0.5188,0.8511,2.5790,0.0990];
 
 function _fsrsW(){
+  if(db.settings&&db.settings.fsrsParams&&db.settings.fsrsParams.length===17)return db.settings.fsrsParams;
   if(db.settings&&db.settings.fsrsWeights&&db.settings.fsrsWeights.length===19)return db.settings.fsrsWeights;
   return FSRS_W_DEFAULT;
 }
