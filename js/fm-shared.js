@@ -4406,6 +4406,24 @@ function runFSRSOptimizer(){
   var w=wStart.slice();
   var lossHistory=[];
 
+  // Chia tap train/validation/test (70/15/15)
+  var allCids=Object.keys(cardGroups);
+  for(var si=allCids.length-1;si>0;si--){var sj=Math.floor(Math.random()*(si+1));var tmp=allCids[si];allCids[si]=allCids[sj];allCids[sj]=tmp;}
+  var nTrain=Math.max(1,Math.round(allCids.length*0.7));
+  var nVal=Math.max(0,Math.round(allCids.length*0.15));
+  var trainCids=allCids.slice(0,nTrain);
+  var valCids=allCids.slice(nTrain,nTrain+nVal);
+  var testCids=allCids.slice(nTrain+nVal);
+  var trainGroups={},valGroups={},testGroups={};
+  trainCids.forEach(function(c){trainGroups[c]=cardGroups[c];});
+  valCids.forEach(function(c){valGroups[c]=cardGroups[c];});
+  testCids.forEach(function(c){testGroups[c]=cardGroups[c];});
+  function countLogs(g){var n=0;for(var c in g)n+=g[c].length;return n;}
+  logEl.textContent+='📊 Dataset: '+allCids.length+' cards ('+totalReviews+' logs)\n';
+  logEl.textContent+='   Train: '+trainCids.length+' cards ('+countLogs(trainGroups)+' logs) | 70%\n';
+  logEl.textContent+='   Validation: '+valCids.length+' cards ('+countLogs(valGroups)+' logs) | 15%\n';
+  logEl.textContent+='   Test: '+testCids.length+' cards ('+countLogs(testGroups)+' logs) | 15%\n\n';
+
   function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
   function retrievability(t,s){return Math.pow(1+t/(9*s),-0.5);}
   function initS(w,r){return Math.max(0.1,w[r]);}
@@ -4413,10 +4431,10 @@ function runFSRSOptimizer(){
   function nextD(w,D,r){var d0=w[4]-Math.exp(w[5]*(r-1))+1;return clamp(w[7]*d0+(1-w[7])*(D-w[6]*(r-3)),1,10);}
   function nextSRecall(w,S,D,R,r){var s=S*(1+Math.exp(w[8])*(11-D)*Math.pow(S,-w[9])*(Math.exp(w[10]*(1-R))-1));if(r===2)s*=w[15];if(r===4)s*=w[16];return Math.max(0.1,s);}
   function nextSLapse(w,S,D,R){return Math.max(0.1,w[11]*Math.pow(D,-w[12])*(Math.pow(S+1,w[13])-1)*Math.exp(w[14]*(1-R)));}
-  function computeLoss(params){
+  function computeLossOn(params,groups){
     var total=0,count=0;
-    for(var cid in cardGroups){
-      var reviews=cardGroups[cid];
+    for(var cid in groups){
+      var reviews=groups[cid];
       var S=null,D=null;
       for(var i=0;i<reviews.length;i++){
         var rv=reviews[i];
@@ -4439,8 +4457,8 @@ function runFSRSOptimizer(){
     var grad=new Array(17);
     for(var i=0;i<17;i++){
       var saved=params[i];
-      params[i]=saved+eps;var lPlus=computeLoss(params);
-      params[i]=saved-eps;var lMinus=computeLoss(params);
+      params[i]=saved+eps;var lPlus=computeLossOn(params,trainGroups);
+      params[i]=saved-eps;var lMinus=computeLossOn(params,trainGroups);
       params[i]=saved;
       grad[i]=(lPlus-lMinus)/(2*eps);
     }
@@ -4458,7 +4476,7 @@ function runFSRSOptimizer(){
       w[4]=clamp(w[4],1,10);w[5]=clamp(w[5],0.01,5);w[6]=clamp(w[6],0.01,5);w[7]=clamp(w[7],0,1);
       for(var i=8;i<15;i++)w[i]=clamp(w[i],0.001,50);
       w[15]=clamp(w[15],0.01,3);w[16]=clamp(w[16],0.01,3);
-      var loss=computeLoss(w);
+      var loss=computeLossOn(w,trainGroups);
       lossHistory.push(loss);
       if(epoch%10===0||epoch===epochs){
         logEl.textContent+='Epoch '+epoch+' — Loss: '+loss.toFixed(6)+'\n';
@@ -4473,7 +4491,11 @@ function runFSRSOptimizer(){
   function finishTraining(){
     var finalLoss=lossHistory[lossHistory.length-1];
     var initLoss=lossHistory[0];
-    logEl.textContent+='✅ Hoàn tất! Loss: '+initLoss.toFixed(6)+' → '+finalLoss.toFixed(6)+' (giảm '+((initLoss-finalLoss)/initLoss*100).toFixed(1)+'%)\n';
+    logEl.textContent+='✅ Hoàn tất! Train Loss: '+initLoss.toFixed(6)+' → '+finalLoss.toFixed(6)+' (giảm '+((initLoss-finalLoss)/initLoss*100).toFixed(1)+'%)\n';
+    var valLoss=valCids.length>0?computeLossOn(w,valGroups):0;
+    var testLoss=testCids.length>0?computeLossOn(w,testGroups):0;
+    if(valCids.length>0)logEl.textContent+='📋 Validation Loss: '+valLoss.toFixed(6)+'\n';
+    if(testCids.length>0)logEl.textContent+='🧪 Test Loss: '+testLoss.toFixed(6)+'\n';
     tableDiv.style.display='block';
     var tbody=document.getElementById('optParamsBody');tbody.innerHTML='';
     for(var i=0;i<17;i++){
